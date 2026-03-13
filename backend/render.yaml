@@ -4,7 +4,7 @@ services:
     name: factory-management-backend
     runtime: node
     plan: free
-    buildCommand: npm install && npm run build
+    buildCommand: npm install
     startCommand: npm start
     healthCheckPath: /api/health
     autoDeploy: true
@@ -20,11 +20,10 @@ services:
       - key: JWT_SECRET
         sync: false # Set this in Render dashboard
       - key: FRONTEND_URL
-        value: https://your-vercel-app-url.vercel.app
+        value: https://factory-management-platform-Abdessalem2000.vercel.app
         
     # Build Configuration
     buildFilter:
       paths:
-        - backend/src/**
+        - backend/start-server.js
         - backend/package.json
-        - backend/tsconfig.json

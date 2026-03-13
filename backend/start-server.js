@@ -77,14 +77,15 @@ app.get('/api/production', (req, res) => {
     success: true,
     data: [
       {
-        id: '1',
+        _id: '1',
         orderNumber: 'PO-000001',
         product: { name: 'Widget A', sku: 'WGT-001' },
         quantity: 100,
         unitOfMeasure: 'units',
         status: 'in_progress',
         priority: 'high',
-        createdAt: new Date().toISOString()
+        createdAt: new Date(),
+        updatedAt: new Date()
       }
     ],
     pagination: { page: 1, limit: 10, total: 1, pages: 1 }
@@ -96,23 +97,23 @@ app.get('/api/financial', (req, res) => {
     success: true,
     data: [
       {
-        id: '1',
+        _id: '1',
         type: 'income',
         category: 'sales',
         amount: 1500000, // 1,500,000 DZD
         currency: 'DZD',
         description: 'Product sale - Industrial equipment',
-        date: new Date().toISOString(),
+        date: new Date(),
         status: 'completed'
       },
       {
-        id: '2',
+        _id: '2',
         type: 'expense',
         category: 'materials',
         amount: 750000, // 750,000 DZD
         currency: 'DZD',
         description: 'Raw materials purchase',
-        date: new Date().toISOString(),
+        date: new Date(),
         status: 'completed'
       }
     ],
@@ -125,7 +126,7 @@ app.get('/api/supplier', (req, res) => {
     success: true,
     data: [
       {
-        id: '1',
+        _id: '1',
         name: 'ABC Supplies',
         contactPerson: 'John Doe',
         email: 'john@abc.com',
@@ -144,7 +145,7 @@ app.get('/api/worker', (req, res) => {
     success: true,
     data: [
       {
-        id: '1',
+        _id: '1',
         employeeId: 'EMP-000001',
         firstName: 'أحمد',
         lastName: 'محمد',
@@ -157,7 +158,7 @@ app.get('/api/worker', (req, res) => {
         skills: ['Assembly', 'Quality Control']
       },
       {
-        id: '2',
+        _id: '2',
         employeeId: 'EMP-000002',
         firstName: 'فاطمة',
         lastName: 'بن علي',
@@ -175,7 +176,7 @@ app.get('/api/worker', (req, res) => {
 });
 
 // Start server
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`🏥 Health check: http://localhost:${PORT}/api/health`);
