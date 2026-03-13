@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Plus, Search, Filter } from 'lucide-react'
+import { Plus, Search } from 'lucide-react'
 import { Button } from '@/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card'
 import { productionApi } from '@/lib/api'
@@ -104,7 +104,7 @@ export function ProductionOrders() {
                 </thead>
                 <tbody>
                   {orders.map((order: ProductionOrder) => (
-                    <tr key={order.id} className="border-b hover:bg-gray-50">
+                    <tr key={order._id} className="border-b hover:bg-gray-50">
                       <td className="p-3 font-medium">{order.orderNumber}</td>
                       <td className="p-3">
                         <div>

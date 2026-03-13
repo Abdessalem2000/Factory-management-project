@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Plus, Search, Star, Users, Mail, Phone } from 'lucide-react'
+import { Plus, Search, Star, Mail, Phone } from 'lucide-react'
 import { Button } from '@/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card'
 import { supplierApi } from '@/lib/api'
-import { formatDate, getStatusColor } from '@/lib/utils'
+import { getStatusColor } from '@/lib/utils'
 import { Supplier, SupplierFilters } from '@/types'
 
 export function SupplierManagement() {
@@ -94,7 +94,7 @@ export function SupplierManagement() {
           </div>
         ) : (
           suppliers.map((supplier: Supplier) => (
-            <Card key={supplier.id} className="hover:shadow-lg transition-shadow">
+            <Card key={supplier._id} className="hover:shadow-lg transition-shadow">
               <CardHeader>
                 <div className="flex justify-between items-start">
                   <div>

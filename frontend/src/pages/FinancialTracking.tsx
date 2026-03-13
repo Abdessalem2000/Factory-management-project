@@ -1,8 +1,15 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Plus, Search, TrendingUp, TrendingDown, DollarSign } from 'lucide-react'
-import { Button } from '@/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card'
+import { Button } from '@/ui/button'
+import { StatCard } from '@/ui/stat-card'
+import { 
+  TrendingUp, 
+  TrendingDown, 
+  DollarSign,
+  Plus,
+  Search
+} from 'lucide-react'
 import { financialApi } from '@/lib/api'
 import { formatDate, formatCurrency, getStatusColor } from '@/lib/utils'
 import { Transaction, FinancialFilters } from '@/types'
@@ -143,7 +150,7 @@ export function FinancialTracking() {
                 </thead>
                 <tbody>
                   {transactions.map((transaction: Transaction) => (
-                    <tr key={transaction.id} className="border-b hover:bg-gray-50">
+                    <tr key={transaction._id} className="border-b hover:bg-gray-50">
                       <td className="p-3">{formatDate(transaction.date)}</td>
                       <td className="p-3">
                         <div>

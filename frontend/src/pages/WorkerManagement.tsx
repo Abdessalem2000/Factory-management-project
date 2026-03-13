@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Plus, Search, Users, Wrench, DollarSign, Calendar } from 'lucide-react'
+import { Plus, Search, DollarSign, Calendar } from 'lucide-react'
 import { Button } from '@/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card'
 import { workerApi } from '@/lib/api'
@@ -81,7 +81,7 @@ export function WorkerManagement() {
           </div>
         ) : (
           workers.map((worker: Worker) => (
-            <Card key={worker.id} className="hover:shadow-lg transition-shadow">
+            <Card key={worker._id} className="hover:shadow-lg transition-shadow">
               <CardHeader>
                 <div className="flex justify-between items-start">
                   <div>
