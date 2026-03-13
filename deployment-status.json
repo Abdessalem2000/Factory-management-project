@@ -1,0 +1,30 @@
+{
+  "deployment": {
+    "timestamp": "2026-03-13T17:52:17.792Z",
+    "version": "1.0.0",
+    "environment": "production",
+    "features": {
+      "algerianDinar": true,
+      "arabicSupport": true,
+      "dockerReady": true,
+      "ciCdConfigured": true
+    },
+    "services": {
+      "frontend": {
+        "url": "http://localhost:5173",
+        "status": "running"
+      },
+      "backend": {
+        "url": "http://localhost:3001",
+        "status": "running",
+        "api": "http://localhost:3001/api"
+      }
+    },
+    "currency": {
+      "code": "DZD",
+      "symbol": "د.ج",
+      "locale": "ar-DZ",
+      "name": "دينار جزائري"
+    }
+  }
+}

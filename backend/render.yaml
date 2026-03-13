@@ -1,0 +1,30 @@
+services:
+  # Production Web Service
+  - type: web
+    name: factory-management-backend
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    
+    # Environment Variables
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: MONGODB_URI
+        sync: false # Set this in Render dashboard
+      - key: JWT_SECRET
+        sync: false # Set this in Render dashboard
+      - key: FRONTEND_URL
+        value: https://your-vercel-app-url.vercel.app
+        
+    # Build Configuration
+    buildFilter:
+      paths:
+        - backend/src/**
+        - backend/package.json
+        - backend/tsconfig.json
