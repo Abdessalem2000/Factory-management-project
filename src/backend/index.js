@@ -698,10 +698,11 @@ app.get('/api/supplier', (req, res) => {
 app.get('/', (req, res) => {
   res.json({
     message: 'Factory Management Platform API',
-    status: 'Running with MongoDB - Version 2.0',
+    status: 'Running with MongoDB - Version 2.2 - FINAL UPDATE',
     currency: 'DZD - Algerian Dinar',
     endpoints: ['/api/health', '/api/worker', '/api/financial', '/api/production', '/api/supplier', '/api/analytics/dashboard'],
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    features: ['Analytics Dashboard', 'Visual Charts', 'Auto-Seeding', 'Enhanced UI']
   });
 });
 
@@ -713,7 +714,9 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`💰 Algerian Dinar (DZD) currency configured`);
   console.log(`🗄️  MongoDB database connected`);
   console.log(`📈 Analytics endpoints available`);
-  console.log(`🎨 Version: 2.1 - Enhanced Analytics`);
+  console.log(`🎨 Version: 2.2 - FINAL UPDATE - ALL FEATURES ENABLED`);
+  console.log(`🌟 Auto-seeding system active`);
+  console.log(`📊 Visual analytics dashboard ready`);
 });
 
 module.exports = app;
