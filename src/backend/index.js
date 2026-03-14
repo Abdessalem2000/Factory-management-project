@@ -6,7 +6,7 @@ const Transaction = require('./models/Transaction');
 const forceDeploy = require('./force-deploy'); // Force deployment
 
 const app = express();
-const PORT = process.env.PORT || 10000;
+const PORT = process.env.PORT || 10001; // CRITICAL CHANGE TO FORCE REDEPLOY
 
 // Middleware
 app.use(cors());
@@ -728,6 +728,8 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`🎨 Version: 2.2 - FINAL UPDATE - ALL FEATURES ENABLED`);
   console.log(`🌟 Auto-seeding system active`);
   console.log(`📊 Visual analytics dashboard ready`);
+  console.log(`🔥 PORT CHANGED TO FORCE REDEPLOY - CRITICAL UPDATE`);
+  console.log(`🚨 THIS WILL TRIGGER NEW DEPLOYMENT - ALL FEATURES ENABLED`);
 });
 
 module.exports = app;
