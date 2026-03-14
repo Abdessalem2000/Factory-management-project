@@ -8,7 +8,8 @@ import {
   Wrench,
   Menu,
   X,
-  Factory
+  Factory,
+  BarChart3
 } from 'lucide-react'
 import { Button } from '@/ui/button'
 import { cn } from '@/lib/utils'
@@ -19,6 +20,7 @@ const navigation = [
   { name: 'Financial', href: '/financial', icon: DollarSign },
   { name: 'Suppliers', href: '/suppliers', icon: Users },
   { name: 'Workers', href: '/workers', icon: Wrench },
+  { name: 'Analytics', href: '/analytics', icon: BarChart3 },
 ]
 
 interface LayoutProps {
