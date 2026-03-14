@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card'
 import { formatCurrency } from '@/lib/utils'
+import { analyticsApi } from '@/lib/api'
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -18,16 +19,16 @@ export function Analytics() {
   const { data: dashboardData, isLoading } = useQuery({
     queryKey: ['analytics-dashboard', timeRange],
     queryFn: async () => {
-      const response = await fetch('/api/analytics/dashboard')
-      return response.json()
+      const response = await analyticsApi.getDashboard()
+      return response
     }
   })
 
   const { data: workerAnalytics } = useQuery({
     queryKey: ['analytics-workers'],
     queryFn: async () => {
-      const response = await fetch('/api/analytics/workers')
-      return response.json()
+      const response = await analyticsApi.getWorkerAnalytics()
+      return response
     }
   })
 
