@@ -1,9 +1,9 @@
 // NEW BACKEND SERVER - FORCES DEPLOYMENT
 const express = require('express');
 const cors = require('cors');
-const connectDB = require('./src/backend/database');
-const Worker = require('./src/backend/models/Worker');
-const Transaction = require('./src/backend/models/Transaction');
+const connectDB = require('./database'); // FIXED PATH
+const Worker = require('./models/Worker'); // FIXED PATH
+const Transaction = require('./models/Transaction'); // FIXED PATH
 
 const app = express();
 const PORT = process.env.PORT || 10003; // NEW PORT TO FORCE DEPLOY
