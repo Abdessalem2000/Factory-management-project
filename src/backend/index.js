@@ -698,9 +698,10 @@ app.get('/api/supplier', (req, res) => {
 app.get('/', (req, res) => {
   res.json({
     message: 'Factory Management Platform API',
-    status: 'Running with MongoDB',
+    status: 'Running with MongoDB - Version 2.0',
     currency: 'DZD - Algerian Dinar',
-    endpoints: ['/api/health', '/api/worker', '/api/financial', '/api/production', '/api/supplier']
+    endpoints: ['/api/health', '/api/worker', '/api/financial', '/api/production', '/api/supplier', '/api/analytics/dashboard'],
+    timestamp: new Date().toISOString()
   });
 });
 
