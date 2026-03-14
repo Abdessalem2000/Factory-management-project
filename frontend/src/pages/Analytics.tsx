@@ -130,40 +130,40 @@ export function Analytics() {
           <CardContent>
             <div className="space-y-6">
               {monthlyTrend.slice(-6).map((month: any, index: number) => (
-                <div key={index} className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-gray-700">{month.month}</span>
-                    <span className={`text-sm font-bold ${
+                <div key={index} className="space-y-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                  <div className="flex justify-between items-center mb-3">
+                    <span className="text-sm font-semibold text-gray-800">{month.month}</span>
+                    <span className={`text-lg font-bold ${
                       month.profit >= 0 ? 'text-green-600' : 'text-red-600'
                     }`}>
                       {formatCurrency(month.profit, 'DZD')}
                     </span>
                   </div>
-                  <div className="flex gap-4">
-                    <div className="flex-1">
-                      <div className="flex justify-between text-xs mb-1">
-                        <span className="text-green-600">Income</span>
-                        <span className="text-green-600 font-medium">
+                  <div className="space-y-3">
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm font-medium text-gray-700">
+                        <span>💰 Income</span>
+                        <span className="text-green-600 font-bold">
                           +{formatCurrency(month.income, 'DZD')}
                         </span>
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div className="w-full bg-gray-200 rounded-full h-3">
                         <div 
-                          className="bg-green-500 h-2 rounded-full" 
+                          className="bg-gradient-to-r from-green-400 to-green-600 h-3 rounded-full transition-all duration-500" 
                           style={{ width: `${Math.min((month.income / 25000000) * 100, 100)}%` }}
                         />
                       </div>
                     </div>
-                    <div className="flex-1">
-                      <div className="flex justify-between text-xs mb-1">
-                        <span className="text-red-600">Expenses</span>
-                        <span className="text-red-600 font-medium">
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm font-medium text-gray-700">
+                        <span>💸 Expenses</span>
+                        <span className="text-red-600 font-bold">
                           -{formatCurrency(month.expenses, 'DZD')}
                         </span>
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div className="w-full bg-gray-200 rounded-full h-3">
                         <div 
-                          className="bg-red-500 h-2 rounded-full" 
+                          className="bg-gradient-to-r from-red-400 to-red-600 h-3 rounded-full transition-all duration-500" 
                           style={{ width: `${Math.min((month.expenses / 25000000) * 100, 100)}%` }}
                         />
                       </div>
@@ -188,17 +188,19 @@ export function Analytics() {
               {Object.entries(departmentBreakdown).map(([dept, count]: [string, any]) => {
                 const percentage = overview.totalWorkers ? (count / overview.totalWorkers) * 100 : 0;
                 return (
-                  <div key={dept} className="space-y-2">
+                  <div key={dept} className="space-y-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-gray-700">{dept}</span>
+                      <span className="text-sm font-semibold text-gray-800">{dept}</span>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-bold text-gray-900">{count}</span>
-                        <span className="text-xs text-gray-500">({percentage.toFixed(1)}%)</span>
+                        <span className="text-lg font-bold text-blue-600">{count}</span>
+                        <span className="text-sm text-gray-600 bg-blue-100 px-2 py-1 rounded-full">
+                          {percentage.toFixed(1)}%
+                        </span>
                       </div>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-3">
+                    <div className="w-full bg-gray-200 rounded-full h-4">
                       <div 
-                        className="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all duration-500" 
+                        className="bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600 h-4 rounded-full transition-all duration-700 shadow-sm" 
                         style={{ width: `${percentage}%` }}
                       />
                     </div>
@@ -221,30 +223,34 @@ export function Analytics() {
         <CardContent>
           <div className="space-y-4">
             {topWorkers.map((worker: any, index: number) => (
-              <div key={worker._id} className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg border border-gray-200 hover:shadow-md transition-shadow duration-200">
+              <div key={worker._id} className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg border border-gray-200 hover:shadow-lg transition-all duration-300 hover:scale-[1.02]">
                 <div className="flex items-center gap-4">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white ${
-                    index === 0 ? 'bg-yellow-500' : 
-                    index === 1 ? 'bg-gray-400' : 
-                    index === 2 ? 'bg-orange-600' : 
-                    'bg-blue-500'
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold text-white shadow-lg ${
+                    index === 0 ? 'bg-gradient-to-br from-yellow-400 to-yellow-600 ring-2 ring-yellow-300' : 
+                    index === 1 ? 'bg-gradient-to-br from-gray-300 to-gray-500 ring-2 ring-gray-300' : 
+                    index === 2 ? 'bg-gradient-to-br from-orange-400 to-orange-600 ring-2 ring-orange-300' : 
+                    'bg-gradient-to-br from-blue-400 to-blue-600 ring-2 ring-blue-300'
                   }`}>
-                    {index + 1}
+                    {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : index + 1}
                   </div>
                   <div>
-                    <div className="font-semibold text-gray-900">
+                    <div className="font-bold text-gray-900 text-lg">
                       {worker.firstName} {worker.lastName}
                     </div>
-                    <div className="text-sm text-gray-600">{worker.position}</div>
-                    <div className="text-xs text-gray-500">{worker.department}</div>
+                    <div className="text-sm text-gray-700 font-medium">{worker.position}</div>
+                    <div className="text-xs text-gray-500 bg-gray-200 px-2 py-1 rounded-full inline-block mt-1">
+                      {worker.department}
+                    </div>
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="font-bold text-lg text-green-600">
+                  <div className="font-bold text-xl text-green-600">
                     {formatCurrency(worker.hourlyRate, 'DZD')}
                   </div>
-                  <div className="text-xs text-gray-500">per hour</div>
-                  <div className="text-xs text-gray-600 mt-1">{worker.paymentType?.replace('_', ' ') || 'hourly'}</div>
+                  <div className="text-xs text-gray-500 font-medium">per hour</div>
+                  <div className="text-xs text-gray-600 bg-green-100 px-2 py-1 rounded-full mt-1">
+                    {worker.paymentType?.replace('_', ' ') || 'hourly'}
+                  </div>
                 </div>
               </div>
             ))}
@@ -265,16 +271,23 @@ export function Analytics() {
                   .sort(([,a]: [string, any], [,b]: [string, any]) => (b as number) - (a as number))
                   .slice(0, 5)
                   .map(([skill, count]: [string, any], index: number) => (
-                    <div key={skill} className="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-xs font-bold text-blue-600">
+                    <div key={skill} className="flex justify-between items-center p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200 hover:shadow-md transition-all duration-200">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white shadow-md ${
+                          index === 0 ? 'bg-gradient-to-br from-blue-500 to-blue-700' :
+                          index === 1 ? 'bg-gradient-to-br from-indigo-500 to-indigo-700' :
+                          index === 2 ? 'bg-gradient-to-br from-purple-500 to-purple-700' :
+                          'bg-gradient-to-br from-gray-500 to-gray-700'
+                        }`}>
                           {index + 1}
                         </div>
-                        <span className="text-sm font-medium text-gray-700">{skill}</span>
+                        <span className="text-sm font-semibold text-gray-800">{skill}</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-bold text-gray-900">{count}</span>
-                        <span className="text-xs text-gray-500">workers</span>
+                        <span className="text-lg font-bold text-blue-600">{count}</span>
+                        <span className="text-xs text-gray-600 bg-blue-100 px-2 py-1 rounded-full">
+                          workers
+                        </span>
                       </div>
                     </div>
                   ))}
@@ -289,13 +302,20 @@ export function Analytics() {
             <CardContent>
               <div className="space-y-3">
                 {Object.entries(workerAnalytics.data.paymentTypes || {}).map(([type, count]: [string, any]) => (
-                  <div key={type} className="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
-                    <span className="text-sm font-medium text-gray-700 capitalize">
-                      {type.replace('_', ' ')}
-                    </span>
+                  <div key={type} className="flex justify-between items-center p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200 hover:shadow-md transition-all duration-200">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center text-white shadow-md">
+                        {type === 'hourly' ? '⏱️' : type === 'salary' ? '💰' : '📋'}
+                      </div>
+                      <span className="text-sm font-semibold text-gray-800 capitalize">
+                        {type.replace('_', ' ')}
+                      </span>
+                    </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-bold text-gray-900">{count}</span>
-                      <span className="text-xs text-gray-500">workers</span>
+                      <span className="text-lg font-bold text-green-600">{count}</span>
+                      <span className="text-xs text-gray-600 bg-green-100 px-2 py-1 rounded-full">
+                        workers
+                      </span>
                     </div>
                   </div>
                 ))}
