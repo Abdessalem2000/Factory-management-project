@@ -23,57 +23,45 @@ app.get('/api/test', (req, res) => {
   });
 });
 
-// Analytics endpoint
-app.get('/api/analytics/dashboard', async (req, res) => {
-  try {
-    console.log('📊 Analytics endpoint called');
-    
-    // Test basic response first
-    const overview = {
-      totalWorkers: 5,
-      totalRevenue: 25000000,
-      totalExpenses: 20000000,
-      profitMargin: 15
-    };
+// Analytics endpoint - SIMPLE VERSION
+app.get('/api/analytics/dashboard', (req, res) => {
+  console.log('📊 Analytics endpoint called');
+  
+  // Simple static data - no database calls
+  const analyticsData = {
+    success: true,
+    data: {
+      overview: {
+        totalWorkers: 5,
+        totalRevenue: 25000000,
+        totalExpenses: 20000000,
+        profitMargin: 15
+      },
+      monthlyTrend: [
+        { month: 'January', income: 25000000, expenses: 20000000, profit: 5000000 },
+        { month: 'February', income: 28000000, expenses: 22000000, profit: 6000000 },
+        { month: 'March', income: 32000000, expenses: 25000000, profit: 7000000 },
+        { month: 'April', income: 30000000, expenses: 23000000, profit: 7000000 },
+        { month: 'May', income: 35000000, expenses: 27000000, profit: 8000000 },
+        { month: 'June', income: 33000000, expenses: 26000000, profit: 7000000 }
+      ],
+      departmentBreakdown: {
+        'Production': 3,
+        'Quality Control': 1,
+        'Logistics': 1
+      },
+      topWorkers: [
+        { _id: '1', firstName: 'أحمد', lastName: 'بن علي', position: 'Production Manager', department: 'Production', hourlyRate: 2500, paymentType: 'salary' },
+        { _id: '2', firstName: 'محمد', lastName: 'الشاذ', position: 'Quality Inspector', department: 'Quality Control', hourlyRate: 2200, paymentType: 'hourly' },
+        { _id: '3', firstName: 'عمر', lastName: 'بن داود', position: 'Logistics Coordinator', department: 'Logistics', hourlyRate: 2000, paymentType: 'hourly' },
+        { _id: '4', firstName: 'ياسين', lastName: 'محمد', position: 'Machine Operator', department: 'Production', hourlyRate: 1800, paymentType: 'hourly' },
+        { _id: '5', firstName: 'سعيد', lastName: 'الخضر', position: 'Maintenance Tech', department: 'Production', hourlyRate: 2100, paymentType: 'hourly' }
+      ]
+    }
+  };
 
-    const monthlyTrend = [
-      { month: 'January', income: 25000000, expenses: 20000000, profit: 5000000 },
-      { month: 'February', income: 28000000, expenses: 22000000, profit: 6000000 },
-      { month: 'March', income: 32000000, expenses: 25000000, profit: 7000000 },
-      { month: 'April', income: 30000000, expenses: 23000000, profit: 7000000 },
-      { month: 'May', income: 35000000, expenses: 27000000, profit: 8000000 },
-      { month: 'June', income: 33000000, expenses: 26000000, profit: 7000000 }
-    ];
-
-    const departmentBreakdown = {
-      'Production': 3,
-      'Quality Control': 1,
-      'Logistics': 1
-    };
-
-    const topWorkers = [
-      { _id: '1', firstName: 'أحمد', lastName: 'بن علي', position: 'Production Manager', department: 'Production', hourlyRate: 2500, paymentType: 'salary' },
-      { _id: '2', firstName: 'محمد', lastName: 'الشاذ', position: 'Quality Inspector', department: 'Quality Control', hourlyRate: 2200, paymentType: 'hourly' },
-      { _id: '3', firstName: 'عمر', lastName: 'بن داود', position: 'Logistics Coordinator', department: 'Logistics', hourlyRate: 2000, paymentType: 'hourly' },
-      { _id: '4', firstName: 'ياسين', lastName: 'محمد', position: 'Machine Operator', department: 'Production', hourlyRate: 1800, paymentType: 'hourly' },
-      { _id: '5', firstName: 'سعيد', lastName: 'الخضر', position: 'Maintenance Tech', department: 'Production', hourlyRate: 2100, paymentType: 'hourly' }
-    ];
-
-    console.log('📊 Analytics data prepared');
-
-    res.json({
-      success: true,
-      data: {
-        overview,
-        monthlyTrend,
-        departmentBreakdown,
-        topWorkers
-      }
-    });
-  } catch (error) {
-    console.error('🚨 Analytics endpoint error:', error);
-    res.status(500).json({ success: false, error: error.message });
-  }
+  console.log('📊 Analytics data sent successfully');
+  res.json(analyticsData);
 });
 
 // Health check
