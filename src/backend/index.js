@@ -712,6 +712,8 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`🏥 Health check: http://localhost:${PORT}/api/health`);
   console.log(`💰 Algerian Dinar (DZD) currency configured`);
   console.log(`🗄️  MongoDB database connected`);
+  console.log(`📈 Analytics endpoints available`);
+  console.log(`🎨 Version: 2.1 - Enhanced Analytics`);
 });
 
 module.exports = app;
