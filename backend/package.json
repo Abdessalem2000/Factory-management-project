@@ -2,11 +2,12 @@
   "name": "factory-management-backend",
   "version": "1.0.0",
   "description": "Backend API for Factory Management Platform",
-  "main": "index-fixed.js",
+  "main": "index-database.js",
   "scripts": {
-    "dev": "nodemon src/index.ts",
+    "dev": "nodemon index-database.js",
     "build": "tsc",
-    "start": "node index-fixed.js",
+    "start": "node index-database.js",
+    "seed": "node seed-database.js",
     "test": "jest",
     "lint": "eslint src/**/*.ts"
   },
