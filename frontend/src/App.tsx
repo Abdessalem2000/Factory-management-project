@@ -6,6 +6,7 @@ import { FinancialTracking } from './pages/FinancialTracking'
 import { SupplierManagement } from './pages/SupplierManagement'
 import { WorkerManagement } from './pages/WorkerManagement'
 import { Analytics } from './pages/Analytics'
+import { AnalyticsTest } from './pages/Analytics-test'
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
         <Route path="/suppliers" element={<SupplierManagement />} />
         <Route path="/workers" element={<WorkerManagement />} />
         <Route path="/analytics" element={<Analytics />} />
+        <Route path="/analytics-test" element={<AnalyticsTest />} />
       </Routes>
     </Layout>
   )
