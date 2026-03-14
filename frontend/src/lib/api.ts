@@ -94,7 +94,18 @@ export const supplierApi = {
   getByCategory: (category: string) => api.get(`/supplier/by-category/${category}`),
 }
 
-// Worker API
+// Analytics API
+export const analyticsApi = {
+  getDashboard: (params?: any) => api.get('/analytics/dashboard', { params }),
+  getWorkerAnalytics: (params?: any) => api.get('/analytics/workers', { params }),
+  getFinancialAnalytics: (params?: any) => api.get('/analytics/financial', { params }),
+}
+
+// Search API
+export const searchApi = {
+  searchWorkers: (query: string) => api.get('/workers/search', { params: { query } }),
+  searchTransactions: (query: string) => api.get('/transactions/search', { params: { query } }),
+}
 export const workerApi = {
   getWorkers: (params?: any) => api.get('/worker', { params }),
   getWorker: (id: string) => api.get(`/worker/${id}`),
