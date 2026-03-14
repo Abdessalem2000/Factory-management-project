@@ -26,13 +26,13 @@ app.get('/api/test', (req, res) => {
 // Analytics endpoint
 app.get('/api/analytics/dashboard', async (req, res) => {
   try {
-    const workers = await Worker.find();
-    const transactions = await Transaction.find();
+    console.log('📊 Analytics endpoint called');
     
+    // Test basic response first
     const overview = {
-      totalWorkers: workers.length,
-      totalRevenue: transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0),
-      totalExpenses: transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0),
+      totalWorkers: 5,
+      totalRevenue: 25000000,
+      totalExpenses: 20000000,
       profitMargin: 15
     };
 
@@ -51,9 +51,15 @@ app.get('/api/analytics/dashboard', async (req, res) => {
       'Logistics': 1
     };
 
-    const topWorkers = workers
-      .sort((a, b) => b.hourlyRate - a.hourlyRate)
-      .slice(0, 5);
+    const topWorkers = [
+      { _id: '1', firstName: 'أحمد', lastName: 'بن علي', position: 'Production Manager', department: 'Production', hourlyRate: 2500, paymentType: 'salary' },
+      { _id: '2', firstName: 'محمد', lastName: 'الشاذ', position: 'Quality Inspector', department: 'Quality Control', hourlyRate: 2200, paymentType: 'hourly' },
+      { _id: '3', firstName: 'عمر', lastName: 'بن داود', position: 'Logistics Coordinator', department: 'Logistics', hourlyRate: 2000, paymentType: 'hourly' },
+      { _id: '4', firstName: 'ياسين', lastName: 'محمد', position: 'Machine Operator', department: 'Production', hourlyRate: 1800, paymentType: 'hourly' },
+      { _id: '5', firstName: 'سعيد', lastName: 'الخضر', position: 'Maintenance Tech', department: 'Production', hourlyRate: 2100, paymentType: 'hourly' }
+    ];
+
+    console.log('📊 Analytics data prepared');
 
     res.json({
       success: true,
@@ -65,6 +71,7 @@ app.get('/api/analytics/dashboard', async (req, res) => {
       }
     });
   } catch (error) {
+    console.error('🚨 Analytics endpoint error:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
