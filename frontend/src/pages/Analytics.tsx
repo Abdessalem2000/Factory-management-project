@@ -15,12 +15,20 @@ import {
 
 export function Analytics() {
   const [timeRange, setTimeRange] = useState('6months')
+  const [debugInfo, setDebugInfo] = useState({})
 
   const { data: dashboardData, isLoading } = useQuery({
     queryKey: ['analytics-dashboard', timeRange],
     queryFn: async () => {
       console.log('🔍 Fetching analytics data...')
       console.log('🌐 API URL:', import.meta.env.VITE_API_URL)
+      console.log('🌐 All env vars:', import.meta.env)
+      
+      setDebugInfo({
+        apiUrl: import.meta.env.VITE_API_URL,
+        nodeEnv: import.meta.env.VITE_NODE_ENV,
+        allEnv: Object.keys(import.meta.env).filter(key => key.startsWith('VITE_'))
+      })
       
       try {
         const response = await analyticsApi.getDashboard()
@@ -60,6 +68,16 @@ export function Analytics() {
 
   return (
     <div className="space-y-6 p-6">
+      {/* DEBUG INFO */}
+      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+        <h3 className="text-red-800 font-bold mb-2">DEBUG INFO</h3>
+        <div className="text-sm text-red-700">
+          <p><strong>API URL:</strong> {debugInfo.apiUrl || 'NOT SET'}</p>
+          <p><strong>Node Env:</strong> {debugInfo.nodeEnv || 'NOT SET'}</p>
+          <p><strong>All VITE_ vars:</strong> {JSON.stringify(debugInfo.allEnv)}</p>
+        </div>
+      </div>
+
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Analytics Dashboard</h1>
