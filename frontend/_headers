@@ -1,0 +1,3 @@
+# Security headers for Factory Management Platform
+# Content Security Policy
+Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://factory-management-project.onrender.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://factory-management-project.onrender.com https://*.netlify.app; frame-ancestors 'none';
