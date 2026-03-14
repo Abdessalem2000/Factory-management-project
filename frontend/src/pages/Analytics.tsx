@@ -9,8 +9,7 @@ import {
   DollarSign, 
   BarChart3,
   PieChart,
-  Activity,
-  Search
+  Activity
 } from 'lucide-react'
 
 export function Analytics() {
@@ -28,14 +27,6 @@ export function Analytics() {
     queryKey: ['analytics-workers'],
     queryFn: async () => {
       const response = await fetch('/api/analytics/workers')
-      return response.json()
-    }
-  })
-
-  const { data: financialAnalytics } = useQuery({
-    queryKey: ['analytics-financial'],
-    queryFn: async () => {
-      const response = await fetch('/api/analytics/financial')
       return response.json()
     }
   })
@@ -138,7 +129,7 @@ export function Analytics() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {monthlyTrend.slice(-6).map((month, index) => (
+              {monthlyTrend.slice(-6).map((month: any, index: number) => (
                 <div key={index} className="flex items-center justify-between">
                   <span className="text-sm font-medium">{month.month}</span>
                   <div className="flex items-center gap-4">
@@ -172,7 +163,7 @@ export function Analytics() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {Object.entries(departmentBreakdown).map(([dept, count]) => (
+              {Object.entries(departmentBreakdown).map(([dept, count]: [string, any]) => (
                 <div key={dept} className="flex items-center justify-between">
                   <span className="text-sm font-medium">{dept}</span>
                   <div className="flex items-center gap-2">
@@ -201,7 +192,7 @@ export function Analytics() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {topWorkers.map((worker, index) => (
+            {topWorkers.map((worker: any, index: number) => (
               <div key={worker._id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-sm font-bold text-blue-600">
@@ -236,9 +227,9 @@ export function Analytics() {
             <CardContent>
               <div className="space-y-2">
                 {Object.entries(workerAnalytics.data.skillsAnalysis || {})
-                  .sort(([,a], [,b]) => b - a)
+                  .sort(([,a]: [string, any], [,b]: [string, any]) => (b as number) - (a as number))
                   .slice(0, 5)
-                  .map(([skill, count]) => (
+                  .map(([skill, count]: [string, any]) => (
                     <div key={skill} className="flex justify-between items-center">
                       <span className="text-sm">{skill}</span>
                       <span className="text-sm font-bold">{count} workers</span>
@@ -254,7 +245,7 @@ export function Analytics() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                {Object.entries(workerAnalytics.data.paymentTypes || {}).map(([type, count]) => (
+                {Object.entries(workerAnalytics.data.paymentTypes || {}).map(([type, count]: [string, any]) => (
                   <div key={type} className="flex justify-between items-center">
                     <span className="text-sm capitalize">{type.replace('_', ' ')}</span>
                     <span className="text-sm font-bold">{count} workers</span>

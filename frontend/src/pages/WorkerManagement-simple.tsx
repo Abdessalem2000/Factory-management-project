@@ -18,12 +18,19 @@ export function WorkerManagement() {
   // Debug logging
   console.log('Workers data:', workersData)
   console.log('Workers array:', workers)
-  console.log('Loading:', isLoading)
-  console.log('Error:', error)
 
   if (isLoading) return <div className="p-8">Loading...</div>
   
-  if (error) return <div className="p-8">Error: {error.message}</div>
+  if (error && 'message' in error) {
+    return (
+      <div className="p-8">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <h3 className="text-red-800 font-medium">Error loading workers</h3>
+          <p className="text-red-600 text-sm mt-1">{(error as any).message}</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6 p-6">
