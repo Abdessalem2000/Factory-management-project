@@ -155,6 +155,8 @@ app.get('/api/worker', (req, res) => {
         status: 'active',
         hourlyRate: 3200, // 3,200 DZD/hour
         currency: 'DZD',
+        paymentType: 'hourly',
+        hireDate: new Date('2023-01-15'),
         skills: ['Assembly', 'Quality Control']
       },
       {
@@ -168,6 +170,8 @@ app.get('/api/worker', (req, res) => {
         status: 'active',
         hourlyRate: 3500, // 3,500 DZD/hour
         currency: 'DZD',
+        paymentType: 'hourly',
+        hireDate: new Date('2023-03-20'),
         skills: ['Machine Operation', 'Maintenance']
       }
     ],
