@@ -98,10 +98,10 @@ export function Analytics() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {formatCurrency(overview.totalIncome || 0, 'DZD')}
+              {formatCurrency(overview.totalRevenue || 0, 'DZD')}
             </div>
             <p className="text-xs text-muted-foreground">
-              {overview.totalTransactions || 0} transactions
+              {overview.totalWorkers || 0} workers
             </p>
           </CardContent>
         </Card>
@@ -128,7 +128,7 @@ export function Analytics() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {formatCurrency(overview.netProfit || 0, 'DZD')}
+              {formatCurrency((overview.totalRevenue || 0) - (overview.totalExpenses || 0), 'DZD')}
             </div>
             <p className="text-xs text-muted-foreground">
               {overview.profitMargin || 0}% margin
