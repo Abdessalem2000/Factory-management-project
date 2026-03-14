@@ -26,9 +26,13 @@ app.get('/api/test', (req, res) => {
   });
 });
 
-// Production stats endpoint
+// Production stats endpoint - OPTIMIZED
 app.get('/api/production/stats/overview', (req, res) => {
   console.log('📊 Production stats endpoint called');
+  
+  // Add caching headers for better performance
+  res.set('Cache-Control', 'public, max-age=300'); // Cache for 5 minutes
+  res.set('ETag', '"production-stats-v1"');
   
   const stats = {
     totalOrders: 24,
@@ -45,9 +49,13 @@ app.get('/api/production/stats/overview', (req, res) => {
   });
 });
 
-// Financial summary endpoint
+// Financial summary endpoint - OPTIMIZED
 app.get('/api/financial/summary/overview', (req, res) => {
   console.log('💰 Financial summary endpoint called');
+  
+  // Add caching headers for better performance
+  res.set('Cache-Control', 'public, max-age=300'); // Cache for 5 minutes
+  res.set('ETag', '"financial-summary-v1"');
   
   const summary = {
     totalIncome: 25000000,
@@ -63,9 +71,13 @@ app.get('/api/financial/summary/overview', (req, res) => {
   });
 });
 
-// Worker stats endpoint
+// Worker stats endpoint - OPTIMIZED
 app.get('/api/worker/stats/overview', (req, res) => {
   console.log('👥 Worker stats endpoint called');
+  
+  // Add caching headers for better performance
+  res.set('Cache-Control', 'public, max-age=300'); // Cache for 5 minutes
+  res.set('ETag', '"worker-stats-v1"');
   
   const stats = {
     totalWorkers: 5,
@@ -81,9 +93,13 @@ app.get('/api/worker/stats/overview', (req, res) => {
   });
 });
 
-// Supplier stats endpoint
+// Supplier stats endpoint - OPTIMIZED
 app.get('/api/supplier/stats/overview', (req, res) => {
   console.log('🏭 Supplier stats endpoint called');
+  
+  // Add caching headers for better performance
+  res.set('Cache-Control', 'public, max-age=300'); // Cache for 5 minutes
+  res.set('ETag', '"supplier-stats-v1"');
   
   const stats = {
     totalSuppliers: 8,
@@ -99,9 +115,13 @@ app.get('/api/supplier/stats/overview', (req, res) => {
   });
 });
 
-// Analytics endpoint - SIMPLE VERSION
+// Analytics endpoint - OPTIMIZED
 app.get('/api/analytics/dashboard', (req, res) => {
   console.log('📊 Analytics endpoint called');
+  
+  // Add caching headers for better performance
+  res.set('Cache-Control', 'public, max-age=600'); // Cache for 10 minutes
+  res.set('ETag', '"analytics-dashboard-v1"');
   
   // Simple static data - no database calls
   const analyticsData = {
