@@ -327,3 +327,5 @@ export function Analytics() {
     </div>
   )
 }
+
+export const Analytics = AnalyticsPage
