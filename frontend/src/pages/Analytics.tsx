@@ -19,16 +19,33 @@ export function Analytics() {
   const { data: dashboardData, isLoading } = useQuery({
     queryKey: ['analytics-dashboard', timeRange],
     queryFn: async () => {
-      const response = await analyticsApi.getDashboard()
-      return response
+      console.log('🔍 Fetching analytics data...')
+      console.log('🌐 API URL:', import.meta.env.VITE_API_URL)
+      
+      try {
+        const response = await analyticsApi.getDashboard()
+        console.log('✅ Analytics response:', response)
+        return response
+      } catch (error) {
+        console.error('❌ Analytics error:', error)
+        throw error
+      }
     }
   })
 
   const { data: workerAnalytics } = useQuery({
     queryKey: ['analytics-workers'],
     queryFn: async () => {
-      const response = await analyticsApi.getWorkerAnalytics()
-      return response
+      console.log('🔍 Fetching worker analytics...')
+      
+      try {
+        const response = await analyticsApi.getWorkerAnalytics()
+        console.log('✅ Worker analytics response:', response)
+        return response
+      } catch (error) {
+        console.error('❌ Worker analytics error:', error)
+        throw error
+      }
     }
   })
 
@@ -38,6 +55,8 @@ export function Analytics() {
   const monthlyTrend = dashboardData?.data?.monthlyTrend || []
   const departmentBreakdown = dashboardData?.data?.departmentBreakdown || {}
   const topWorkers = dashboardData?.data?.topWorkers || []
+
+  console.log('📊 Processed data:', { overview, monthlyTrend, departmentBreakdown, topWorkers })
 
   return (
     <div className="space-y-6 p-6">

@@ -9,7 +9,10 @@ const app = express();
 const PORT = process.env.PORT || 10003; // NEW PORT TO FORCE DEPLOY
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: ['https://factory-management-project-btx5.vercel.app', 'https://*.netlify.app'],
+  credentials: true
+}));
 app.use(express.json());
 
 // Test endpoint
