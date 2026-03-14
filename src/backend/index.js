@@ -694,13 +694,23 @@ app.get('/api/supplier', (req, res) => {
   });
 });
 
+// Force redeploy endpoint
+app.get('/api/version-check', (req, res) => {
+  res.json({
+    version: '2.2-FINAL-UPDATE',
+    timestamp: new Date().toISOString(),
+    features: ['Analytics Dashboard', 'Visual Charts', 'Auto-Seeding', 'Enhanced UI'],
+    status: 'ALL_FEATURES_ENABLED'
+  });
+});
+
 // Root endpoint
 app.get('/', (req, res) => {
   res.json({
     message: 'Factory Management Platform API',
     status: 'Running with MongoDB - Version 2.2 - FINAL UPDATE',
     currency: 'DZD - Algerian Dinar',
-    endpoints: ['/api/health', '/api/worker', '/api/financial', '/api/production', '/api/supplier', '/api/analytics/dashboard'],
+    endpoints: ['/api/health', '/api/worker', '/api/financial', '/api/production', '/api/supplier', '/api/analytics/dashboard', '/api/version-check'],
     timestamp: new Date().toISOString(),
     features: ['Analytics Dashboard', 'Visual Charts', 'Auto-Seeding', 'Enhanced UI']
   });
