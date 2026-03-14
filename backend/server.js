@@ -26,6 +26,79 @@ app.get('/api/test', (req, res) => {
   });
 });
 
+// Production stats endpoint
+app.get('/api/production/stats/overview', (req, res) => {
+  console.log('📊 Production stats endpoint called');
+  
+  const stats = {
+    totalOrders: 24,
+    completedOrders: 18,
+    pendingOrders: 4,
+    failedOrders: 2,
+    averageCompletionTime: 2.5,
+    efficiency: 75
+  };
+
+  res.json({
+    success: true,
+    data: stats
+  });
+});
+
+// Financial summary endpoint
+app.get('/api/financial/summary/overview', (req, res) => {
+  console.log('💰 Financial summary endpoint called');
+  
+  const summary = {
+    totalIncome: 25000000,
+    totalExpenses: 20000000,
+    netProfit: 5000000,
+    profitMargin: 20,
+    transactionCount: 45
+  };
+
+  res.json({
+    success: true,
+    data: summary
+  });
+});
+
+// Worker stats endpoint
+app.get('/api/worker/stats/overview', (req, res) => {
+  console.log('👥 Worker stats endpoint called');
+  
+  const stats = {
+    totalWorkers: 5,
+    activeWorkers: 4,
+    departments: ['Production', 'Quality Control', 'Logistics'],
+    averageHourlyRate: 2120,
+    totalSalaryCost: 18000000
+  };
+
+  res.json({
+    success: true,
+    data: stats
+  });
+});
+
+// Supplier stats endpoint
+app.get('/api/supplier/stats/overview', (req, res) => {
+  console.log('🏭 Supplier stats endpoint called');
+  
+  const stats = {
+    totalSuppliers: 8,
+    activeSuppliers: 6,
+    averageRating: 4.2,
+    totalOrders: 15,
+    categories: ['Raw Materials', 'Equipment', 'Services']
+  };
+
+  res.json({
+    success: true,
+    data: stats
+  });
+});
+
 // Analytics endpoint - SIMPLE VERSION
 app.get('/api/analytics/dashboard', (req, res) => {
   console.log('📊 Analytics endpoint called');
@@ -65,6 +138,125 @@ app.get('/api/analytics/dashboard', (req, res) => {
 
   console.log('📊 Analytics data sent successfully');
   res.json(analyticsData);
+});
+
+// Generic data endpoints
+app.get('/api/production', (req, res) => {
+  console.log('📋 Production endpoint called');
+  
+  const productionData = {
+    success: true,
+    data: [
+      {
+        _id: '1',
+        orderNumber: 'PO-2024-001',
+        product: 'Steel Components',
+        quantity: 500,
+        status: 'completed',
+        deadline: '2024-03-15',
+        priority: 'high'
+      },
+      {
+        _id: '2',
+        orderNumber: 'PO-2024-002',
+        product: 'Aluminum Parts',
+        quantity: 300,
+        status: 'in-progress',
+        deadline: '2024-03-20',
+        priority: 'medium'
+      }
+    ]
+  };
+
+  res.json(productionData);
+});
+
+app.get('/api/financial', (req, res) => {
+  console.log('💰 Financial endpoint called');
+  
+  const financialData = {
+    success: true,
+    data: [
+      {
+        _id: '1',
+        type: 'income',
+        amount: 25000000,
+        description: 'Product Sales',
+        date: '2024-03-01',
+        category: 'sales'
+      },
+      {
+        _id: '2',
+        type: 'expense',
+        amount: 20000000,
+        description: 'Raw Materials',
+        date: '2024-03-01',
+        category: 'materials'
+      }
+    ]
+  };
+
+  res.json(financialData);
+});
+
+app.get('/api/worker', (req, res) => {
+  console.log('👥 Worker endpoint called');
+  
+  const workerData = {
+    success: true,
+    data: [
+      {
+        _id: '1',
+        firstName: 'أحمد',
+        lastName: 'بن علي',
+        position: 'Production Manager',
+        department: 'Production',
+        hourlyRate: 2500,
+        paymentType: 'salary',
+        status: 'active'
+      },
+      {
+        _id: '2',
+        firstName: 'محمد',
+        lastName: 'الشاذ',
+        position: 'Quality Inspector',
+        department: 'Quality Control',
+        hourlyRate: 2200,
+        paymentType: 'hourly',
+        status: 'active'
+      }
+    ]
+  };
+
+  res.json(workerData);
+});
+
+app.get('/api/supplier', (req, res) => {
+  console.log('🏭 Supplier endpoint called');
+  
+  const supplierData = {
+    success: true,
+    data: [
+      {
+        _id: '1',
+        name: 'Algerian Steel Co.',
+        category: 'Raw Materials',
+        rating: 4.5,
+        totalOrders: 8,
+        status: 'active'
+      },
+      {
+        _id: '2',
+        name: 'Industrial Parts Ltd.',
+        category: 'Equipment',
+        rating: 4.0,
+        totalOrders: 5,
+        status: 'active'
+      }
+    ]
+  };
+
+  res.json(supplierData);
 });
 
 // Health check
