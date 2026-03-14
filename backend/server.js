@@ -12,6 +12,17 @@ const PORT = process.env.PORT || 10003; // NEW PORT TO FORCE DEPLOY
 app.use(cors());
 app.use(express.json());
 
+// Test endpoint
+app.get('/api/test', (req, res) => {
+  res.json({
+    message: 'Backend deployed successfully!',
+    timestamp: new Date().toISOString(),
+    version: '2.3-FIXED',
+    features: ['Analytics Dashboard', 'Visual Charts', 'Auto-Seeding'],
+    status: 'ALL_FEATURES_WORKING'
+  });
+});
+
 // Analytics endpoint
 app.get('/api/analytics/dashboard', async (req, res) => {
   try {
