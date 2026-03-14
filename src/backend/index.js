@@ -3,9 +3,10 @@ const cors = require('cors');
 const connectDB = require('./database');
 const Worker = require('./models/Worker');
 const Transaction = require('./models/Transaction');
+const forceDeploy = require('./force-deploy'); // Force deployment
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 10000;
 
 // Middleware
 app.use(cors());
