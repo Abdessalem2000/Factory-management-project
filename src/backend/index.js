@@ -4,9 +4,10 @@ const connectDB = require('./database');
 const Worker = require('./models/Worker');
 const Transaction = require('./models/Transaction');
 const forceDeploy = require('./force-deploy'); // Force deployment
+const emergencyDeploy = require('./emergency-deploy'); // EMERGENCY DEPLOY
 
 const app = express();
-const PORT = process.env.PORT || 10001; // CRITICAL CHANGE TO FORCE REDEPLOY
+const PORT = process.env.PORT || 10002; // EMERGENCY PORT CHANGE
 
 // Middleware
 app.use(cors());
