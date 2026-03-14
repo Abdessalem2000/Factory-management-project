@@ -9,10 +9,15 @@ import { errorHandler } from './middleware/errorHandler';
 import { notFound } from './middleware/notFound';
 
 // Import routes
+import authRoutes from './routes/auth';
+import mobileRoutes from './routes/mobile';
 import productionRoutes from './routes/production';
 import financialRoutes from './routes/financial';
 import supplierRoutes from './routes/supplier';
 import workerRoutes from './routes/worker';
+import reportRoutes from './routes/reports';
+import notificationRoutes from './routes/notifications';
+import analyticsRoutes from './routes/analytics';
 
 // Load environment variables
 dotenv.config();
@@ -49,10 +54,15 @@ app.get('/api/health', (req, res) => {
 });
 
 // API routes
+app.use('/api/auth', authRoutes);
+app.use('/api/mobile', mobileRoutes);
 app.use('/api/production', productionRoutes);
 app.use('/api/financial', financialRoutes);
 app.use('/api/supplier', supplierRoutes);
 app.use('/api/worker', workerRoutes);
+app.use('/api/reports', reportRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 // Error handling middleware
 app.use(notFound);
