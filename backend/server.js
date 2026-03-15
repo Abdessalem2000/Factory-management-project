@@ -10,10 +10,20 @@ const PORT = process.env.PORT || 10003; // NEW PORT TO FORCE DEPLOY
 
 // Middleware
 app.use(cors({
-  origin: ['https://factory-management-project-btx5.vercel.app', 'https://*.netlify.app'],
-  credentials: true
+  origin: [
+    'https://factory-management-platform.netlify.app',
+    'https://factory-management-project-btx5.vercel.app',
+    'https://*.netlify.app',
+    'http://localhost:5173'
+  ],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: false
 }));
 app.use(express.json());
+
+// Handle preflight requests
+app.options('*', cors());
 
 // Test endpoint
 app.get('/api/test', (req, res) => {
