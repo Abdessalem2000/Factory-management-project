@@ -54,7 +54,11 @@ export function Analytics() {
         console.log('🔍 Response.data:', response?.data)
         console.log('🔍 Response.data type:', typeof response?.data)
         
-        return response
+        // IMPORTANT: Return response.data.data, not response
+        const workerData = response?.data?.data || response?.data || {}
+        console.log('🔍 Final worker data:', workerData)
+        
+        return workerData
       } catch (error) {
         console.error('❌ Worker analytics error:', error)
         throw error
