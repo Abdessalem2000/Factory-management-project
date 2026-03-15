@@ -231,6 +231,16 @@ app.get('/api/analytics/workers', (req, res) => {
     success: true,
     data: {
       totalWorkers: 5,
+      skillsAnalysis: {
+        "Machine Operation": 2,
+        "Quality Control": 1,
+        "Logistics": 1,
+        "Production Management": 1
+      },
+      paymentTypes: {
+        "salary": 1,
+        "hourly": 4
+      },
       workers: [
         {
           id: 1,
