@@ -112,9 +112,9 @@ export function Analytics() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{workerAnalytics?.data?.totalWorkers || overview.totalWorkers || 0}</div>
+            <div className="text-2xl font-bold">{workerAnalytics?.totalWorkers || overview.totalWorkers || 0}</div>
             <p className="text-xs text-muted-foreground">
-              {workerAnalytics?.data?.totalWorkers || overview.activeWorkers || 0} active
+              {workerAnalytics?.totalWorkers || overview.totalWorkers || 0} workers
             </p>
           </CardContent>
         </Card>
@@ -228,7 +228,7 @@ export function Analytics() {
           <CardContent>
             <div className="space-y-4">
               {Object.entries(departmentBreakdown).map(([dept, count]: [string, any]) => {
-                const percentage = workerAnalytics?.data?.totalWorkers ? (count / workerAnalytics.data.totalWorkers) * 100 : 0;
+                const percentage = workerAnalytics?.totalWorkers ? (count / workerAnalytics.totalWorkers) * 100 : 0;
                 return (
                   <div key={dept} className="space-y-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
                     <div className="flex justify-between items-center">
@@ -301,7 +301,7 @@ export function Analytics() {
       </Card>
 
       {/* Worker Analytics */}
-      {workerAnalytics?.data?.skillsAnalysis && (
+      {workerAnalytics?.skillsAnalysis && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
@@ -309,7 +309,7 @@ export function Analytics() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {Object.entries(workerAnalytics.data.skillsAnalysis || {})
+                {Object.entries(workerAnalytics?.skillsAnalysis || {})
                   .sort(([,a]: [string, any], [,b]: [string, any]) => (b as number) - (a as number))
                   .slice(0, 5)
                   .map(([skill, count]: [string, any], index: number) => (
@@ -343,7 +343,7 @@ export function Analytics() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {Object.entries(workerAnalytics?.data?.paymentTypes || {}).map(([type, count]: [string, any]) => (
+                {Object.entries(workerAnalytics?.paymentTypes || {}).map(([type, count]: [string, any]) => (
                   <div key={type} className="flex justify-between items-center p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200 hover:shadow-md transition-all duration-200">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center text-white shadow-md">
