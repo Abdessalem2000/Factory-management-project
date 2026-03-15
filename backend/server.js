@@ -160,6 +160,69 @@ app.get('/api/analytics/dashboard', (req, res) => {
   res.json(analyticsData);
 });
 
+// Worker endpoint
+app.get('/api/worker', (req, res) => {
+  console.log('👥 Worker endpoint called');
+  
+  const workerData = {
+    success: true,
+    data: [
+      {
+        _id: '1',
+        firstName: 'أحمد',
+        lastName: 'بن علي',
+        position: 'Production Manager',
+        department: 'Production',
+        hourlyRate: 2500,
+        paymentType: 'salary',
+        status: 'active'
+      },
+      {
+        _id: '2',
+        firstName: 'محمد',
+        lastName: 'الشاذ',
+        position: 'Quality Inspector',
+        department: 'Quality Control',
+        hourlyRate: 2200,
+        paymentType: 'hourly',
+        status: 'active'
+      },
+      {
+        _id: '3',
+        firstName: 'عمر',
+        lastName: 'بن داود',
+        position: 'Logistics Coordinator',
+        department: 'Logistics',
+        hourlyRate: 2000,
+        paymentType: 'hourly',
+        status: 'active'
+      },
+      {
+        _id: '4',
+        firstName: 'ياسين',
+        lastName: 'محمد',
+        position: 'Machine Operator',
+        department: 'Production',
+        hourlyRate: 1800,
+        paymentType: 'hourly',
+        status: 'active'
+      },
+      {
+        _id: '5',
+        firstName: 'سعيد',
+        lastName: 'الخضر',
+        position: 'Maintenance Tech',
+        department: 'Production',
+        hourlyRate: 2100,
+        paymentType: 'hourly',
+        status: 'active'
+      }
+    ]
+  };
+
+  res.json(workerData);
+});
+
 // Generic data endpoints
 app.get('/api/production', (req, res) => {
   console.log('📋 Production endpoint called');

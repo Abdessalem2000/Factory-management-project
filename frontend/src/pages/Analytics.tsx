@@ -26,7 +26,7 @@ export function Analytics() {
       
       setDebugInfo({
         apiUrl: import.meta.env.VITE_API_URL,
-        nodeEnv: import.meta.env.VITE_NODE_ENV,
+        nodeEnv: import.meta.env.VITE_NODE_ENV || 'production', // Default to production
         allEnv: Object.keys(import.meta.env).filter(key => key.startsWith('VITE_'))
       })
       
