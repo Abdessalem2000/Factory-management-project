@@ -301,7 +301,7 @@ export function Analytics() {
       </Card>
 
       {/* Worker Analytics */}
-      {workerAnalytics?.data && (
+      {workerAnalytics?.data?.skillsAnalysis && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
@@ -343,7 +343,7 @@ export function Analytics() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {Object.entries(workerAnalytics.data.paymentTypes || {}).map(([type, count]: [string, any]) => (
+                {Object.entries(workerAnalytics?.data?.paymentTypes || {}).map(([type, count]: [string, any]) => (
                   <div key={type} className="flex justify-between items-center p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200 hover:shadow-md transition-all duration-200">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center text-white shadow-md">
