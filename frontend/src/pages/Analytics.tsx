@@ -298,70 +298,42 @@ export function Analytics() {
           </Card>
 
           {workerAnalytics?.skillsAnalysis && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card className="bg-white/10 backdrop-blur-md border border-white/20">
-                <CardHeader>
-                  <CardTitle className="text-white">Skills Distribution</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {Object.entries(workerAnalytics?.skillsAnalysis || {})
-                      .sort(([,a]: [string, any], [,b]: [string, any]) => (b as number) - (a as number))
-                      .slice(0, 5)
-                      .map(([skill, count]: [string, any], index: number) => (
-                        <div key={skill} className="flex justify-between items-center p-3 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition-all duration-200">
-                          <div className="flex items-center gap-3">
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white shadow-md ${
-                              index === 0 ? 'bg-gradient-to-br from-blue-500 to-blue-700' :
-                              index === 1 ? 'bg-gradient-to-br from-indigo-500 to-indigo-700' :
-                              index === 2 ? 'bg-gradient-to-br from-purple-500 to-purple-700' :
-                              'bg-gradient-to-br from-gray-500 to-gray-700'
-                            }`}>
-                              {index + 1}
-                            </div>
-                            <span className="text-sm font-semibold text-white">{skill}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-lg font-bold text-blue-400">{count}</span>
-                            <span className="text-xs text-gray-300 bg-blue-400/20 px-2 py-1 rounded-full">
-                              workers
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-white/10 backdrop-blur-md border border-white/20">
-                <CardHeader>
-                  <CardTitle className="text-white">Payment Types</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {Object.entries(workerAnalytics?.paymentTypes || {}).map(([type, count]: [string, any]) => (
-                      <div key={type} className="flex justify-between items-center p-3 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition-all duration-200">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card className="bg-white/10 backdrop-blur-md border border-white/20">
+              <CardHeader>
+                <CardTitle className="text-white">Skills Distribution</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {Object.entries(workerAnalytics?.skillsAnalysis || {})
+                    .sort(([,a]: [string, any], [,b]: [string, any]) => (b as number) - (a as number))
+                    .slice(0, 5)
+                    .map(([skill, count]: [string, any], index: number) => (
+                      <div key={skill} className="flex justify-between items-center p-3 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition-all duration-200">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center text-white shadow-md">
-                            {type === 'hourly' ? '⏱️' : type === 'salary' ? '💰' : '📋'}
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white shadow-md ${
+                            index === 0 ? 'bg-gradient-to-br from-blue-500 to-blue-700' :
+                            index === 1 ? 'bg-gradient-to-br from-indigo-500 to-indigo-700' :
+                            index === 2 ? 'bg-gradient-to-br from-purple-500 to-purple-700' :
+                            'bg-gradient-to-br from-gray-500 to-gray-700'
+                          }`}>
+                            {index + 1}
                           </div>
-                          <span className="text-sm font-semibold text-white capitalize">
-                            {type.replace('_', ' ')}
-                          </span>
+                          <span className="text-sm font-semibold text-white">{skill}</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-lg font-bold text-green-400">{count}</span>
-                          <span className="text-xs text-gray-300 bg-green-400/20 px-2 py-1 rounded-full">
+                          <span className="text-lg font-bold text-blue-400">{count}</span>
+                          <span className="text-xs text-gray-300 bg-blue-400/20 px-2 py-1 rounded-full">
                             workers
                           </span>
                         </div>
                       </div>
                     ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}  
         </div>
       </div>
     </div>
