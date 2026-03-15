@@ -223,6 +223,100 @@ app.get('/api/worker', (req, res) => {
   res.json(workerData);
 });
 
+// Analytics workers endpoint
+app.get('/api/analytics/workers', (req, res) => {
+  console.log('👥 Analytics workers endpoint called');
+  
+  const workerAnalyticsData = {
+    success: true,
+    data: {
+      totalWorkers: 5,
+      workers: [
+        {
+          id: 1,
+          name: "أحمد بن علي",
+          status: "active",
+          department: "الإنتاج",
+          position: "مشغل آلة",
+          performance: 95,
+          hourlyRate: 2500,
+          paymentType: "salary"
+        },
+        {
+          id: 2,
+          name: "محمد الشاذ",
+          status: "active",
+          department: "الصيانة",
+          position: "مفتش جودة",
+          performance: 88,
+          hourlyRate: 2200,
+          paymentType: "hourly"
+        },
+        {
+          id: 3,
+          name: "عمر بن داود",
+          status: "active",
+          department: "الخدمات اللوجستية",
+          position: "منسق لوجستي",
+          performance: 92,
+          hourlyRate: 2000,
+          paymentType: "hourly"
+        },
+        {
+          id: 4,
+          name: "ياسين محمد",
+          status: "active",
+          department: "الإنتاج",
+          position: "مشغل آلة",
+          performance: 85,
+          hourlyRate: 1800,
+          paymentType: "hourly"
+        },
+        {
+          id: 5,
+          name: "سعيد الخضر",
+          status: "active",
+          department: "الإنتاج",
+          position: "فني صيانة",
+          performance: 90,
+          hourlyRate: 2100,
+          paymentType: "hourly"
+        }
+      ],
+      topPerformers: [
+        {
+          id: 1,
+          name: "أحمد بن علي",
+          performance: 95,
+          department: "الإنتاج",
+          position: "مشغل آلة"
+        },
+        {
+          id: 2,
+          name: "محمد الشاذ",
+          performance: 88,
+          department: "الصيانة",
+          position: "مفتش جودة"
+        },
+        {
+          id: 3,
+          name: "عمر بن داود",
+          performance: 92,
+          department: "الخدمات اللوجستية",
+          position: "منسق لوجستي"
+        }
+      ],
+      departmentBreakdown: [
+        { department: "الإنتاج", count: 3 },
+        { department: "الصيانة", count: 2 }
+      ]
+    }
+  };
+
+  console.log('📊 Analytics workers data sent successfully');
+  res.json(workerAnalyticsData);
+});
+
 // Generic data endpoints
 app.get('/api/production', (req, res) => {
   console.log('📋 Production endpoint called');
