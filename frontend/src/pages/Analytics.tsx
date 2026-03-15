@@ -73,7 +73,8 @@ export function Analytics() {
   const departmentBreakdown = dashboardData?.data?.departmentBreakdown || {}
   const topWorkers = dashboardData?.data?.topWorkers || []
 
-  console.log('📊 Processed data:', { overview, monthlyTrend, departmentBreakdown, topWorkers })
+  console.log('📊 Dashboard data:', { overview, monthlyTrend, departmentBreakdown, topWorkers })
+  console.log('👥 Worker analytics data:', workerAnalytics?.data)
 
   return (
     <div className="space-y-6 p-6">
@@ -111,9 +112,9 @@ export function Analytics() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{overview.totalWorkers || 0}</div>
+            <div className="text-2xl font-bold">{workerAnalytics?.data?.totalWorkers || overview.totalWorkers || 0}</div>
             <p className="text-xs text-muted-foreground">
-              {overview.activeWorkers || 0} active
+              {workerAnalytics?.data?.totalWorkers || overview.activeWorkers || 0} active
             </p>
           </CardContent>
         </Card>
@@ -124,11 +125,9 @@ export function Analytics() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {formatCurrency(overview.totalRevenue || 0, 'DZD')}
-            </div>
+            <div className="text-2xl font-bold">{formatCurrency(overview.totalRevenue || 0, 'DZD')}</div>
             <p className="text-xs text-muted-foreground">
-              {overview.totalWorkers || 0} workers
+              {workerAnalytics?.data?.totalWorkers || overview.totalWorkers || 0} workers
             </p>
           </CardContent>
         </Card>
@@ -139,9 +138,7 @@ export function Analytics() {
             <TrendingDown className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {formatCurrency(overview.totalExpenses || 0, 'DZD')}
-            </div>
+            <div className="text-2xl font-bold">{formatCurrency(overview.totalExpenses || 0, 'DZD')}</div>
             <p className="text-xs text-muted-foreground">
               Across all categories
             </p>
@@ -154,9 +151,7 @@ export function Analytics() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {formatCurrency((overview.totalRevenue || 0) - (overview.totalExpenses || 0), 'DZD')}
-            </div>
+            <div className="text-2xl font-bold">{formatCurrency((overview.totalRevenue || 0) - (overview.totalExpenses || 0), 'DZD')}</div>
             <p className="text-xs text-muted-foreground">
               {overview.profitMargin || 0}% margin
             </p>
