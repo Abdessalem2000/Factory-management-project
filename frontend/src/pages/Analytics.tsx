@@ -49,6 +49,11 @@ export function Analytics() {
       try {
         const response = await analyticsApi.getWorkerAnalytics()
         console.log('✅ Worker analytics response:', response)
+        console.log('🔍 Response type:', typeof response)
+        console.log('🔍 Response keys:', Object.keys(response || {}))
+        console.log('🔍 Response.data:', response?.data)
+        console.log('🔍 Response.data type:', typeof response?.data)
+        
         return response
       } catch (error) {
         console.error('❌ Worker analytics error:', error)
