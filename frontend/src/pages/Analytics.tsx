@@ -127,7 +127,7 @@ export function Analytics() {
           <CardContent>
             <div className="text-2xl font-bold">{formatCurrency(overview.totalRevenue || 0, 'DZD')}</div>
             <p className="text-xs text-muted-foreground">
-              {workerAnalytics?.data?.totalWorkers || overview.totalWorkers || 0} workers
+              Total operations
             </p>
           </CardContent>
         </Card>
@@ -228,7 +228,7 @@ export function Analytics() {
           <CardContent>
             <div className="space-y-4">
               {Object.entries(departmentBreakdown).map(([dept, count]: [string, any]) => {
-                const percentage = overview.totalWorkers ? (count / overview.totalWorkers) * 100 : 0;
+                const percentage = workerAnalytics?.data?.totalWorkers ? (count / workerAnalytics.data.totalWorkers) * 100 : 0;
                 return (
                   <div key={dept} className="space-y-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
                     <div className="flex justify-between items-center">
