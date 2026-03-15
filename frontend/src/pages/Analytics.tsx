@@ -75,6 +75,7 @@ export function Analytics() {
 
   console.log('📊 Dashboard data:', { overview, monthlyTrend, departmentBreakdown, topWorkers })
   console.log('👥 Worker analytics data:', workerAnalytics?.data)
+  console.log('📈 Overview analytics >>>', overview)
 
   return (
     <div className="space-y-6 p-6">
