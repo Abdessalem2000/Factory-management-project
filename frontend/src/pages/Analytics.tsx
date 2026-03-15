@@ -78,54 +78,41 @@ export function Analytics() {
   console.log('📈 Overview analytics >>>', overview)
 
   return (
-    <div className="space-y-6 p-6">
-      {/* DEBUG INFO */}
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-        <h3 className="text-red-800 font-bold mb-2">DEBUG INFO</h3>
-        <div className="text-sm text-red-700">
-          <p><strong>API URL:</strong> {debugInfo.apiUrl || 'NOT SET'}</p>
-          <p><strong>Node Env:</strong> {debugInfo.nodeEnv || 'NOT SET'}</p>
-          <p><strong>All VITE_ vars:</strong> {JSON.stringify(debugInfo.allEnv)}</p>
+    <>
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-6">
+        {/* Background Pattern */}
+        <div className="fixed inset-0 opacity-20">
+          <svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+            <g fill="none" fillRule="evenodd">
+              <g fill="#9C92AC" fillOpacity="0.1">
+                <path d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/>
+              </g>
+            </g>
+          </svg>
         </div>
-      </div>
+        
+        <div className="relative z-10 max-w-7xl mx-auto">
+          {/* Header */}
+          <div className="mb-8 text-center">
+            <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 mb-2">
+              Analytics Dashboard
+            </h1>
+            <p className="text-gray-300 text-lg">Comprehensive insights for your factory</p>
+          </div>
+          <div className="mb-6 flex justify-center">
+            <select
+              value={timeRange}
+              onChange={(e) => setTimeRange(e.target.value)}
+              className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:ring-2 focus:ring-blue-500 backdrop-blur-sm"
+            >
+              <option value="6months">Last 6 Months</option>
+              <option value="3months">Last 3 Months</option>
+              <option value="1year">Last Year</option>
+            </select>
+          </div>
 
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Analytics Dashboard</h1>
-          <p className="text-gray-600">Comprehensive insights for your factory</p>
-        </div>
-        <select
-          value={timeRange}
-          onChange={(e) => setTimeRange(e.target.value)}
-          className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="6months">Last 6 Months</option>
-          <option value="3months">Last 3 Months</option>
-          <option value="1year">Last Year</option>
-        </select>
-      </div>
-
-      {/* Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Workers</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{workerAnalytics?.totalWorkers || overview.totalWorkers || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              {workerAnalytics?.totalWorkers || overview.totalWorkers || 0} workers
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Income</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
+          {/* Overview Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="text-2xl font-bold">{formatCurrency(overview.totalRevenue || 0, 'DZD')}</div>
             <p className="text-xs text-muted-foreground">
               Total operations
