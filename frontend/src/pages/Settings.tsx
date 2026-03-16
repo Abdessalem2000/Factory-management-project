@@ -1,14 +1,13 @@
 import { useState } from 'react'
 import { ERPCard, ERPCardHeader, ERPCardTitle, ERPCardContent } from '@/components/ui/ERPCard'
 import Button from '@/components/ui/Button'
-import { Settings, Save, Database, Bell, Shield, Palette } from 'lucide-react'
+import { Settings, Save, Database, Bell, Palette } from 'lucide-react'
 
 export function Settings() {
   const [settings, setSettings] = useState({
     factoryName: 'Factory Manager ERP',
     timezone: 'UTC',
     currency: 'USD',
-    language: 'English',
     emailNotifications: true,
     pushNotifications: false,
     darkMode: false,
@@ -18,6 +17,13 @@ export function Settings() {
   const handleSave = () => {
     console.log('Settings saved:', settings)
     // Add save functionality here
+  }
+
+  const handleInputChange = (field: string, value: any) => {
+    setSettings(prev => ({
+      ...prev,
+      [field]: value
+    }))
   }
 
   return (
@@ -48,7 +54,7 @@ export function Settings() {
               <input
                 type="text"
                 value={settings.factoryName}
-                onChange={(e) => setSettings({...settings, factoryName: e.target.value})}
+                onChange={(e) => handleInputChange('factoryName', e.target.value)}
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
               />
             </div>
@@ -56,7 +62,7 @@ export function Settings() {
               <label className="block text-sm font-medium text-gray-700">Timezone</label>
               <select
                 value={settings.timezone}
-                onChange={(e) => setSettings({...settings, timezone: e.target.value})}
+                onChange={(e) => handleInputChange('timezone', e.target.value)}
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
               >
                 <option value="UTC">UTC</option>
@@ -69,7 +75,7 @@ export function Settings() {
               <label className="block text-sm font-medium text-gray-700">Currency</label>
               <select
                 value={settings.currency}
-                onChange={(e) => setSettings({...settings, currency: e.target.value})}
+                onChange={(e) => handleInputChange('currency', e.target.value)}
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
               >
                 <option value="USD">USD ($)</option>
@@ -96,7 +102,7 @@ export function Settings() {
               <input
                 type="checkbox"
                 checked={settings.emailNotifications}
-                onChange={(e) => setSettings({...settings, emailNotifications: e.target.checked})}
+                onChange={(e) => handleInputChange('emailNotifications', e.target.checked)}
                 className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
               />
               <span className="ml-2 text-sm text-gray-700">Email Notifications</span>
@@ -105,7 +111,7 @@ export function Settings() {
               <input
                 type="checkbox"
                 checked={settings.pushNotifications}
-                onChange={(e) => setSettings({...settings, pushNotifications: e.target.checked})}
+                onChange={(e) => handleInputChange('pushNotifications', e.target.checked)}
                 className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
               />
               <span className="ml-2 text-sm text-gray-700">Push Notifications</span>
@@ -128,7 +134,7 @@ export function Settings() {
               <input
                 type="checkbox"
                 checked={settings.darkMode}
-                onChange={(e) => setSettings({...settings, darkMode: e.target.checked})}
+                onChange={(e) => handleInputChange('darkMode', e.target.checked)}
                 className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
               />
               <span className="ml-2 text-sm text-gray-700">Dark Mode</span>
@@ -151,7 +157,7 @@ export function Settings() {
               <input
                 type="checkbox"
                 checked={settings.autoBackup}
-                onChange={(e) => setSettings({...settings, autoBackup: e.target.checked})}
+                onChange={(e) => handleInputChange('autoBackup', e.target.checked)}
                 className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
               />
               <span className="ml-2 text-sm text-gray-700">Automatic Backup</span>
