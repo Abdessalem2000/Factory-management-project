@@ -5,6 +5,9 @@
   "installCommand": "cd frontend && npm install --ignore-audit",
   "framework": "vite",
   "regions": ["iad1"],
+  "env": {
+    "VITE_API_URL": "https://factory-management-project.onrender.com/api"
+  },
   "headers": [
     {
       "source": "/api/(.*)",
@@ -22,6 +25,29 @@
           "value": "Content-Type, Authorization"
         }
       ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }

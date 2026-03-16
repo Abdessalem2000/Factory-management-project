@@ -8,11 +8,13 @@ const Transaction = require('./models/Transaction'); // FIXED PATH
 const app = express();
 const PORT = process.env.PORT || 3001; // RENDER PORT
 
-// Middleware CORS - Configuration optimisée pour Netlify et développement local
+// Middleware CORS - Configuration optimisée pour Vercel et développement local
 const corsOptions = {
   origin: [
-    'https://factory-management-platform.netlify.app',  // Votre URL Netlify
+    'https://factory-management-platform-Abdessalem2000.vercel.app',  // Votre URL Vercel
+    'https://factory-management-platform.netlify.app',
     'https://factory-management-project-btx5.vercel.app',
+    'https://*.vercel.app',
     'https://*.netlify.app',
     'http://localhost:5173'  // Développement local
   ],
