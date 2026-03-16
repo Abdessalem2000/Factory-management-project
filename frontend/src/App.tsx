@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom'
 import { ERPLayout } from './components/ui/ERPLayout'
 import { ERPDashboard } from './pages/ERPDashboard'
+import { RawMaterials } from './pages/RawMaterials'
 import { ProductionOrders } from './pages/ProductionOrders'
 import { FinancialTracking } from './pages/FinancialTracking'
 import { SupplierManagement } from './pages/SupplierManagement'
@@ -17,6 +18,7 @@ function App() {
         <Route path="/" element={<ERPDashboard />} />
         <Route path="/dashboard" element={<ERPDashboard />} />
         <Route path="/production" element={<ProductionOrders />} />
+        <Route path="/raw-materials" element={<RawMaterials />} />
         <Route path="/financial" element={<FinancialTracking />} />
         <Route path="/suppliers" element={<SupplierManagement />} />
         <Route path="/workers" element={<WorkerManagement />} />
