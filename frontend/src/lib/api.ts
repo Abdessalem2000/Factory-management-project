@@ -2,7 +2,7 @@ import axios from 'axios'
 import { ApiResponse } from '../types'
 
 // HARDCODED API URL - TEMPORARY FIX FOR ENVIRONMENT VARIABLE ISSUE
-const API_BASE_URL = 'https://factory-management-project.onrender.com/api'
+const API_BASE_URL = 'http://localhost:10003/api'
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
