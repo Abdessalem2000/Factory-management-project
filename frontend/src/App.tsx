@@ -1,6 +1,6 @@
 import { Routes, Route } from 'react-router-dom'
-import { Layout } from './components/Layout'
-import { Dashboard } from './pages/Dashboard'
+import { ERPLayout } from './components/ui/ERPLayout'
+import { ERPDashboard } from './pages/ERPDashboard'
 import { ProductionOrders } from './pages/ProductionOrders'
 import { FinancialTracking } from './pages/FinancialTracking'
 import { SupplierManagement } from './pages/SupplierManagement'
@@ -12,10 +12,10 @@ import { ConnectionTest } from './pages/ConnectionTest'
 
 function App() {
   return (
-    <Layout>
+    <ERPLayout>
       <Routes>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/" element={<ERPDashboard />} />
+        <Route path="/dashboard" element={<ERPDashboard />} />
         <Route path="/production" element={<ProductionOrders />} />
         <Route path="/financial" element={<FinancialTracking />} />
         <Route path="/suppliers" element={<SupplierManagement />} />
@@ -25,7 +25,7 @@ function App() {
         <Route path="/test-simple" element={<TestSimple />} />
         <Route path="/connection-test" element={<ConnectionTest />} />
       </Routes>
-    </Layout>
+    </ERPLayout>
   )
 }
 
