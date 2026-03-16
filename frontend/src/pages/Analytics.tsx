@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { formatCurrency } from '@/lib/utils'
 import { analyticsApi } from '@/lib/api'
+import { SimpleBarChart, SimpleLineChart, SimplePieChart } from '@/components/ui/Chart'
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -125,44 +126,7 @@ export function Analytics() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-6">
-                {monthlyTrend.slice(-6).map((month: any, index: number) => (
-                  <div key={index} className="space-y-3 p-4 bg-white/5 rounded-lg border border-white/10">
-                    <div className="flex justify-between items-center mb-3">
-                      <span className="text-sm font-semibold text-white">{month.month}</span>
-                      <span className={`text-lg font-bold ${month.profit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                        {formatCurrency(month.profit, 'DZD')}
-                      </span>
-                    </div>
-                    <div className="space-y-3">
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-sm font-medium text-gray-300">
-                          <span>Income</span>
-                          <span className="text-green-400 font-bold">+{formatCurrency(month.income, 'DZD')}</span>
-                        </div>
-                        <div className="w-full bg-white/20 rounded-full h-3">
-                          <div 
-                            className="bg-gradient-to-r from-green-400 to-green-600 h-3 rounded-full transition-all duration-500" 
-                            style={{ width: `${Math.min((month.income / 25000000) * 100, 100)}%` }}
-                          />
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-sm font-medium text-gray-300">
-                          <span>Expenses</span>
-                          <span className="text-red-400 font-bold">-{formatCurrency(month.expenses, 'DZD')}</span>
-                        </div>
-                        <div className="w-full bg-white/20 rounded-full h-3">
-                          <div 
-                            className="bg-gradient-to-r from-red-400 to-red-600 h-3 rounded-full transition-all duration-500" 
-                            style={{ width: `${Math.min((month.expenses / 25000000) * 100, 100)}%` }}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <SimpleLineChart data={monthlyTrend.slice(-6)} />
             </CardContent>
           </Card>
 
@@ -174,21 +138,31 @@ export function Analytics() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {Object.entries(departmentBreakdown).map(([department, data]: [string, any], index) => (
-                  <div key={department} className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-white capitalize">{department.replace('-', ' ')}</span>
-                      <span className="text-sm font-bold text-purple-400">{data.count} workers</span>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-4">
+                  {Object.entries(departmentBreakdown).map(([department, data]: [string, any], index) => (
+                    <div key={department} className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium text-white capitalize">{department.replace('-', ' ')}</span>
+                        <span className="text-sm font-bold text-purple-400">{data.count} workers</span>
+                      </div>
+                      <div className="w-full bg-white/20 rounded-full h-2">
+                        <div 
+                          className="bg-gradient-to-r from-purple-400 to-purple-600 h-2 rounded-full transition-all duration-500" 
+                          style={{ width: `${Math.min((data.count / 10) * 100, 100)}%` }}
+                        />
+                      </div>
                     </div>
-                    <div className="w-full bg-white/20 rounded-full h-2">
-                      <div 
-                        className="bg-gradient-to-r from-purple-400 to-purple-600 h-2 rounded-full transition-all duration-500" 
-                        style={{ width: `${Math.min((data.count / 10) * 100, 100)}%` }}
-                      />
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
+                <SimplePieChart 
+                  data={Object.entries(departmentBreakdown).map(([department, data]: [string, any]) => ({
+                    label: department.replace('-', ' '),
+                    value: data.count,
+                    color: `bg-gradient-to-r from-purple-${400 + Math.floor(Math.random() * 200)} to-purple-${600 + Math.floor(Math.random() * 200)}`
+                  }))}
+                  size={150}
+                />
               </div>
             </CardContent>
           </Card>
@@ -233,6 +207,28 @@ export function Analytics() {
                 </div>
               ))}
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Additional Performance Chart */}
+        <Card className="bg-white/10 backdrop-blur-md border border-white/20">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-white">
+              <BarChart3 className="h-5 w-5 text-blue-400" />
+              Performance Metrics
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <SimpleBarChart 
+              data={[
+                { label: 'Production Efficiency', value: 85, color: 'bg-gradient-to-r from-green-400 to-green-600' },
+                { label: 'Quality Score', value: 92, color: 'bg-gradient-to-r from-blue-400 to-blue-600' },
+                { label: 'On-time Delivery', value: 78, color: 'bg-gradient-to-r from-purple-400 to-purple-600' },
+                { label: 'Cost Efficiency', value: 88, color: 'bg-gradient-to-r from-orange-400 to-orange-600' },
+                { label: 'Safety Score', value: 95, color: 'bg-gradient-to-r from-red-400 to-red-600' }
+              ]}
+              height={250}
+            />
           </CardContent>
         </Card>
       </div>
