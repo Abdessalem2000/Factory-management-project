@@ -132,7 +132,7 @@ export function ERPLayout({ children }: { children: React.ReactNode }) {
         </header>
 
         {/* Page Content */}
-        <main className="p-6">
+        <main className="p-6 pt-0">
           {children}
         </main>
       </div>

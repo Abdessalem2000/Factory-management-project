@@ -1,10 +1,9 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Plus, Search, Star, Mail, Phone } from 'lucide-react'
-import { Button } from '@/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card'
+import { ERPCard, ERPCardHeader, ERPCardTitle, ERPCardContent } from '@/components/ui/ERPCard'
+import Button from '@/components/ui/Button'
 import { supplierApi } from '@/lib/api'
-import { getStatusColor } from '@/lib/utils'
 import { Supplier, SupplierFilters } from '@/types'
 
 export function SupplierManagement() {
@@ -43,11 +42,11 @@ export function SupplierManagement() {
       </div>
 
       {/* Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Filters</CardTitle>
-        </CardHeader>
-        <CardContent>
+      <ERPCard>
+        <ERPCardHeader>
+          <ERPCardTitle className="text-lg">Filters</ERPCardTitle>
+        </ERPCardHeader>
+        <ERPCardContent>
           <div className="flex gap-4 flex-wrap">
             <div className="flex-1 min-w-[200px]">
               <div className="relative">
@@ -86,8 +85,8 @@ export function SupplierManagement() {
               onChange={(e) => setFilters({ ...filters, rating: e.target.value ? parseInt(e.target.value) : undefined })}
             />
           </div>
-        </CardContent>
-      </Card>
+        </ERPCardContent>
+      </ERPCard>
 
       {/* Suppliers Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -99,19 +98,19 @@ export function SupplierManagement() {
           </div>
         ) : (
           suppliers.map((supplier: Supplier) => (
-            <Card key={supplier._id} className="hover:shadow-lg transition-shadow">
-              <CardHeader>
+            <ERPCard key={supplier._id} className="hover:shadow-lg transition-shadow">
+              <ERPCardHeader>
                 <div className="flex justify-between items-start">
                   <div>
-                    <CardTitle className="text-lg">{supplier.name}</CardTitle>
+                    <ERPCardTitle className="text-lg">{supplier.name}</ERPCardTitle>
                     <p className="text-sm text-gray-600">{supplier.contactPerson}</p>
                   </div>
                   <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(supplier.status)}`}>
                     {supplier.status}
                   </span>
                 </div>
-              </CardHeader>
-              <CardContent>
+              </ERPCardHeader>
+              <ERPCardContent>
                 <div className="space-y-3">
                   {/* Rating */}
                   <div className="flex items-center gap-2">
@@ -165,8 +164,8 @@ export function SupplierManagement() {
                     </Button>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              </ERPCardContent>
+            </ERPCard>
           ))
         )}
       </div>

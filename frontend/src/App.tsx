@@ -7,6 +7,8 @@ import { FinancialTracking } from './pages/FinancialTracking'
 import { SupplierManagement } from './pages/SupplierManagement'
 import { WorkerManagement } from './pages/WorkerManagement'
 import { Analytics } from './pages/Analytics'
+import { Expenses } from './pages/Expenses'
+import { Incomes } from './pages/Incomes'
 
 function App() {
   return (
@@ -19,6 +21,8 @@ function App() {
         <Route path="/financial" element={<FinancialTracking />} />
         <Route path="/suppliers" element={<SupplierManagement />} />
         <Route path="/workers" element={<WorkerManagement />} />
+        <Route path="/expenses" element={<Expenses />} />
+        <Route path="/incomes" element={<Incomes />} />
         <Route path="/analytics" element={<Analytics />} />
       </Routes>
     </ERPLayout>
