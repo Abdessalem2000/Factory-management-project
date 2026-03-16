@@ -57,7 +57,7 @@ export const generateForecast = async (req: AuthRequest, res: Response, next: Ne
       validatedData.daysAhead
     );
 
-    res.json({
+    return res.json({
       success: true,
       data: {
         forecast,

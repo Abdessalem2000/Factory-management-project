@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Select } from '@/components/ui/Select'
+import { Input } from '@/components/ui/Input'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { reportingApi } from '@/lib/api'
 import { 
@@ -28,7 +29,10 @@ import {
   Activity,
   Zap,
   Award,
-  Globe
+  Globe,
+  Plus,
+  Edit,
+  Trash2
 } from 'lucide-react'
 
 interface Report {
