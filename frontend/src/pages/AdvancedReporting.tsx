@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { ERPCard, ERPCardHeader, ERPCardTitle, ERPCardContent } from '@/components/ui/ERPCard'
-import { Button } from '@/components/ui/Button'
-import { Select } from '@/components/ui/Select'
-import { Input } from '@/components/ui/Input'
+import Button from '@/components/ui/Button'
+import Select from '@/components/ui/Select'
+import Input from '@/components/ui/Input'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { reportingApi } from '@/lib/api'
 import { 
@@ -34,6 +34,22 @@ import {
   Edit,
   Trash2
 } from 'lucide-react'
+
+// Types
+interface AnalyticsData {
+  totalReports: number
+  activeReports: number
+  scheduledReports: number
+  failedReports: number
+  reportsGenerated: number
+  averageGenerationTime: number
+  storageUsed: number
+  activeUsers: number
+  usersGrowth: number
+  reportsByType: Record<string, number>
+  reportsByStatus: Record<string, number>
+  generationTrends: Array<{ date: string; reports: number }>
+}
 
 interface Report {
   id: string
@@ -220,21 +236,25 @@ export function AdvancedReporting() {
   const [reportParameters, setReportParameters] = useState<Record<string, any>>({})
 
   // Mock API calls - replace with actual API calls
-  const { data: reports, isLoading } = useQuery({
+  const { data: reports, isLoading } = useQuery<Report[]>({
     queryKey: ['reports', selectedPeriod, selectedType, selectedStatus],
     queryFn: async () => {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000))
       return mockReports
-    }
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes (v5 uses gcTime instead of cacheTime)
   })
 
-  const { data: analytics } = useQuery({
+  const { data: analytics } = useQuery<AnalyticsData>({
     queryKey: ['reporting-analytics'],
     queryFn: async () => {
       await new Promise(resolve => setTimeout(resolve, 500))
       return analyticsData
-    }
+    },
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   })
 
   const metrics = [
