@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
+import { ERPCard, ERPCardHeader, ERPCardTitle, ERPCardContent } from '@/components/ui/ERPCard'
 import { Button } from '@/components/ui/Button'
 import { 
   TrendingUp, 
@@ -77,8 +77,8 @@ export function ERPDashboard() {
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {kpiData.map((kpi, index) => (
-          <Card key={index} className="bg-white shadow-sm border border-gray-200">
-            <CardContent className="p-6">
+          <ERPCard key={index}>
+            <ERPCardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">{kpi.title}</p>
@@ -98,19 +98,19 @@ export function ERPDashboard() {
                   <kpi.icon className="h-6 w-6 text-white" />
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </ERPCardContent>
+          </ERPCard>
         ))}
       </div>
 
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Financial Trends */}
-        <Card className="bg-white shadow-sm border border-gray-200">
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold text-gray-900">Financial Trends</CardTitle>
-          </CardHeader>
-          <CardContent>
+        <ERPCard>
+          <ERPCardHeader>
+            <ERPCardTitle className="text-lg font-semibold text-gray-900">Financial Trends</ERPCardTitle>
+          </ERPCardHeader>
+          <ERPCardContent>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={monthlyData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -138,15 +138,15 @@ export function ERPDashboard() {
                 <span className="text-sm text-gray-600">Expenses</span>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </ERPCardContent>
+        </ERPCard>
 
         {/* Production by Category */}
-        <Card className="bg-white shadow-sm border border-gray-200">
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold text-gray-900">Production by Category</CardTitle>
-          </CardHeader>
-          <CardContent>
+        <ERPCard>
+          <ERPCardHeader>
+            <ERPCardTitle className="text-lg font-semibold text-gray-900">Production by Category</ERPCardTitle>
+          </ERPCardHeader>
+          <ERPCardContent>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={productionData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -158,19 +158,19 @@ export function ERPDashboard() {
                 <Bar dataKey="value" fill="#4F46E5" radius={[8, 8, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
-          </CardContent>
-        </Card>
+          </ERPCardContent>
+        </ERPCard>
       </div>
 
       {/* Low Stock Alert */}
-      <Card className="bg-white shadow-sm border border-gray-200">
-        <CardHeader>
-          <CardTitle className="text-lg font-semibold text-gray-900 flex items-center">
+      <ERPCard>
+        <ERPCardHeader>
+          <ERPCardTitle className="text-lg font-semibold text-gray-900 flex items-center">
             <AlertTriangle className="h-5 w-5 text-red-500 mr-2" />
             Low Stock Alert
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+          </ERPCardTitle>
+        </ERPCardHeader>
+        <ERPCardContent>
           <div className="space-y-3">
             {lowStockMaterials.map((material) => (
               <div key={material.id} className="flex items-center justify-between p-3 bg-red-50 border border-red-200 rounded-lg">
@@ -194,8 +194,8 @@ export function ERPDashboard() {
               </div>
             ))}
           </div>
-        </CardContent>
-      </Card>
+        </ERPCardContent>
+      </ERPCard>
     </div>
   )
 }
