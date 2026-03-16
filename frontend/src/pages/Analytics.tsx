@@ -258,7 +258,7 @@ export function Analytics() {
             data={[
               { label: 'Production Efficiency', value: 85, color: 'bg-gradient-to-r from-green-400 to-green-600' },
               { label: 'Quality Score', value: 92, color: 'bg-gradient-to-r from-indigo-400 to-indigo-600' },
-              { label: 'On-time Delivery', value: 78, color: 'bg-gradient-to-r from-purple-400 to-purple-600' },
+              { label: 'On-time Delivery', value: 78, color: 'bg-gradient-to-r from-indigo-400 to-indigo-600' },
               { label: 'Cost Efficiency', value: 88, color: 'bg-gradient-to-r from-orange-400 to-orange-600' },
               { label: 'Safety Score', value: 95, color: 'bg-gradient-to-r from-red-400 to-red-600' }
             ]}
