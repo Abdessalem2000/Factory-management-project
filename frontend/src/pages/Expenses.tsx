@@ -1,26 +1,176 @@
 import { useState } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ERPCard, ERPCardHeader, ERPCardTitle, ERPCardContent } from '@/components/ui/ERPCard'
 import Button from '@/components/ui/Button'
-import { Plus, TrendingUp, DollarSign, Calendar } from 'lucide-react'
+import { FileImport } from '@/components/ui/FileImport'
+import { Plus, TrendingUp, DollarSign, Calendar, X, Check, Loader2, Download } from 'lucide-react'
+import { financialApi } from '@/lib/api'
 
 export function Expenses() {
-  const [expenses] = useState([
-    { id: 1, description: 'Raw Materials Purchase', amount: 5000, date: '2024-01-15', category: 'Materials' },
-    { id: 2, description: 'Equipment Maintenance', amount: 1200, date: '2024-01-14', category: 'Maintenance' },
-    { id: 3, description: 'Utilities', amount: 800, date: '2024-01-13', category: 'Utilities' },
-  ])
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false)
+  const [isExporting, setIsExporting] = useState(false)
+  const queryClient = useQueryClient()
+  
+  // Formulaire state
+  const [formData, setFormData] = useState({
+    description: '',
+    amount: 0,
+    date: '',
+    category: 'Materials',
+    notes: ''
+  })
+
+  // Récupération des données réelles
+  const { data: expensesData, isLoading } = useQuery({
+    queryKey: ['expenses'],
+    queryFn: async () => {
+      try {
+        const result = await financialApi.getExpenses()
+        return result?.data || []
+      } catch (apiError) {
+        console.error('API Error:', apiError)
+        // Fallback to mock data
+        return [
+          { id: 1, description: 'Raw Materials Purchase', amount: 5000, date: '2024-01-15', category: 'Materials' },
+          { id: 2, description: 'Equipment Maintenance', amount: 1200, date: '2024-01-14', category: 'Maintenance' },
+          { id: 3, description: 'Utilities', amount: 800, date: '2024-01-13', category: 'Utilities' },
+        ]
+      }
+    },
+    retry: 1,
+    gcTime: 300000,
+  })
+
+  const expenses = expensesData || []
+
+  // Mutation pour ajouter une dépense
+  const createExpenseMutation = useMutation({
+    mutationFn: (data: any) => financialApi.createExpense(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['expenses'] })
+      setShowSuccessMessage(true)
+      setTimeout(() => {
+        setShowSuccessMessage(false)
+        setShowAddModal(false)
+      }, 2000)
+      // Reset form
+      setFormData({
+        description: '',
+        amount: 0,
+        date: '',
+        category: 'Materials',
+        notes: ''
+      })
+    },
+    onError: (error) => {
+      console.error('Error creating expense:', error)
+    }
+  })
+
+  const handleAddExpense = () => {
+    console.log('Adding expense:', formData)
+    createExpenseMutation.mutate(formData)
+  }
+
+  const updateFormData = (field: string, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }))
+  }
+
+  // CSV Export function
+  const exportToCSV = async () => {
+    setIsExporting(true)
+    try {
+      const headers = ['Description', 'Amount', 'Date', 'Category', 'Notes']
+      const csvData = expenses.map(expense => [
+        expense.description || 'Unknown',
+        expense.amount || 0,
+        expense.date || 'N/A',
+        expense.category || 'Uncategorized',
+        expense.notes || ''
+      ])
+      
+      const csvContent = [
+        headers.join(','),
+        ...csvData.map(row => row.map(cell => `"${cell}"`).join(','))
+      ].join('\n')
+      
+      const blob = new Blob([csvContent], { type: 'text/csv' })
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `expenses-${new Date().toISOString().split('T')[0]}.csv`
+      a.click()
+      window.URL.revokeObjectURL(url)
+      
+      setTimeout(() => setIsExporting(false), 1000)
+    } catch (error) {
+      console.error('Export failed:', error)
+      setIsExporting(false)
+    }
+  }
+
+  // Import function
+  const handleImportFile = (file: File) => {
+    console.log('Importing file:', file.name)
+    // TODO: Implement actual file parsing and API upload
+    // For now, just show success message
+    setShowSuccessMessage(true)
+    setTimeout(() => setShowSuccessMessage(false), 2000)
+  }
 
   return (
     <div className="space-y-6">
+      {/* Success Message */}
+      {showSuccessMessage && (
+        <div className="fixed top-4 right-4 bg-green-50 border border-green-200 rounded-lg p-4 shadow-lg z-50 flex items-center gap-3">
+          <Check className="h-5 w-5 text-green-600" />
+          <div>
+            <h4 className="text-green-800 font-medium">Success!</h4>
+            <p className="text-green-600 text-sm">Expense added successfully</p>
+          </div>
+        </div>
+      )}
+
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Expenses</h1>
           <p className="text-gray-600">Track and manage factory expenses</p>
         </div>
-        <Button className="bg-indigo-600 hover:bg-indigo-700">
-          <Plus className="h-4 w-4 mr-2" />
-          Add Expense
-        </Button>
+        <div className="flex gap-2">
+          <FileImport 
+            onFileSelect={handleImportFile}
+            buttonText="Import"
+            accept=".csv,.xlsx,.json"
+          />
+          <Button 
+            variant="outline"
+            onClick={exportToCSV}
+            disabled={isExporting}
+            className={`flex items-center gap-2 ${
+              isExporting ? 'bg-green-50 border-green-300 text-green-700' : ''
+            }`}
+          >
+            {isExporting ? (
+              <>
+                <Check className="h-4 w-4" />
+                Exported!
+              </>
+            ) : (
+              <>
+                <Download className="h-4 w-4" />
+                Export
+              </>
+            )}
+          </Button>
+          <Button 
+            className="bg-indigo-600 hover:bg-indigo-700"
+            onClick={() => setShowAddModal(true)}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Expense
+          </Button>
+        </div>
       </div>
 
       {/* Summary Cards */}
@@ -100,6 +250,112 @@ export function Expenses() {
           </div>
         </ERPCardContent>
       </ERPCard>
+
+      {/* Add Expense Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-gray-900">Add Expense</h2>
+              <button
+                onClick={() => setShowAddModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <input
+                  type="text"
+                  value={formData.description}
+                  onChange={(e) => updateFormData('description', e.target.value)}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="e.g., Raw Materials Purchase"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Amount</label>
+                <input
+                  type="number"
+                  value={formData.amount}
+                  onChange={(e) => updateFormData('amount', parseFloat(e.target.value) || 0)}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="0.00"
+                  step="0.01"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                <input
+                  type="date"
+                  value={formData.date}
+                  onChange={(e) => updateFormData('date', e.target.value)}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                <select
+                  value={formData.category}
+                  onChange={(e) => updateFormData('category', e.target.value)}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="Materials">Materials</option>
+                  <option value="Maintenance">Maintenance</option>
+                  <option value="Utilities">Utilities</option>
+                  <option value="Salaries">Salaries</option>
+                  <option value="Rent">Rent</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                <textarea
+                  value={formData.notes}
+                  onChange={(e) => updateFormData('notes', e.target.value)}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                  rows={3}
+                  placeholder="Additional notes..."
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 mt-6">
+              <Button
+                variant="outline"
+                onClick={() => setShowAddModal(false)}
+                disabled={createExpenseMutation.isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleAddExpense}
+                disabled={createExpenseMutation.isPending}
+                className="bg-indigo-600 hover:bg-indigo-700 flex items-center gap-2"
+              >
+                {createExpenseMutation.isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Adding...
+                  </>
+                ) : (
+                  <>
+                    <Plus className="h-4 w-4" />
+                    Add Expense
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { Plus, Search } from 'lucide-react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { Plus, Search, X, Check, Loader2 } from 'lucide-react'
 import { Button } from '@/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card'
 import { productionApi } from '@/lib/api'
@@ -10,6 +10,21 @@ import { ProductionOrder, ProductionFilters } from '@/types'
 export function ProductionOrders() {
   const [filters, setFilters] = useState<ProductionFilters>({})
   const [searchTerm, setSearchTerm] = useState('')
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false)
+  const queryClient = useQueryClient()
+  
+  // Formulaire state
+  const [formData, setFormData] = useState({
+    orderNumber: '',
+    customerId: '',
+    productName: '',
+    quantity: 0,
+    deliveryDate: '',
+    priority: 'medium',
+    status: 'pending',
+    notes: ''
+  })
 
   const { data: ordersData, isLoading } = useQuery({
     queryKey: ['production-orders', filters, searchTerm],
@@ -18,14 +33,61 @@ export function ProductionOrders() {
 
   const orders = ordersData?.data || []
 
+  // Mutation pour créer un ordre
+  const createOrderMutation = useMutation({
+    mutationFn: (data: any) => productionApi.createOrder(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['production-orders'] })
+      setShowSuccessMessage(true)
+      setTimeout(() => {
+        setShowSuccessMessage(false)
+        setShowAddModal(false)
+      }, 2000)
+      // Reset form
+      setFormData({
+        orderNumber: '',
+        customerId: '',
+        productName: '',
+        quantity: 0,
+        deliveryDate: '',
+        priority: 'medium',
+        status: 'pending',
+        notes: ''
+      })
+    },
+    onError: (error) => {
+      console.error('Error creating order:', error)
+    }
+  })
+
+  const handleAddOrder = () => {
+    console.log('Adding order:', formData)
+    createOrderMutation.mutate(formData)
+  }
+
+  const updateFormData = (field: string, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }))
+  }
+
   return (
     <div className="space-y-6">
+      {/* Success Message */}
+      {showSuccessMessage && (
+        <div className="fixed top-4 right-4 bg-green-50 border border-green-200 rounded-lg p-4 shadow-lg z-50 flex items-center gap-3">
+          <Check className="h-5 w-5 text-green-600" />
+          <div>
+            <h4 className="text-green-800 font-medium">Success!</h4>
+            <p className="text-green-600 text-sm">Order created successfully</p>
+          </div>
+        </div>
+      )}
+
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Production Orders</h1>
           <p className="text-gray-600">Manage and track production orders</p>
         </div>
-        <Button>
+        <Button onClick={() => setShowAddModal(true)}>
           <Plus className="h-4 w-4 mr-2" />
           New Order
         </Button>
@@ -143,6 +205,131 @@ export function ProductionOrders() {
           )}
         </CardContent>
       </Card>
+
+      {/* Add Order Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-gray-900">New Production Order</h2>
+              <button
+                onClick={() => setShowAddModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Order Number</label>
+                <input
+                  type="text"
+                  value={formData.orderNumber}
+                  onChange={(e) => updateFormData('orderNumber', e.target.value)}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="e.g., PO-001"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Customer ID</label>
+                <input
+                  type="text"
+                  value={formData.customerId}
+                  onChange={(e) => updateFormData('customerId', e.target.value)}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="e.g., CUST-001"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Product Name</label>
+                <input
+                  type="text"
+                  value={formData.productName}
+                  onChange={(e) => updateFormData('productName', e.target.value)}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="e.g., Cotton T-Shirt"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
+                <input
+                  type="number"
+                  value={formData.quantity}
+                  onChange={(e) => updateFormData('quantity', parseInt(e.target.value) || 0)}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="0"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Delivery Date</label>
+                <input
+                  type="date"
+                  value={formData.deliveryDate}
+                  onChange={(e) => updateFormData('deliveryDate', e.target.value)}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                <select
+                  value={formData.priority}
+                  onChange={(e) => updateFormData('priority', e.target.value)}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="urgent">Urgent</option>
+                </select>
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                <textarea
+                  value={formData.notes}
+                  onChange={(e) => updateFormData('notes', e.target.value)}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                  rows={3}
+                  placeholder="Additional notes..."
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 mt-6">
+              <Button
+                variant="outline"
+                onClick={() => setShowAddModal(false)}
+                disabled={createOrderMutation.isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleAddOrder}
+                disabled={createOrderMutation.isPending}
+                className="flex items-center gap-2"
+              >
+                {createOrderMutation.isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  <>
+                    <Plus className="h-4 w-4" />
+                    Create Order
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
