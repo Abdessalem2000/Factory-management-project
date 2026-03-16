@@ -39,6 +39,8 @@ export function Select({
   )
 }
 
+export default Select
+
 interface SelectOptionProps {
   value: string
   children: ReactNode
