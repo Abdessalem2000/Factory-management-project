@@ -7,9 +7,6 @@ import { FinancialTracking } from './pages/FinancialTracking'
 import { SupplierManagement } from './pages/SupplierManagement'
 import { WorkerManagement } from './pages/WorkerManagement'
 import { Analytics } from './pages/Analytics'
-import { AnalyticsTest } from './pages/AnalyticsTest'
-import { TestSimple } from './pages/TestSimple'
-import { ConnectionTest } from './pages/ConnectionTest'
 
 function App() {
   return (
@@ -23,9 +20,6 @@ function App() {
         <Route path="/suppliers" element={<SupplierManagement />} />
         <Route path="/workers" element={<WorkerManagement />} />
         <Route path="/analytics" element={<Analytics />} />
-        <Route path="/analytics-test" element={<AnalyticsTest />} />
-        <Route path="/test-simple" element={<TestSimple />} />
-        <Route path="/connection-test" element={<ConnectionTest />} />
       </Routes>
     </ERPLayout>
   )
