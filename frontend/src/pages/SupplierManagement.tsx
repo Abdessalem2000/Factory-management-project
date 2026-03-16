@@ -6,6 +6,20 @@ import Button from '@/components/ui/Button'
 import { supplierApi } from '@/lib/api'
 import { Supplier, SupplierFilters } from '@/types'
 
+// Helper function for status colors
+const getStatusColor = (status: string) => {
+  switch (status.toLowerCase()) {
+    case 'active':
+      return 'bg-green-100 text-green-800'
+    case 'inactive':
+      return 'bg-gray-100 text-gray-800'
+    case 'blacklisted':
+      return 'bg-red-100 text-red-800'
+    default:
+      return 'bg-gray-100 text-gray-800'
+  }
+}
+
 export function SupplierManagement() {
   const [filters, setFilters] = useState<SupplierFilters>({})
   const [searchTerm, setSearchTerm] = useState('')
