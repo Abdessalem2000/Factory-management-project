@@ -58,6 +58,4 @@ export function Input({
   )
 }
 
-export { Input }
-
 export default Input
