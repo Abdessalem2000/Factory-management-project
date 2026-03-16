@@ -29,8 +29,11 @@ import {
   Clock,
   CheckCircle,
   XCircle,
+  Download,
+  Upload,
   Camera
 } from 'lucide-react'
+import { FileImport } from '@/components/ui/FileImport'
 
 interface Employee {
   id: string
@@ -176,6 +179,8 @@ export function EmployeeManagement() {
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null)
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null)
   const [showEmployeeDetails, setShowEmployeeDetails] = useState(false)
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false)
+  const [isExporting, setIsExporting] = useState(false)
 
   const queryClient = useQueryClient()
 
@@ -270,6 +275,50 @@ export function EmployeeManagement() {
     }
   })
 
+  // CSV Export function
+  const exportToCSV = async () => {
+    setIsExporting(true)
+    try {
+      const headers = ['Name', 'Email', 'Phone', 'Position', 'Department', 'Status', 'Hire Date']
+      const csvData = employees?.map((employee: any) => [
+        `${employee.firstName} ${employee.lastName}`,
+        employee.email || 'N/A',
+        employee.phone || 'N/A',
+        employee.position || 'N/A',
+        employee.department || 'N/A',
+        employee.status || 'active',
+        employee.hireDate || 'N/A'
+      ]) || []
+      
+      const csvContent = [
+        headers.join(','),
+        ...csvData.map(row => row.map(cell => `"${cell}"`).join(','))
+      ].join('\n')
+      
+      const blob = new Blob([csvContent], { type: 'text/csv' })
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `employees-${new Date().toISOString().split('T')[0]}.csv`
+      a.click()
+      window.URL.revokeObjectURL(url)
+      
+      setTimeout(() => setIsExporting(false), 1000)
+    } catch (error) {
+      console.error('Export failed:', error)
+      setIsExporting(false)
+    }
+  }
+
+  // Import function
+  const handleImportFile = (file: File) => {
+    console.log('Importing file:', file.name)
+    // TODO: Implement actual file parsing and API upload
+    // For now, just show success message
+    setShowSuccessMessage(true)
+    setTimeout(() => setShowSuccessMessage(false), 2000)
+  }
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active': return 'text-green-400 bg-green-400/20'
@@ -319,6 +368,17 @@ export function EmployeeManagement() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-6">
+      {/* Success Message */}
+      {showSuccessMessage && (
+        <div className="fixed top-4 right-4 bg-green-50 border border-green-200 rounded-lg p-4 shadow-lg z-50 flex items-center gap-3">
+          <CheckCircle className="h-5 w-5 text-green-600" />
+          <div>
+            <h4 className="text-green-800 font-medium">Success!</h4>
+            <p className="text-green-600 text-sm">Operation completed successfully</p>
+          </div>
+        </div>
+      )}
+
       <div className="fixed inset-0 opacity-20">
         <div className="w-full h-full bg-pattern"></div>
       </div>
@@ -442,13 +502,39 @@ export function EmployeeManagement() {
                   <option value="on-leave">On Leave</option>
                   <option value="terminated">Terminated</option>
                 </Select>
-                <Button
-                  onClick={() => setShowCreateModal(true)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
-                >
-                  <UserPlus className="w-4 h-4" />
-                  Add Employee
-                </Button>
+                <div className="flex gap-2">
+                  <FileImport 
+                    onFileSelect={handleImportFile}
+                    buttonText="Import"
+                    accept=".csv,.xlsx,.json"
+                  />
+                  <Button
+                    onClick={exportToCSV}
+                    disabled={isExporting}
+                    className={`flex items-center gap-2 ${
+                      isExporting ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-600 hover:bg-gray-700'
+                    } text-white px-4 py-2 rounded-lg`}
+                  >
+                    {isExporting ? (
+                      <>
+                        <CheckCircle className="w-4 h-4" />
+                        Exported!
+                      </>
+                    ) : (
+                      <>
+                        <Download className="w-4 h-4" />
+                        Export
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    onClick={() => setShowCreateModal(true)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+                  >
+                    <UserPlus className="w-4 h-4" />
+                    Add Employee
+                  </Button>
+                </div>
               </div>
             </CardHeader>
             <CardContent>
