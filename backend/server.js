@@ -8,18 +8,21 @@ const Transaction = require('./models/Transaction'); // FIXED PATH
 const app = express();
 const PORT = process.env.PORT || 3001; // RENDER PORT
 
-// Middleware
-app.use(cors({
+// Middleware CORS - Configuration optimisée pour Netlify et développement local
+const corsOptions = {
   origin: [
-    'https://factory-management-platform.netlify.app',
+    'https://factory-management-platform.netlify.app',  // Votre URL Netlify
     'https://factory-management-project-btx5.vercel.app',
     'https://*.netlify.app',
-    'http://localhost:5173'
+    'http://localhost:5173'  // Développement local
   ],
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: false
-}));
+  credentials: false,
+  optionsSuccessStatus: 200  // Réponse OK pour les requêtes preflight
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Handle preflight requests
