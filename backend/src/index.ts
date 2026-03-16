@@ -18,6 +18,7 @@ import workerRoutes from './routes/worker';
 import reportRoutes from './routes/reports';
 import notificationRoutes from './routes/notifications';
 import analyticsRoutes from './routes/analytics';
+import rawMaterialsRoutes from './routes/rawMaterials';
 
 // Load environment variables
 dotenv.config();
@@ -63,6 +64,7 @@ app.use('/api/worker', workerRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/raw-materials', rawMaterialsRoutes);
 
 // Error handling middleware
 app.use(notFound);

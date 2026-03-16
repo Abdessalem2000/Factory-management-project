@@ -8,7 +8,7 @@ export interface IRawMaterial extends Document {
   currentStock: number;
   minStockAlert: number;
   unitCost: number;
-  supplier: mongoose.Types.ObjectId;
+  supplier: mongoose.Types.ObjectId | string;
   lastRestocked: Date;
   description?: string;
   location: string;
@@ -53,9 +53,8 @@ const RawMaterialSchema = new Schema<IRawMaterial>({
     min: 0
   },
   supplier: {
-    type: Schema.Types.ObjectId,
-    ref: 'Supplier',
-    required: true
+    type: Schema.Types.Mixed, // Allow both ObjectId and string
+    required: false
   },
   lastRestocked: {
     type: Date,
