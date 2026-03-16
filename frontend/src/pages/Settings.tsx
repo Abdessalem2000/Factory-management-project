@@ -16,14 +16,14 @@ export function Settings() {
 
   const handleSave = () => {
     console.log('Settings saved:', settings)
-    // Add save functionality here
   }
 
-  const handleInputChange = (field: string, value: any) => {
-    setSettings(prev => ({
-      ...prev,
-      [field]: value
-    }))
+  const updateField = (field: string, value: any) => {
+    setSettings(prev => {
+      const newSettings = { ...prev, [field]: value }
+      console.log('Settings updated:', newSettings)
+      return newSettings
+    })
   }
 
   return (
@@ -54,7 +54,7 @@ export function Settings() {
               <input
                 type="text"
                 value={settings.factoryName}
-                onChange={(e) => handleInputChange('factoryName', e.target.value)}
+                onChange={(e) => updateField('factoryName', e.target.value)}
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
               />
             </div>
@@ -62,7 +62,7 @@ export function Settings() {
               <label className="block text-sm font-medium text-gray-700">Timezone</label>
               <select
                 value={settings.timezone}
-                onChange={(e) => handleInputChange('timezone', e.target.value)}
+                onChange={(e) => updateField('timezone', e.target.value)}
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
               >
                 <option value="UTC">UTC</option>
@@ -75,7 +75,7 @@ export function Settings() {
               <label className="block text-sm font-medium text-gray-700">Currency</label>
               <select
                 value={settings.currency}
-                onChange={(e) => handleInputChange('currency', e.target.value)}
+                onChange={(e) => updateField('currency', e.target.value)}
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
               >
                 <option value="USD">USD ($)</option>
@@ -102,7 +102,7 @@ export function Settings() {
               <input
                 type="checkbox"
                 checked={settings.emailNotifications}
-                onChange={(e) => handleInputChange('emailNotifications', e.target.checked)}
+                onChange={(e) => updateField('emailNotifications', e.target.checked)}
                 className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
               />
               <span className="ml-2 text-sm text-gray-700">Email Notifications</span>
@@ -111,7 +111,7 @@ export function Settings() {
               <input
                 type="checkbox"
                 checked={settings.pushNotifications}
-                onChange={(e) => handleInputChange('pushNotifications', e.target.checked)}
+                onChange={(e) => updateField('pushNotifications', e.target.checked)}
                 className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
               />
               <span className="ml-2 text-sm text-gray-700">Push Notifications</span>
@@ -134,7 +134,7 @@ export function Settings() {
               <input
                 type="checkbox"
                 checked={settings.darkMode}
-                onChange={(e) => handleInputChange('darkMode', e.target.checked)}
+                onChange={(e) => updateField('darkMode', e.target.checked)}
                 className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
               />
               <span className="ml-2 text-sm text-gray-700">Dark Mode</span>
@@ -157,7 +157,7 @@ export function Settings() {
               <input
                 type="checkbox"
                 checked={settings.autoBackup}
-                onChange={(e) => handleInputChange('autoBackup', e.target.checked)}
+                onChange={(e) => updateField('autoBackup', e.target.checked)}
                 className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
               />
               <span className="ml-2 text-sm text-gray-700">Automatic Backup</span>
