@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
+import { ERPCard, ERPCardHeader, ERPCardTitle, ERPCardContent } from '@/components/ui/ERPCard'
 import { Button } from '@/components/ui/Button'
 import { Select } from '@/components/ui/Select'
 import { Input } from '@/components/ui/Input'
@@ -51,212 +51,228 @@ interface Report {
   downloadUrl?: string
   parameters: Record<string, any>
   recipients: string[]
-  createdBy: string
 }
 
 interface ReportTemplate {
   id: string
   name: string
   description: string
-  type: string
-  category: string
+  type: 'financial' | 'production' | 'inventory' | 'employee' | 'sales'
+  category: 'summary' | 'detailed' | 'analytical' | 'comparative'
   parameters: Array<{
     name: string
-    type: 'date' | 'select' | 'text' | 'number' | 'boolean'
-    label: string
+    type: 'date' | 'select' | 'number' | 'text'
     required: boolean
     options?: string[]
     defaultValue?: any
   }>
-  format: string[]
-  frequency: string[]
-  recipients: string[]
-}
-
-interface ScheduledReport {
-  id: string
-  reportId: string
-  reportName: string
-  schedule: string
-  nextRun: string
-  lastRun?: string
-  status: 'active' | 'paused' | 'failed'
-  recipients: string[]
-  parameters: Record<string, any>
-}
-
-interface ReportMetric {
-  name: string
-  value: number | string
-  change: number
-  changeType: 'increase' | 'decrease' | 'neutral'
-  icon: any
+  icon: React.ElementType
   color: string
-  format?: 'currency' | 'percentage' | 'number'
+}
+
+const reportTemplates: ReportTemplate[] = [
+  {
+    id: 'financial-summary',
+    name: 'Financial Summary',
+    description: 'Overview of financial performance with revenue, expenses, and profit analysis',
+    type: 'financial',
+    category: 'summary',
+    icon: DollarSign,
+    color: 'text-green-600',
+    parameters: [
+      { name: 'startDate', type: 'date', required: true },
+      { name: 'endDate', type: 'date', required: true },
+      { name: 'includeForecast', type: 'select', required: false, options: ['yes', 'no'], defaultValue: 'no' }
+    ]
+  },
+  {
+    id: 'production-efficiency',
+    name: 'Production Efficiency',
+    description: 'Detailed analysis of production metrics, efficiency rates, and bottlenecks',
+    type: 'production',
+    category: 'analytical',
+    icon: Target,
+    color: 'text-blue-600',
+    parameters: [
+      { name: 'period', type: 'select', required: true, options: ['daily', 'weekly', 'monthly'] },
+      { name: 'department', type: 'select', required: false, options: ['all', 'cutting', 'assembly', 'finishing'] },
+      { name: 'targetEfficiency', type: 'number', required: false, defaultValue: 85 }
+    ]
+  },
+  {
+    id: 'inventory-status',
+    name: 'Inventory Status',
+    description: 'Current inventory levels, stock movements, and low stock alerts',
+    type: 'inventory',
+    category: 'detailed',
+    icon: Package,
+    color: 'text-purple-600',
+    parameters: [
+      { name: 'warehouse', type: 'select', required: false, options: ['all', 'A', 'B', 'C'] },
+      { name: 'includeLowStock', type: 'select', required: false, options: ['yes', 'no'], defaultValue: 'yes' },
+      { name: 'category', type: 'select', required: false, options: ['all', 'raw-materials', 'finished-goods'] }
+    ]
+  },
+  {
+    id: 'employee-performance',
+    name: 'Employee Performance',
+    description: 'Employee productivity, attendance, and performance metrics',
+    type: 'employee',
+    category: 'analytical',
+    icon: Users,
+    color: 'text-indigo-600',
+    parameters: [
+      { name: 'department', type: 'select', required: false, options: ['all', 'production', 'quality', 'maintenance'] },
+      { name: 'period', type: 'select', required: true, options: ['weekly', 'monthly', 'quarterly'] },
+      { name: 'includeGoals', type: 'select', required: false, options: ['yes', 'no'], defaultValue: 'yes' }
+    ]
+  }
+]
+
+const mockReports: Report[] = [
+  {
+    id: '1',
+    name: 'Monthly Financial Report - March 2024',
+    description: 'Complete financial analysis for March 2024',
+    type: 'financial',
+    category: 'detailed',
+    frequency: 'monthly',
+    status: 'ready',
+    createdAt: '2024-03-15T10:30:00Z',
+    lastGenerated: '2024-03-15T14:20:00Z',
+    format: 'pdf',
+    size: 2457600,
+    downloadUrl: '/api/reports/1/download',
+    parameters: { startDate: '2024-03-01', endDate: '2024-03-31' },
+    recipients: ['manager@factory.com', 'finance@factory.com']
+  },
+  {
+    id: '2',
+    name: 'Production Efficiency Analysis',
+    description: 'Weekly production efficiency metrics and analysis',
+    type: 'production',
+    category: 'analytical',
+    frequency: 'weekly',
+    status: 'generating',
+    createdAt: '2024-03-16T09:15:00Z',
+    format: 'excel',
+    parameters: { period: 'weekly', department: 'all' },
+    recipients: ['production@factory.com']
+  },
+  {
+    id: '3',
+    name: 'Inventory Status Report',
+    description: 'Current inventory levels and low stock alerts',
+    type: 'inventory',
+    category: 'detailed',
+    frequency: 'daily',
+    status: 'ready',
+    createdAt: '2024-03-16T08:00:00Z',
+    lastGenerated: '2024-03-16T08:30:00Z',
+    format: 'pdf',
+    size: 1843200,
+    downloadUrl: '/api/reports/3/download',
+    parameters: { warehouse: 'all', includeLowStock: 'yes' },
+    recipients: ['warehouse@factory.com', 'procurement@factory.com']
+  }
+]
+
+const analyticsData = {
+  totalReports: 156,
+  activeReports: 23,
+  scheduledReports: 8,
+  failedReports: 2,
+  reportsGenerated: 1247,
+  averageGenerationTime: 45, // seconds
+  storageUsed: 2.4, // GB
+  activeUsers: 12,
+  usersGrowth: 8.5,
+  reportsByType: {
+    financial: 45,
+    production: 38,
+    inventory: 32,
+    employee: 28,
+    sales: 13
+  },
+  reportsByStatus: {
+    ready: 89,
+    generating: 12,
+    scheduled: 8,
+    failed: 2
+  },
+  generationTrends: [
+    { date: '2024-03-10', reports: 18 },
+    { date: '2024-03-11', reports: 22 },
+    { date: '2024-03-12', reports: 19 },
+    { date: '2024-03-13', reports: 25 },
+    { date: '2024-03-14', reports: 31 },
+    { date: '2024-03-15', reports: 28 },
+    { date: '2024-03-16', reports: 13 }
+  ]
 }
 
 export function AdvancedReporting() {
-  const [activeTab, setActiveTab] = useState<'reports' | 'templates' | 'scheduled' | 'analytics'>('reports')
+  const [selectedPeriod, setSelectedPeriod] = useState('7days')
   const [selectedType, setSelectedType] = useState('all')
-  const [selectedCategory, setSelectedCategory] = useState('all')
   const [selectedStatus, setSelectedStatus] = useState('all')
-  const [dateRange, setDateRange] = useState('month')
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [selectedTemplate, setSelectedTemplate] = useState<ReportTemplate | null>(null)
   const [reportParameters, setReportParameters] = useState<Record<string, any>>({})
 
+  // Mock API calls - replace with actual API calls
   const { data: reports, isLoading } = useQuery({
-    queryKey: ['reports', selectedType, selectedCategory, selectedStatus],
+    queryKey: ['reports', selectedPeriod, selectedType, selectedStatus],
     queryFn: async () => {
-      const response = await reportingApi.getReports({
-        type: selectedType,
-        category: selectedCategory,
-        status: selectedStatus
-      })
-      return response?.data || []
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      return mockReports
     }
   })
 
-  const { data: templates } = useQuery({
-    queryKey: ['report-templates'],
+  const { data: analytics } = useQuery({
+    queryKey: ['reporting-analytics'],
     queryFn: async () => {
-      const response = await reportingApi.getReportTemplates()
-      return response?.data || []
+      await new Promise(resolve => setTimeout(resolve, 500))
+      return analyticsData
     }
   })
 
-  const { data: scheduledReports } = useQuery({
-    queryKey: ['scheduled-reports'],
-    queryFn: async () => {
-      const response = await reportingApi.getScheduledReports()
-      return response?.data || []
-    }
-  })
-
-  const { data: analyticsData } = useQuery({
-    queryKey: ['report-analytics', dateRange],
-    queryFn: async () => {
-      const response = await reportingApi.getReportAnalytics(dateRange)
-      return response?.data || {}
-    }
-  })
-
-  const getReportTypeColor = (type: string) => {
-    switch (type) {
-      case 'financial': return 'text-green-400 bg-green-400/20'
-      case 'production': return 'text-blue-400 bg-blue-400/20'
-      case 'inventory': return 'text-purple-400 bg-purple-400/20'
-      case 'employee': return 'text-yellow-400 bg-yellow-400/20'
-      case 'sales': return 'text-red-400 bg-red-400/20'
-      default: return 'text-gray-400 bg-gray-400/20'
-    }
-  }
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'ready': return 'text-green-400 bg-green-400/20'
-      case 'generating': return 'text-blue-400 bg-blue-400/20'
-      case 'scheduled': return 'text-yellow-400 bg-yellow-400/20'
-      case 'active': return 'text-green-400 bg-green-400/20'
-      case 'failed': return 'text-red-400 bg-red-400/20'
-      case 'paused': return 'text-gray-400 bg-gray-400/20'
-      default: return 'text-gray-400 bg-gray-400/20'
-    }
-  }
-
-  const formatValue = (value: number | string, format?: string) => {
-    if (typeof value === 'string') return value
-    
-    switch (format) {
-      case 'currency':
-        return formatCurrency(value, 'DZD')
-      case 'percentage':
-        return `${value}%`
-      case 'number':
-        return value.toLocaleString()
-      default:
-        return value.toString()
-    }
-  }
-
-  const generateReport = async (templateId: string, parameters: Record<string, any>) => {
-    try {
-      await reportingApi.generateReport(templateId, parameters)
-      // Refresh reports list
-      window.location.reload()
-    } catch (error) {
-      console.error('Error generating report:', error)
-    }
-  }
-
-  const downloadReport = async (reportId: string, format: string) => {
-    try {
-      const response = await reportingApi.downloadReport(reportId, format)
-      // Create download link
-      const url = window.URL.createObjectURL(new Blob([response.data]))
-      const link = document.createElement('a')
-      link.href = url
-      link.setAttribute('download', `report-${reportId}.${format}`)
-      document.body.appendChild(link)
-      link.click()
-      link.remove()
-    } catch (error) {
-      console.error('Error downloading report:', error)
-    }
-  }
-
-  const shareReport = async (reportId: string, recipients: string[]) => {
-    try {
-      await reportingApi.shareReport(reportId, recipients)
-      // Show success message
-    } catch (error) {
-      console.error('Error sharing report:', error)
-    }
-  }
-
-  const filteredReports = reports?.filter(report => {
-    const matchesType = selectedType === 'all' || report.type === selectedType
-    const matchesCategory = selectedCategory === 'all' || report.category === selectedCategory
-    const matchesStatus = selectedStatus === 'all' || report.status === selectedStatus
-    return matchesType && matchesCategory && matchesStatus
-  }) || []
-
-  const reportMetrics: ReportMetric[] = [
+  const metrics = [
     {
-      name: 'Total Reports',
-      value: analyticsData.totalReports || 0,
-      change: analyticsData.reportsGrowth || 0,
-      changeType: analyticsData.reportsGrowth >= 0 ? 'increase' : 'decrease',
+      title: 'Total Reports',
+      value: analytics?.totalReports || 0,
+      change: analytics?.reportsGenerated || 0,
+      changeType: 'increase',
       icon: FileText,
-      color: 'text-blue-400',
+      color: 'text-blue-600',
       format: 'number'
     },
     {
-      name: 'Generated Today',
-      value: analyticsData.generatedToday || 0,
-      change: analyticsData.todayGrowth || 0,
-      changeType: analyticsData.todayGrowth >= 0 ? 'increase' : 'decrease',
-      icon: Zap,
-      color: 'text-green-400',
+      title: 'Active Reports',
+      value: analytics?.activeReports || 0,
+      change: 12.5,
+      changeType: 'increase',
+      icon: Activity,
+      color: 'text-green-600',
       format: 'number'
     },
     {
-      name: 'Scheduled Reports',
-      value: analyticsData.scheduledReports || 0,
-      change: analyticsData.scheduledGrowth || 0,
-      changeType: analyticsData.scheduledGrowth >= 0 ? 'increase' : 'decrease',
+      title: 'Scheduled Reports',
+      value: analytics?.scheduledReports || 0,
+      change: -2.3,
+      changeType: 'decrease',
       icon: Clock,
-      color: 'text-purple-400',
+      color: 'text-purple-600',
       format: 'number'
     },
     {
-      name: 'Active Users',
-      value: analyticsData.activeUsers || 0,
-      change: analyticsData.usersGrowth || 0,
-      changeType: analyticsData.usersGrowth >= 0 ? 'increase' : 'decrease',
-      icon: Users,
-      color: 'text-yellow-400',
-      format: 'number'
+      title: 'Avg. Generation Time',
+      value: analytics?.averageGenerationTime || 0,
+      change: -8.7,
+      changeType: 'increase',
+      icon: Zap,
+      color: 'text-orange-600',
+      format: 'time'
     }
   ]
 
@@ -273,531 +289,245 @@ export function AdvancedReporting() {
           Advanced Reporting
         </h1>
         <p className="text-gray-500 text-lg">Generate custom reports and gain deep insights</p>
-        </div>
-
-        {/* Date Range Selector */}
-        <div className="mb-6 flex justify-center">
-          <Select
-            value={dateRange}
-            onChange={(e) => setDateRange(e.target.value)}
-            className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
-          >
-            <option value="today">Today</option>
-            <option value="week">This Week</option>
-            <option value="month">This Month</option>
-            <option value="quarter">This Quarter</option>
-            <option value="year">This Year</option>
-          </Select>
-        </div>
-
-        {/* Report Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {reportMetrics.map((metric, index) => (
-            <Card key={index} className="bg-white/10 backdrop-blur-md border border-white/20">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-white">{metric.name}</CardTitle>
-                <metric.icon className={`h-4 w-4 ${metric.color}`} />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-white">
-                  {formatValue(metric.value, metric.format)}
-                </div>
-                <p className="text-xs text-gray-300 flex items-center gap-1">
-                  {metric.changeType === 'increase' ? (
-                    <TrendingUp className="w-3 h-3 text-green-400" />
-                  ) : metric.changeType === 'decrease' ? (
-                    <TrendingDown className="w-3 h-3 text-red-400" />
-                  ) : (
-                    <div className="w-3 h-3 bg-gray-400 rounded-full" />
-                  )}
-                  {metric.change >= 0 ? '+' : ''}{metric.change}% from last period
-                </p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {/* Navigation Tabs */}
-        <div className="mb-6 border-b border-white/20">
-          <nav className="flex space-x-8">
-            {[
-              { id: 'reports', label: 'Reports', icon: FileText },
-              { id: 'templates', label: 'Templates', icon: Settings },
-              { id: 'scheduled', label: 'Scheduled', icon: Clock },
-              { id: 'analytics', label: 'Analytics', icon: BarChart3 }
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
-                className={`flex items-center gap-2 py-2 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === tab.id
-                    ? 'border-blue-400 text-blue-400'
-                    : 'border-transparent text-gray-400 hover:text-gray-300'
-                }`}
-              >
-                <tab.icon className="w-4 h-4" />
-                {tab.label}
-              </button>
-            ))}
-          </nav>
-        </div>
-
-        {/* Reports Tab */}
-        {activeTab === 'reports' && (
-          <div className="space-y-6">
-            {/* Filters */}
-            <div className="flex flex-wrap gap-4 items-center">
-              <Select
-                value={selectedType}
-                onChange={(e) => setSelectedType(e.target.value)}
-                className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
-              >
-                <option value="all">All Types</option>
-                <option value="financial">Financial</option>
-                <option value="production">Production</option>
-                <option value="inventory">Inventory</option>
-                <option value="employee">Employee</option>
-                <option value="sales">Sales</option>
-              </Select>
-              <Select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
-              >
-                <option value="all">All Categories</option>
-                <option value="summary">Summary</option>
-                <option value="detailed">Detailed</option>
-                <option value="analytical">Analytical</option>
-                <option value="comparative">Comparative</option>
-              </Select>
-              <Select
-                value={selectedStatus}
-                onChange={(e) => setSelectedStatus(e.target.value)}
-                className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
-              >
-                <option value="all">All Status</option>
-                <option value="ready">Ready</option>
-                <option value="generating">Generating</option>
-                <option value="scheduled">Scheduled</option>
-                <option value="failed">Failed</option>
-              </Select>
-              <Button
-                onClick={() => setShowCreateModal(true)}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
-              >
-                <Plus className="w-4 h-4" />
-                Generate Report
-              </Button>
-            </div>
-
-            {/* Reports List */}
-            <Card className="bg-white/10 backdrop-blur-md border border-white/20">
-              <CardHeader>
-                <CardTitle className="text-white">Generated Reports</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {filteredReports.map((report: Report) => (
-                    <div key={report.id} className="p-4 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition-all duration-200">
-                      <div className="flex justify-between items-start mb-3">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <h3 className="text-lg font-semibold text-white">{report.name}</h3>
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getReportTypeColor(report.type)}`}>
-                              {report.type}
-                            </span>
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(report.status)}`}>
-                              {report.status}
-                            </span>
-                          </div>
-                          <p className="text-sm text-gray-300 mb-3">{report.description}</p>
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-300">
-                            <div>
-                              <span className="block text-gray-400">Format:</span>
-                              <span className="font-medium text-white">{report.format.toUpperCase()}</span>
-                            </div>
-                            <div>
-                              <span className="block text-gray-400">Frequency:</span>
-                              <span className="font-medium text-white">{report.frequency}</span>
-                            </div>
-                            <div>
-                              <span className="block text-gray-400">Created:</span>
-                              <span className="font-medium text-white">{formatDate(report.createdAt)}</span>
-                            </div>
-                            <div>
-                              <span className="block text-gray-400">Size:</span>
-                              <span className="font-medium text-white">{report.size ? `${(report.size / 1024).toFixed(1)} KB` : 'N/A'}</span>
-                            </div>
-                          </div>
-                          {report.lastGenerated && (
-                            <div className="mt-2 text-sm text-gray-300">
-                              <span className="text-gray-400">Last Generated: </span>
-                              {formatDate(report.lastGenerated)}
-                            </div>
-                          )}
-                          {report.nextScheduled && (
-                            <div className="mt-2 text-sm text-gray-300">
-                              <span className="text-gray-400">Next Scheduled: </span>
-                              {formatDate(report.nextScheduled)}
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex gap-2">
-                          {report.status === 'ready' && (
-                            <>
-                              <Button
-                                onClick={() => downloadReport(report.id, report.format)}
-                                className="p-2 bg-green-600 hover:bg-green-700 text-white rounded"
-                                title="Download"
-                              >
-                                <Download className="w-4 h-4" />
-                              </Button>
-                              <Button
-                                onClick={() => shareReport(report.id, report.recipients)}
-                                className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded"
-                                title="Share"
-                              >
-                                <Mail className="w-4 h-4" />
-                              </Button>
-                            </>
-                          )}
-                          <Button className="p-2 bg-purple-600 hover:bg-purple-700 text-white rounded" title="View">
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                          <Button className="p-2 bg-gray-600 hover:bg-gray-700 text-white rounded" title="Print">
-                            <Printer className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-        {/* Templates Tab */}
-        {activeTab === 'templates' && (
-          <Card className="bg-white/10 backdrop-blur-md border border-white/20">
-            <CardHeader className="flex justify-between items-center">
-              <CardTitle className="text-white">Report Templates</CardTitle>
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2">
-                <Plus className="w-4 h-4" />
-                Create Template
-              </Button>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {templates?.map((template: ReportTemplate) => (
-                  <div key={template.id} className="p-4 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition-all duration-200">
-                    <div className="mb-3">
-                      <h3 className="text-lg font-semibold text-white mb-1">{template.name}</h3>
-                      <p className="text-sm text-gray-300">{template.description}</p>
-                    </div>
-                    <div className="space-y-2 text-sm text-gray-300">
-                      <div>
-                        <span className="text-gray-400">Type: </span>
-                        <span className="text-white">{template.type}</span>
-                      </div>
-                      <div>
-                        <span className="text-gray-400">Category: </span>
-                        <span className="text-white">{template.category}</span>
-                      </div>
-                      <div>
-                        <span className="text-gray-400">Parameters: </span>
-                        <span className="text-white">{template.parameters.length} required</span>
-                      </div>
-                    </div>
-                    <div className="mt-4 flex gap-2">
-                      <Button
-                        onClick={() => {
-                          setSelectedTemplate(template)
-                          setShowCreateModal(true)
-                        }}
-                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded text-sm"
-                      >
-                        Use Template
-                      </Button>
-                      <Button className="p-2 bg-gray-600 hover:bg-gray-700 text-white rounded" title="Edit">
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Scheduled Reports Tab */}
-        {activeTab === 'scheduled' && (
-          <Card className="bg-white/10 backdrop-blur-md border border-white/20">
-            <CardHeader className="flex justify-between items-center">
-              <CardTitle className="text-white">Scheduled Reports</CardTitle>
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2">
-                <Plus className="w-4 h-4" />
-                Schedule Report
-              </Button>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {scheduledReports?.map((scheduled: ScheduledReport) => (
-                  <div key={scheduled.id} className="p-4 bg-white/5 rounded-lg border border-white/10">
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <h3 className="text-lg font-semibold text-white">{scheduled.reportName}</h3>
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(scheduled.status)}`}>
-                            {scheduled.status}
-                          </span>
-                        </div>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-300">
-                          <div>
-                            <span className="block text-gray-400">Schedule:</span>
-                            <span className="font-medium text-white">{scheduled.schedule}</span>
-                          </div>
-                          <div>
-                            <span className="block text-gray-400">Next Run:</span>
-                            <span className="font-medium text-white">{formatDate(scheduled.nextRun)}</span>
-                          </div>
-                          <div>
-                            <span className="block text-gray-400">Last Run:</span>
-                            <span className="font-medium text-white">{scheduled.lastRun ? formatDate(scheduled.lastRun) : 'Never'}</span>
-                          </div>
-                          <div>
-                            <span className="block text-gray-400">Recipients:</span>
-                            <span className="font-medium text-white">{scheduled.recipients.length}</span>
-                          </div>
-                        </div>
-                        <div className="mt-2 text-sm text-gray-300">
-                          <span className="text-gray-400">Recipients: </span>
-                          {scheduled.recipients.join(', ')}
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded" title="Edit">
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button className="p-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded" title="Pause">
-                          <Clock className="w-4 h-4" />
-                        </Button>
-                        <Button className="p-2 bg-red-600 hover:bg-red-700 text-white rounded" title="Delete">
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Analytics Tab */}
-        {activeTab === 'analytics' && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card className="bg-white/10 backdrop-blur-md border border-white/20">
-              <CardHeader>
-                <CardTitle className="text-white">Report Generation Trends</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {analyticsData.generationTrends?.map((trend: any, index: number) => (
-                    <div key={index} className="flex justify-between items-center">
-                      <span className="text-gray-300">{trend.period}</span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-white font-medium">{trend.count}</span>
-                        <span className={`text-sm ${trend.change >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                          {trend.change >= 0 ? '+' : ''}{trend.change}%
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-white/10 backdrop-blur-md border border-white/20">
-              <CardHeader>
-                <CardTitle className="text-white">Popular Report Types</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {analyticsData.popularTypes?.map((type: any, index: number) => (
-                    <div key={index} className="flex justify-between items-center">
-                      <span className="text-gray-300">{type.name}</span>
-                      <div className="flex items-center gap-2">
-                        <div className="w-32 bg-white/20 rounded-full h-2">
-                          <div 
-                            className="bg-gradient-to-r from-blue-400 to-blue-600 h-2 rounded-full" 
-                            style={{ width: `${type.percentage}%` }}
-                          />
-                        </div>
-                        <span className="text-white font-medium">{type.percentage}%</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-white/10 backdrop-blur-md border border-white/20">
-              <CardHeader>
-                <CardTitle className="text-white">User Activity</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {analyticsData.userActivity?.map((user: any, index: number) => (
-                    <div key={index} className="flex justify-between items-center">
-                      <span className="text-gray-300">{user.name}</span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-white font-medium">{user.reports}</span>
-                        <span className="text-xs text-gray-400">reports</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-white/10 backdrop-blur-md border border-white/20">
-              <CardHeader>
-                <CardTitle className="text-white">System Performance</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-300">Avg Generation Time</span>
-                    <span className="text-white font-medium">{analyticsData.avgGenerationTime}s</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-300">Success Rate</span>
-                    <span className="text-green-400 font-medium">{analyticsData.successRate}%</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-300">Storage Used</span>
-                    <span className="text-white font-medium">{analyticsData.storageUsed} MB</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-300">Active Users</span>
-                    <span className="text-white font-medium">{analyticsData.activeUsers}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
       </div>
 
-      {/* Generate Report Modal */}
-      {showCreateModal && (
+      {/* Metrics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {metrics.map((metric, index) => (
+          <ERPCard key={index}>
+            <ERPCardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">{metric.title}</p>
+                  <p className="text-2xl font-bold text-gray-900 mt-1">
+                    {metric.format === 'time' ? `${metric.value}s` : metric.value}
+                  </p>
+                  <div className="flex items-center mt-2">
+                    {metric.changeType === 'increase' ? (
+                      <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
+                    ) : (
+                      <TrendingDown className="h-4 w-4 text-red-500 mr-1" />
+                    )}
+                    <span className={`text-sm font-medium ${metric.changeType === 'increase' ? 'text-green-600' : 'text-red-600'}`}>
+                      {metric.changeType === 'increase' ? '+' : ''}{metric.change}%
+                    </span>
+                  </div>
+                </div>
+                <div className={`p-3 bg-gray-100 rounded-lg`}>
+                  <metric.icon className={`h-6 w-6 ${metric.color}`} />
+                </div>
+              </div>
+            </ERPCardContent>
+          </ERPCard>
+        ))}
+      </div>
+
+      {/* Report Templates */}
+      <ERPCard>
+        <ERPCardHeader>
+          <ERPCardTitle>Report Templates</ERPCardTitle>
+        </ERPCardHeader>
+        <ERPCardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {reportTemplates.map((template) => (
+              <div
+                key={template.id}
+                className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow cursor-pointer"
+                onClick={() => {
+                  setSelectedTemplate(template)
+                  setShowCreateModal(true)
+                }}
+              >
+                <div className="flex items-center mb-3">
+                  <template.icon className={`h-6 w-6 ${template.color} mr-2`} />
+                  <h3 className="font-semibold text-gray-900">{template.name}</h3>
+                </div>
+                <p className="text-sm text-gray-600 mb-3">{template.description}</p>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-gray-500">
+                    {template.category}
+                  </span>
+                  <span className="text-xs font-medium text-indigo-600">
+                    {template.type}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </ERPCardContent>
+      </ERPCard>
+
+      {/* Recent Reports */}
+      <ERPCard>
+        <ERPCardHeader>
+          <ERPCardTitle className="flex items-center justify-between">
+            <span>Recent Reports</span>
+            <Button className="bg-indigo-600 hover:bg-indigo-700">
+              <Plus className="h-4 w-4 mr-2" />
+              Create Report
+            </Button>
+          </ERPCardTitle>
+        </ERPCardHeader>
+        <ERPCardContent>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Report
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Type
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Generated
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {reports?.map((report) => (
+                  <tr key={report.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div>
+                        <div className="text-sm font-medium text-gray-900">{report.name}</div>
+                        <div className="text-sm text-gray-500">{report.description}</div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="px-2 py-1 text-xs font-medium rounded-full bg-indigo-100 text-indigo-800">
+                        {report.type}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                        report.status === 'ready' ? 'bg-green-100 text-green-800' :
+                        report.status === 'generating' ? 'bg-yellow-100 text-yellow-800' :
+                        report.status === 'scheduled' ? 'bg-blue-100 text-blue-800' :
+                        'bg-red-100 text-red-800'
+                      }`}>
+                        {report.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {report.lastGenerated ? formatDate(report.lastGenerated) : 'Not generated'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex items-center space-x-2">
+                        {report.status === 'ready' && (
+                          <button className="text-indigo-600 hover:text-indigo-900">
+                            <Download className="h-4 w-4" />
+                          </button>
+                        )}
+                        <button className="text-gray-400 hover:text-gray-600">
+                          <Eye className="h-4 w-4" />
+                        </button>
+                        <button className="text-gray-400 hover:text-gray-600">
+                          <Edit className="h-4 w-4" />
+                        </button>
+                        <button className="text-red-600 hover:text-red-900">
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </ERPCardContent>
+      </ERPCard>
+
+      {/* Create Report Modal */}
+      {showCreateModal && selectedTemplate && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-slate-800 rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <h2 className="text-2xl font-bold text-white mb-6">
-              {selectedTemplate ? 'Generate Report from Template' : 'Generate Custom Report'}
+          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">
+              Generate Report: {selectedTemplate.name}
             </h2>
             
-            {selectedTemplate ? (
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-lg font-semibold text-white mb-4">{selectedTemplate.name}</h3>
-                  <p className="text-gray-300 mb-4">{selectedTemplate.description}</p>
-                </div>
-                
-                {selectedTemplate.parameters.map((param, index) => (
-                  <div key={index}>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      {param.label} {param.required && <span className="text-red-400">*</span>}
-                    </label>
-                    {param.type === 'date' ? (
-                      <Input
-                        type="date"
-                        value={reportParameters[param.name] || ''}
-                        onChange={(e) => setReportParameters({...reportParameters, [param.name]: e.target.value})}
-                        className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
-                      />
-                    ) : param.type === 'select' ? (
-                      <Select
-                        value={reportParameters[param.name] || param.defaultValue || ''}
-                        onChange={(e) => setReportParameters({...reportParameters, [param.name]: e.target.value})}
-                        className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
-                      >
-                        <option value="">Select {param.label}</option>
-                        {param.options?.map((option) => (
-                          <option key={option} value={option}>{option}</option>
-                        ))}
-                      </Select>
-                    ) : param.type === 'number' ? (
-                      <Input
-                        type="number"
-                        value={reportParameters[param.name] || param.defaultValue || ''}
-                        onChange={(e) => setReportParameters({...reportParameters, [param.name]: e.target.value})}
-                        className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
-                        placeholder={`Enter ${param.label.toLowerCase()}`}
-                      />
-                    ) : (
-                      <Input
-                        type="text"
-                        value={reportParameters[param.name] || param.defaultValue || ''}
-                        onChange={(e) => setReportParameters({...reportParameters, [param.name]: e.target.value})}
-                        className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
-                        placeholder={`Enter ${param.label.toLowerCase()}`}
-                      />
-                    )}
-                  </div>
-                ))}
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">{selectedTemplate.name}</h3>
+                <p className="text-gray-600 mb-4">{selectedTemplate.description}</p>
               </div>
-            ) : (
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Report Name</label>
-                  <Input
-                    className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
-                    placeholder="Enter report name"
-                  />
+              
+              {selectedTemplate.parameters.map((param, index) => (
+                <div key={index}>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    {param.name} {param.required && <span className="text-red-500">*</span>}
+                  </label>
+                  {param.type === 'date' ? (
+                    <Input
+                      type="date"
+                      value={reportParameters[param.name] || ''}
+                      onChange={(value) => setReportParameters(prev => ({
+                        ...prev,
+                        [param.name]: value
+                      }))}
+                    />
+                  ) : param.type === 'select' ? (
+                    <Select
+                      value={reportParameters[param.name] || param.defaultValue || ''}
+                      onChange={(value) => setReportParameters(prev => ({
+                        ...prev,
+                        [param.name]: value
+                      }))}
+                    >
+                      {param.options?.map(option => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </Select>
+                  ) : param.type === 'number' ? (
+                    <Input
+                      type="number"
+                      value={reportParameters[param.name] || param.defaultValue || ''}
+                      onChange={(value) => setReportParameters(prev => ({
+                        ...prev,
+                        [param.name]: parseInt(value)
+                      }))}
+                    />
+                  ) : (
+                    <Input
+                      type="text"
+                      value={reportParameters[param.name] || ''}
+                      onChange={(value) => setReportParameters(prev => ({
+                        ...prev,
+                        [param.name]: value
+                      }))}
+                    />
+                  )}
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Report Type</label>
-                  <Select className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white">
-                    <option value="">Select type</option>
-                    <option value="financial">Financial</option>
-                    <option value="production">Production</option>
-                    <option value="inventory">Inventory</option>
-                    <option value="employee">Employee</option>
-                    <option value="sales">Sales</option>
-                  </Select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Format</label>
-                  <Select className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white">
-                    <option value="pdf">PDF</option>
-                    <option value="excel">Excel</option>
-                    <option value="csv">CSV</option>
-                    <option value="json">JSON</option>
-                  </Select>
-                </div>
-              </div>
-            )}
-
-            <div className="flex justify-end gap-4 mt-6">
+              ))}
+            </div>
+            
+            <div className="flex justify-end space-x-3 mt-6">
               <Button
+                variant="outline"
                 onClick={() => {
                   setShowCreateModal(false)
                   setSelectedTemplate(null)
                   setReportParameters({})
                 }}
-                className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg"
               >
                 Cancel
               </Button>
               <Button
+                className="bg-indigo-600 hover:bg-indigo-700"
                 onClick={() => {
-                  if (selectedTemplate) {
-                    generateReport(selectedTemplate.id, reportParameters)
-                  }
+                  // Handle report generation
+                  console.log('Generating report with parameters:', reportParameters)
+                  setShowCreateModal(false)
+                  setSelectedTemplate(null)
+                  setReportParameters({})
                 }}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
               >
                 Generate Report
               </Button>
