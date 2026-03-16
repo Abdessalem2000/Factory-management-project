@@ -77,7 +77,7 @@ export const generateForecast = async (req: AuthRequest, res: Response, next: Ne
         errors: error.errors
       });
     }
-    next(error);
+    return next(error);
   }
 };
 
