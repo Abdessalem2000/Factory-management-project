@@ -6,7 +6,7 @@ import { FinancialTracking } from './pages/FinancialTracking'
 import { SupplierManagement } from './pages/SupplierManagement'
 import { WorkerManagement } from './pages/WorkerManagement'
 import { Analytics } from './pages/Analytics'
-import { AnalyticsTest } from './pages/Analytics-test'
+import { AnalyticsTest } from './pages/AnalyticsTest'
 import { TestSimple } from './pages/TestSimple'
 
 function App() {

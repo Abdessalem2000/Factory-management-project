@@ -175,28 +175,20 @@ export function Analytics() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {Object.entries(departmentBreakdown).map(([dept, count]: [string, any]) => {
-                  const percentage = workerAnalytics?.totalWorkers ? (count / workerAnalytics.totalWorkers) * 100 : 0;
-                  return (
-                    <div key={dept} className="space-y-3 p-3 bg-white/5 rounded-lg border border-white/10">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-semibold text-white">{dept}</span>
-                        <div className="flex items-center gap-2">
-                          <span className="text-lg font-bold text-blue-400">{count}</span>
-                          <span className="text-sm text-gray-300 bg-blue-400/20 px-2 py-1 rounded-full">
-                            {percentage.toFixed(1)}%
-                          </span>
-                        </div>
-                      </div>
-                      <div className="w-full bg-white/20 rounded-full h-4">
-                        <div 
-                          className="bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600 h-4 rounded-full transition-all duration-700 shadow-sm" 
-                          style={{ width: `${percentage}%` }}
-                        />
-                      </div>
+                {Object.entries(departmentBreakdown).map(([department, data]: [string, any], index) => (
+                  <div key={department} className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium text-white capitalize">{department.replace('-', ' ')}</span>
+                      <span className="text-sm font-bold text-purple-400">{data.count} workers</span>
                     </div>
-                  );
-                })}
+                    <div className="w-full bg-white/20 rounded-full h-2">
+                      <div 
+                        className="bg-gradient-to-r from-purple-400 to-purple-600 h-2 rounded-full transition-all duration-500" 
+                        style={{ width: `${Math.min((data.count / 10) * 100, 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>
@@ -218,16 +210,16 @@ export function Analytics() {
                       index === 0 ? 'bg-gradient-to-br from-yellow-400 to-yellow-600 ring-2 ring-yellow-300' : 
                       index === 1 ? 'bg-gradient-to-br from-gray-300 to-gray-500 ring-2 ring-gray-300' : 
                       index === 2 ? 'bg-gradient-to-br from-orange-400 to-orange-600 ring-2 ring-orange-300' : 
-                      'bg-gradient-to-br from-blue-400 to-blue-600 ring-2 ring-blue-300'
+                      'bg-gradient-to-br from-blue-400 to-blue-600 ring-2 ring-blue-400'
                     }`}>
                       {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : index + 1}
                     </div>
                     <div>
-                      <div className="font-bold text-gray-900 text-lg">
+                      <div className="font-bold text-white text-lg">
                         {worker.firstName} {worker.lastName}
                       </div>
-                      <div className="text-sm text-gray-700 font-medium">{worker.position}</div>
-                      <div className="text-xs text-gray-500 bg-gray-200 px-2 py-1 rounded-full inline-block mt-1">
+                      <div className="text-sm text-gray-300 font-medium">{worker.position}</div>
+                      <div className="text-xs text-gray-400 bg-white/10 px-2 py-1 rounded-full inline-block mt-1">
                         {worker.department}
                       </div>
                     </div>
@@ -236,7 +228,7 @@ export function Analytics() {
                     <div className="font-bold text-xl text-green-400">
                       {formatCurrency(worker.hourlyRate, 'DZD')}
                     </div>
-                    <div className="text-xs text-gray-500 font-medium">per hour</div>
+                    <div className="text-xs text-gray-400 font-medium">per hour</div>
                   </div>
                 </div>
               ))}
