@@ -68,7 +68,27 @@ export function PieceWorkers() {
 
   const handleAddWorker = () => {
     console.log('Adding piece worker:', formData)
-    createWorkerMutation.mutate(formData)
+    // Convert form data to worker schema format
+    const workerData = {
+      employeeId: `EMP${Date.now()}`, // Generate unique employee ID
+      firstName: formData.name.split(' ')[0] || formData.name,
+      lastName: formData.name.split(' ').slice(1).join(' ') || 'Worker',
+      email: `${formData.name.toLowerCase().replace(/\s+/g, '.')}@factory.com`, // Generate email
+      position: formData.specialty,
+      department: 'Production', // Default department for piece workers
+      status: formData.status,
+      hourlyRate: formData.rate,
+      currency: 'USD',
+      paymentType: 'hourly',
+      hireDate: new Date().toISOString(),
+      // Additional piece worker specific fields
+      metadata: {
+        specialty: formData.specialty,
+        isPieceWorker: true,
+        piecesCompleted: 0
+      }
+    }
+    createWorkerMutation.mutate(workerData)
   }
 
   const updateFormData = (field: string, value: any) => {

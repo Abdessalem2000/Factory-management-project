@@ -68,7 +68,32 @@ export function Models() {
 
   const handleAddModel = () => {
     console.log('Adding model:', formData)
-    createModelMutation.mutate(formData)
+    // Convert form data to production order format (temporary solution)
+    const productionOrderData = {
+      orderNumber: `MODEL-${Date.now()}`,
+      product: {
+        name: formData.name,
+        category: formData.category,
+        version: formData.version
+      },
+      quantity: 1, // Models are typically single units
+      priority: 'medium',
+      status: formData.status === 'active' ? 'in-progress' : 'planned',
+      startDate: new Date().toISOString(),
+      estimatedCompletionDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
+      customer: {
+        name: 'Internal',
+        type: 'internal'
+      },
+      totalValue: 0,
+      isModel: true, // Flag to identify this as a model
+      metadata: {
+        modelVersion: formData.version,
+        modelCategory: formData.category,
+        modelStatus: formData.status
+      }
+    }
+    createModelMutation.mutate(productionOrderData)
   }
 
   const updateFormData = (field: string, value: any) => {

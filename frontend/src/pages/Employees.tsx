@@ -68,7 +68,26 @@ export function Employees() {
 
   const handleAddEmployee = () => {
     console.log('Adding employee:', formData)
-    createEmployeeMutation.mutate(formData)
+    // Convert form data to worker schema format
+    const workerData = {
+      employeeId: `EMP${Date.now()}`, // Generate unique employee ID
+      firstName: formData.name.split(' ')[0] || formData.name,
+      lastName: formData.name.split(' ').slice(1).join(' ') || 'Employee',
+      email: `${formData.name.toLowerCase().replace(/\s+/g, '.')}@factory.com`, // Generate email
+      position: formData.position,
+      department: formData.department,
+      status: formData.status,
+      hourlyRate: 15, // Default hourly rate
+      currency: 'USD',
+      paymentType: 'salary',
+      hireDate: new Date().toISOString(),
+      // Additional employee specific fields
+      metadata: {
+        isEmployee: true,
+        employeeType: 'full-time'
+      }
+    }
+    createEmployeeMutation.mutate(workerData)
   }
 
   const updateFormData = (field: string, value: any) => {

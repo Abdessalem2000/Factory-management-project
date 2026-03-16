@@ -68,7 +68,21 @@ export function SalaryAllowances() {
 
   const handleAddAllowance = () => {
     console.log('Adding allowance:', formData)
-    createAllowanceMutation.mutate(formData)
+    // Convert allowance data to transaction format for backend
+    const transactionData = {
+      name: formData.name,
+      amount: formData.amount,
+      type: 'expense',
+      category: 'allowance',
+      description: `${formData.name} for ${formData.employees} employees`,
+      date: new Date().toISOString(),
+      metadata: {
+        allowanceType: formData.type,
+        numberOfEmployees: formData.employees,
+        totalMonthlyCost: formData.amount * formData.employees
+      }
+    }
+    createAllowanceMutation.mutate(transactionData)
   }
 
   const updateFormData = (field: string, value: any) => {

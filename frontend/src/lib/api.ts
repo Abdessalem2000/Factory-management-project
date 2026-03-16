@@ -70,6 +70,11 @@ export const productionApi = {
     api.patch(`/production/${id}/stages/${stageId}`, data),
   deleteOrder: (id: string) => api.delete(`/production/${id}`),
   getStats: () => api.get('/production/stats/overview'),
+  // Models - Using production orders as models (temporary solution)
+  getModels: (params?: any) => api.get('/production', { params: { ...params, isModel: true } }),
+  createModel: (data: any) => api.post('/production', { ...data, isModel: true }),
+  updateModel: (id: string, data: any) => api.put(`/production/${id}`, data),
+  deleteModel: (id: string) => api.delete(`/production/${id}`),
 }
 
 // Financial API
@@ -97,6 +102,11 @@ export const financialApi = {
   getPayments: () => api.get('/financial/payments'),
   recordPayment: (data: any) => api.post('/financial/payments', data),
   getPaymentMetrics: (period: string) => api.get(`/financial/payments/metrics/${period}`),
+  // Allowances - Using transactions with category 'allowance'
+  getAllowances: (params?: any) => api.get('/financial', { params: { ...params, category: 'allowance' } }),
+  createAllowance: (data: any) => api.post('/financial', { ...data, type: 'expense', category: 'allowance' }),
+  updateAllowance: (id: string, data: any) => api.put(`/financial/${id}`, data),
+  deleteAllowance: (id: string) => api.delete(`/financial/${id}`),
 }
 
 // Supplier API
@@ -169,18 +179,19 @@ export const inventoryApi = {
   getConsumptionReport: (timeRange: string) => api.get(`/inventory/consumption/${timeRange}`),
 }
 
-// Employee Management API
+// Employee Management API - Using worker routes as base
 export const employeeApi = {
-  getEmployees: (params: any) => api.get('/employees', { params }),
-  createEmployee: (data: any) => api.post('/employees', data),
-  updateEmployee: (id: string, data: any) => api.put(`/employees/${id}`, data),
-  deleteEmployee: (id: string) => api.delete(`/employees/${id}`),
-  getAttendanceRecords: (params?: any) => api.get('/employees/attendance', { params }),
-  recordAttendance: (data: any) => api.post('/employees/attendance', data),
-  getLeaveRequests: () => api.get('/employees/leave'),
-  createLeaveRequest: (data: any) => api.post('/employees/leave', data),
-  approveLeaveRequest: (id: string) => api.patch(`/employees/leave/${id}/approve`),
-  rejectLeaveRequest: (id: string) => api.patch(`/employees/leave/${id}/reject`),
+  getEmployees: (params: any) => api.get('/worker', { params }),
+  createEmployee: (data: any) => api.post('/worker', data),
+  updateEmployee: (id: string, data: any) => api.put(`/worker/${id}`, data),
+  deleteEmployee: (id: string) => api.delete(`/worker/${id}`),
+  // These endpoints don't exist yet - will need to be created in backend
+  getAttendanceRecords: (params?: any) => api.get('/worker/attendance', { params }),
+  recordAttendance: (data: any) => api.post('/worker/attendance', data),
+  getLeaveRequests: () => api.get('/worker/leave'),
+  createLeaveRequest: (data: any) => api.post('/worker/leave', data),
+  approveLeaveRequest: (id: string) => api.patch(`/worker/leave/${id}/approve`),
+  rejectLeaveRequest: (id: string) => api.patch(`/worker/leave/${id}/reject`),
   getPerformanceReviews: () => api.get('/employees/performance'),
   createPerformanceReview: (data: any) => api.post('/employees/performance', data),
   updatePerformanceReview: (id: string, data: any) => api.put(`/employees/performance/${id}`, data),
