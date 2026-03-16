@@ -14,7 +14,8 @@ import {
   ShoppingCart,
   ArrowUpRight,
   ArrowDownRight,
-  Download
+  Download,
+  ExternalLink
 } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts'
 
@@ -51,6 +52,12 @@ const kpiData = [
 
 export function ERPDashboard() {
   const [selectedPeriod, setSelectedPeriod] = useState('6months')
+
+  // Handler pour naviguer vers les matériaux
+  const handleViewMaterials = () => {
+    // Naviguer vers la page Raw Materials
+    window.location.href = '/raw-materials'
+  }
 
   // Récupération des données réelles des raw materials pour les alertes
   const { data: rawMaterialsData } = useQuery({
@@ -175,7 +182,12 @@ export function ERPDashboard() {
                   </p>
                 </div>
               </div>
-              <Button variant="outline" className="border-red-300 text-red-700 hover:bg-red-100">
+              <Button 
+                variant="outline" 
+                className="border-red-300 text-red-700 hover:bg-red-100 flex items-center gap-2"
+                onClick={handleViewMaterials}
+              >
+                <ExternalLink className="h-4 w-4" />
                 View Materials
               </Button>
             </div>

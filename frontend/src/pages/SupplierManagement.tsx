@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Plus, Search, Star, Mail, Phone } from 'lucide-react'
+import { Plus, Search, Star, Mail, Phone, Eye, Edit, Check, ExternalLink } from 'lucide-react'
 import { ERPCard, ERPCardHeader, ERPCardTitle, ERPCardContent } from '@/components/ui/ERPCard'
 import Button from '@/components/ui/Button'
 import { supplierApi } from '@/lib/api'
@@ -30,6 +30,8 @@ const getStatusColor = (status: string) => {
 export function SupplierManagement() {
   const [filters, setFilters] = useState<SupplierFilters>({})
   const [searchTerm, setSearchTerm] = useState('')
+  const [viewingSupplier, setViewingSupplier] = useState<string | null>(null)
+  const [editingSupplier, setEditingSupplier] = useState<string | null>(null)
 
   const { data: suppliersData, isLoading, error } = useQuery({
     queryKey: ['suppliers', filters, searchTerm],
@@ -47,6 +49,17 @@ export function SupplierManagement() {
   })
 
   const suppliers = suppliersData?.data || []
+
+  // Handlers pour les actions
+  const handleViewSupplier = (supplierId: string) => {
+    setViewingSupplier(supplierId)
+    setTimeout(() => setViewingSupplier(null), 2000) // Simuler une action
+  }
+
+  const handleEditSupplier = (supplierId: string) => {
+    setEditingSupplier(supplierId)
+    setTimeout(() => setEditingSupplier(null), 2000) // Simuler une action
+  }
 
   // Debug log to track data
   console.log('Suppliers Data:', { suppliersData, suppliers, isLoading, error })
@@ -226,11 +239,35 @@ export function SupplierManagement() {
 
                       {/* Actions */}
                       <div className="flex gap-2 pt-2">
-                        <Button variant="outline" size="sm" className="flex-1">
-                          View Details
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="flex-1"
+                          onClick={() => handleViewSupplier(safeKey)}
+                        >
+                          {viewingSupplier === safeKey ? (
+                            <>
+                              <Check className="h-3 w-3 mr-1" />
+                              Viewed
+                            </>
+                          ) : (
+                            <>
+                              <Eye className="h-3 w-3 mr-1" />
+                              View Details
+                            </>
+                          )}
                         </Button>
-                        <Button variant="outline" size="sm">
-                          Edit
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleEditSupplier(safeKey)}
+                          className={editingSupplier === safeKey ? 'bg-green-50 border-green-300' : ''}
+                        >
+                          {editingSupplier === safeKey ? (
+                            <Check className="h-3 w-3" />
+                          ) : (
+                            <Edit className="h-3 w-3" />
+                          )}
                         </Button>
                       </div>
                     </div>

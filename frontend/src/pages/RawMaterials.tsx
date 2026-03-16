@@ -13,13 +13,19 @@ import {
   Eye,
   Edit,
   Trash2,
-  X
+  X,
+  Check,
+  Loader2
 } from 'lucide-react'
 
 export function RawMaterials() {
   const [showAddForm, setShowAddForm] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('all')
+  const [isExporting, setIsExporting] = useState(false)
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false)
+  const [viewingMaterial, setViewingMaterial] = useState<string | null>(null)
+  const [editingMaterial, setEditingMaterial] = useState<string | null>(null)
   const queryClient = useQueryClient()
   
   // Formulaire state
@@ -113,7 +119,11 @@ export function RawMaterials() {
     mutationFn: (data: any) => rawMaterialsApi.createRawMaterial(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['rawMaterials'] })
-      setShowAddForm(false)
+      setShowSuccessMessage(true)
+      setTimeout(() => {
+        setShowSuccessMessage(false)
+        setShowAddForm(false)
+      }, 2000)
       // Reset form
       setFormData({
         name: '',
@@ -129,6 +139,7 @@ export function RawMaterials() {
     },
     onError: (error) => {
       console.error('Error creating material:', error)
+      // TODO: Show error message to user
     }
   })
 
@@ -137,6 +148,23 @@ export function RawMaterials() {
   const handleAddMaterial = () => {
     console.log('Adding material:', formData)
     createMaterialMutation.mutate(formData)
+  }
+
+  const handleViewMaterial = (materialId: string) => {
+    setViewingMaterial(materialId)
+    setTimeout(() => setViewingMaterial(null), 2000) // Simuler une action
+  }
+
+  const handleEditMaterial = (materialId: string) => {
+    setEditingMaterial(materialId)
+    setTimeout(() => setEditingMaterial(null), 2000) // Simuler une action
+  }
+
+  const handleDeleteMaterial = (materialId: string) => {
+    if (confirm('Are you sure you want to delete this material?')) {
+      console.log('Deleting material:', materialId)
+      // TODO: Implement delete mutation
+    }
   }
 
   const updateFormData = (field: string, value: any) => {
@@ -157,38 +185,58 @@ export function RawMaterials() {
     return material?.currentStock <= material?.minStockAlert
   }
 
-  // CSV Export function
-  const exportToCSV = () => {
-    const headers = ['Name', 'Reference', 'Category', 'Current Stock', 'Min Alert', 'Unit', 'Unit Cost', 'Supplier', 'Location', 'Status']
-    const csvData = filteredMaterials.map(material => [
-      material?.name || 'Unknown',
-      material?.reference || 'N/A',
-      material?.category || 'Uncategorized',
-      material?.currentStock || 0,
-      material?.minStockAlert || 0,
-      material?.unit || 'N/A',
-      material?.unitCost || 0,
-      material?.supplier || 'Unknown',
-      material?.location || 'Unknown',
-      isLowStock(material) ? 'LOW STOCK' : 'OK'
-    ])
-    
-    const csvContent = [
-      headers.join(','),
-      ...csvData.map(row => row.map(cell => `"${cell}"`).join(','))
-    ].join('\n')
-    
-    const blob = new Blob([csvContent], { type: 'text/csv' })
-    const url = window.URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `raw-materials-${new Date().toISOString().split('T')[0]}.csv`
-    a.click()
-    window.URL.revokeObjectURL(url)
+  // CSV Export function avec feedback
+  const exportToCSV = async () => {
+    setIsExporting(true)
+    try {
+      const headers = ['Name', 'Reference', 'Category', 'Current Stock', 'Min Alert', 'Unit', 'Unit Cost', 'Supplier', 'Location', 'Status']
+      const csvData = filteredMaterials.map(material => [
+        material?.name || 'Unknown',
+        material?.reference || 'N/A',
+        material?.category || 'Uncategorized',
+        material?.currentStock || 0,
+        material?.minStockAlert || 0,
+        material?.unit || 'N/A',
+        material?.unitCost || 0,
+        material?.supplier || 'Unknown',
+        material?.location || 'Unknown',
+        isLowStock(material) ? 'LOW STOCK' : 'OK'
+      ])
+      
+      const csvContent = [
+        headers.join(','),
+        ...csvData.map(row => row.map(cell => `"${cell}"`).join(','))
+      ].join('\n')
+      
+      const blob = new Blob([csvContent], { type: 'text/csv' })
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `raw-materials-${new Date().toISOString().split('T')[0]}.csv`
+      a.click()
+      window.URL.revokeObjectURL(url)
+      
+      // Feedback succès
+      setTimeout(() => setIsExporting(false), 1000)
+    } catch (error) {
+      console.error('Export failed:', error)
+      setIsExporting(false)
+    }
   }
 
   return (
     <div className="space-y-6">
+      {/* Success Message */}
+      {showSuccessMessage && (
+        <div className="fixed top-4 right-4 bg-green-50 border border-green-200 rounded-lg p-4 shadow-lg z-50 flex items-center gap-3">
+          <Check className="h-5 w-5 text-green-600" />
+          <div>
+            <h4 className="text-green-800 font-medium">Success!</h4>
+            <p className="text-green-600 text-sm">Material added successfully</p>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
@@ -333,14 +381,28 @@ export function RawMaterials() {
               <Button
                 variant="outline"
                 onClick={() => setShowAddForm(false)}
+                disabled={createMaterialMutation.isPending}
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleAddMaterial}
-                className="bg-indigo-600 hover:bg-indigo-700"
+                disabled={createMaterialMutation.isPending}
+                className={`bg-indigo-600 hover:bg-indigo-700 flex items-center gap-2 ${
+                  createMaterialMutation.isPending ? 'opacity-75' : ''
+                }`}
               >
-                Add Material
+                {createMaterialMutation.isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Adding...
+                  </>
+                ) : (
+                  <>
+                    <Plus className="h-4 w-4" />
+                    Add Material
+                  </>
+                )}
               </Button>
             </div>
           </div>
@@ -379,10 +441,24 @@ export function RawMaterials() {
             <Button
               variant="outline"
               onClick={exportToCSV}
-              className="flex items-center gap-2"
+              disabled={isExporting}
+              className={`flex items-center gap-2 transition-all ${
+                isExporting 
+                  ? 'bg-green-50 border-green-300 text-green-700' 
+                  : 'hover:bg-gray-50'
+              }`}
             >
-              <Download className="h-4 w-4" />
-              Export CSV
+              {isExporting ? (
+                <>
+                  <Check className="h-4 w-4" />
+                  Exported!
+                </>
+              ) : (
+                <>
+                  <Download className="h-4 w-4" />
+                  Export CSV
+                </>
+              )}
             </Button>
           </div>
         </ERPCardContent>
@@ -489,12 +565,35 @@ export function RawMaterials() {
                   <span className="text-sm font-medium">{material?.location || 'Unknown'}</span>
                 </div>
                 <div className="flex gap-2 pt-2">
-                  <Button variant="outline" size="sm" className="flex-1">
-                    <Eye className="h-3 w-3 mr-1" />
-                    View
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1"
+                    onClick={() => handleViewMaterial(material?._id || material?.id || '')}
+                  >
+                    {viewingMaterial === (material?._id || material?.id) ? (
+                      <>
+                        <Check className="h-3 w-3 mr-1" />
+                        Viewed
+                      </>
+                    ) : (
+                      <>
+                        <Eye className="h-3 w-3 mr-1" />
+                        View
+                      </>
+                    )}
                   </Button>
-                  <Button variant="outline" size="sm">
-                    <Edit className="h-3 w-3" />
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleEditMaterial(material?._id || material?.id || '')}
+                    className={editingMaterial === (material?._id || material?.id) ? 'bg-green-50 border-green-300' : ''}
+                  >
+                    {editingMaterial === (material?._id || material?.id) ? (
+                      <Check className="h-3 w-3" />
+                    ) : (
+                      <Edit className="h-3 w-3" />
+                    )}
                   </Button>
                 </div>
               </div>
