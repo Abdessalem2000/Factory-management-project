@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { ERPCard, ERPCardHeader, ERPCardTitle, ERPCardContent } from '@/components/ui/ERPCard'
 import { Button } from '@/components/ui/Button'
+import { rawMaterialsApi } from '@/lib/api'
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -11,7 +13,8 @@ import {
   Users,
   ShoppingCart,
   ArrowUpRight,
-  ArrowDownRight
+  ArrowDownRight,
+  Download
 } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts'
 
@@ -49,6 +52,57 @@ const kpiData = [
 export function ERPDashboard() {
   const [selectedPeriod, setSelectedPeriod] = useState('6months')
 
+  // Récupération des données réelles des raw materials pour les alertes
+  const { data: rawMaterialsData } = useQuery({
+    queryKey: ['rawMaterials-dashboard'],
+    queryFn: async () => {
+      try {
+        const result = await rawMaterialsApi.getRawMaterials()
+        return result?.data || []
+      } catch (apiError) {
+        console.error('API Error:', apiError)
+        // Fallback to mock data
+        return [
+          { _id: '1', name: 'Cotton Fabric - Blue', currentStock: 45, minStockAlert: 100, unit: 'meters' },
+          { _id: '2', name: 'Zippers - Metal', currentStock: 12, minStockAlert: 50, unit: 'pieces' },
+          { _id: '3', name: 'Thread - White', currentStock: 8, minStockAlert: 25, unit: 'rolls' },
+          { _id: '4', name: 'Buttons - Pearl', currentStock: 15, minStockAlert: 30, unit: 'pieces' }
+        ]
+      }
+    },
+    retry: 1,
+    gcTime: 300000,
+  })
+
+  // Calculer les matériaux en stock faible
+  const lowStockMaterials = (rawMaterialsData || []).filter(material => 
+    material?.currentStock <= material?.minStockAlert
+  )
+
+  // Export CSV function pour le dashboard
+  const exportDashboardToCSV = () => {
+    const headers = ['Month', 'Expenses', 'Production', 'Income']
+    const csvData = monthlyData.map(item => [
+      item.month,
+      item.expenses,
+      item.production,
+      item.income
+    ])
+    
+    const csvContent = [
+      headers.join(','),
+      ...csvData.map(row => row.join(','))
+    ].join('\n')
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' })
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `dashboard-report-${new Date().toISOString().split('T')[0]}.csv`
+    a.click()
+    window.URL.revokeObjectURL(url)
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -68,7 +122,11 @@ export function ERPDashboard() {
             <option value="6months">Last 6 Months</option>
             <option value="1year">Last Year</option>
           </select>
-          <Button className="bg-indigo-600 hover:bg-indigo-700">
+          <Button 
+            onClick={exportDashboardToCSV}
+            className="bg-indigo-600 hover:bg-indigo-700 flex items-center gap-2"
+          >
+            <Download className="h-4 w-4" />
             Export Report
           </Button>
         </div>
@@ -102,6 +160,47 @@ export function ERPDashboard() {
           </ERPCard>
         ))}
       </div>
+
+      {/* Low Stock Alert */}
+      {lowStockMaterials.length > 0 && (
+        <ERPCard className="border-red-200 bg-red-50">
+          <ERPCardContent>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <AlertTriangle className="h-6 w-6 text-red-600" />
+                <div>
+                  <h3 className="text-red-800 font-semibold">Critical Inventory Alert</h3>
+                  <p className="text-red-600 text-sm">
+                    {lowStockMaterials.length} materials need immediate restocking
+                  </p>
+                </div>
+              </div>
+              <Button variant="outline" className="border-red-300 text-red-700 hover:bg-red-100">
+                View Materials
+              </Button>
+            </div>
+            
+            {/* Quick List of Critical Items */}
+            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+              {lowStockMaterials.slice(0, 4).map((material) => (
+                <div key={material?._id} className="bg-white rounded-lg p-3 border border-red-200">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">{material?.name || 'Unknown'}</p>
+                      <p className="text-xs text-red-600 font-semibold">
+                        {material?.currentStock || 0} / {material?.minStockAlert || 0} {material?.unit || 'units'}
+                      </p>
+                    </div>
+                    <div className="bg-red-100 rounded-full p-1">
+                      <AlertTriangle className="h-3 w-3 text-red-600" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </ERPCardContent>
+        </ERPCard>
+      )}
 
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

@@ -196,6 +196,20 @@ export const employeeApi = {
   generatePayroll: (data: any) => api.post('/employees/payroll/generate', data),
 }
 
+// Raw Materials API
+export const rawMaterialsApi = {
+  getRawMaterials: (params?: any) => api.get('/raw-materials', { params }),
+  getRawMaterial: (id: string) => api.get(`/raw-materials/${id}`),
+  createRawMaterial: (data: any) => api.post('/raw-materials', data),
+  updateRawMaterial: (id: string, data: any) => api.put(`/raw-materials/${id}`, data),
+  deleteRawMaterial: (id: string) => api.delete(`/raw-materials/${id}`),
+  getLowStockAlerts: () => api.get('/raw-materials/alerts/low-stock'),
+  updateStock: (id: string, quantity: number) => api.patch(`/raw-materials/${id}/stock`, { quantity }),
+  getStockMovements: (id: string) => api.get(`/raw-materials/${id}/movements`),
+  getCategories: () => api.get('/raw-materials/categories'),
+  getSuppliers: () => api.get('/raw-materials/suppliers'),
+}
+
 // Advanced Reporting API
 export const reportingApi = {
   getReports: (params: any) => api.get('/reports', { params }),

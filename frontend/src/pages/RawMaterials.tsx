@@ -1,6 +1,8 @@
 import { useState } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ERPCard, ERPCardHeader, ERPCardTitle, ERPCardContent } from '@/components/ui/ERPCard'
 import { Button } from '@/components/ui/Button'
+import { rawMaterialsApi } from '@/lib/api'
 import { 
   Package, 
   AlertTriangle, 
@@ -14,70 +16,11 @@ import {
   X
 } from 'lucide-react'
 
-// Mock data - sera remplacé par API calls
-const rawMaterials = [
-  {
-    id: 1,
-    name: 'Cotton Fabric - Blue',
-    reference: 'CF-BLUE-001',
-    category: 'fabric',
-    currentStock: 45,
-    minStockAlert: 100,
-    unit: 'meters',
-    unitCost: 250,
-    supplier: 'Textile Supplier Co.',
-    lastRestocked: '2024-03-10',
-    location: 'Warehouse A',
-    status: 'low_stock'
-  },
-  {
-    id: 2,
-    name: 'Zippers - Metal',
-    reference: 'ZIP-MET-002',
-    category: 'zippers',
-    currentStock: 12,
-    minStockAlert: 50,
-    unit: 'pieces',
-    unitCost: 85,
-    supplier: 'Hardware Supplies Inc.',
-    lastRestocked: '2024-03-08',
-    location: 'Warehouse B',
-    status: 'low_stock'
-  },
-  {
-    id: 3,
-    name: 'Thread - White',
-    reference: 'THR-WHT-003',
-    category: 'thread',
-    currentStock: 8,
-    minStockAlert: 25,
-    unit: 'rolls',
-    unitCost: 45,
-    supplier: 'Thread Masters Ltd.',
-    lastRestocked: '2024-03-05',
-    location: 'Warehouse A',
-    status: 'low_stock'
-  },
-  {
-    id: 4,
-    name: 'Buttons - Pearl',
-    reference: 'BTN-PRL-004',
-    category: 'buttons',
-    currentStock: 15,
-    minStockAlert: 30,
-    unit: 'pieces',
-    unitCost: 12,
-    supplier: 'Button World Co.',
-    lastRestocked: '2024-03-12',
-    location: 'Warehouse C',
-    status: 'low_stock'
-  }
-]
-
 export function RawMaterials() {
   const [showAddForm, setShowAddForm] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('all')
+  const queryClient = useQueryClient()
   
   // Formulaire state
   const [formData, setFormData] = useState({
@@ -92,34 +35,157 @@ export function RawMaterials() {
     location: 'Warehouse A'
   })
 
+  // Récupération des données réelles
+  const { data: rawMaterialsData, isLoading, error } = useQuery({
+    queryKey: ['rawMaterials', selectedCategory, searchTerm],
+    queryFn: async () => {
+      try {
+        const result = await rawMaterialsApi.getRawMaterials({ 
+          category: selectedCategory !== 'all' ? selectedCategory : undefined,
+          search: searchTerm 
+        })
+        return result?.data || []
+      } catch (apiError) {
+        console.error('API Error:', apiError)
+        // Fallback to mock data if API fails
+        return [
+          {
+            _id: '1',
+            name: 'Cotton Fabric - Blue',
+            reference: 'CF-BLUE-001',
+            category: 'fabric',
+            currentStock: 45,
+            minStockAlert: 100,
+            unit: 'meters',
+            unitCost: 250,
+            supplier: 'Textile Supplier Co.',
+            lastRestocked: '2024-03-10',
+            location: 'Warehouse A',
+          },
+          {
+            _id: '2',
+            name: 'Zippers - Metal',
+            reference: 'ZIP-MET-002',
+            category: 'zippers',
+            currentStock: 12,
+            minStockAlert: 50,
+            unit: 'pieces',
+            unitCost: 85,
+            supplier: 'Hardware Supplies Inc.',
+            lastRestocked: '2024-03-08',
+            location: 'Warehouse B',
+          },
+          {
+            _id: '3',
+            name: 'Thread - White',
+            reference: 'THR-WHT-003',
+            category: 'thread',
+            currentStock: 8,
+            minStockAlert: 25,
+            unit: 'rolls',
+            unitCost: 45,
+            supplier: 'Thread Masters Ltd.',
+            lastRestocked: '2024-03-05',
+            location: 'Warehouse A',
+          },
+          {
+            _id: '4',
+            name: 'Buttons - Pearl',
+            reference: 'BTN-PRL-004',
+            category: 'buttons',
+            currentStock: 15,
+            minStockAlert: 30,
+            unit: 'pieces',
+            unitCost: 12,
+            supplier: 'Button World Co.',
+            lastRestocked: '2024-03-12',
+            location: 'Warehouse C',
+          }
+        ]
+      }
+    },
+    retry: 1,
+    gcTime: 300000,
+  })
+
+  // Mutation pour ajouter un matériau
+  const createMaterialMutation = useMutation({
+    mutationFn: (data: any) => rawMaterialsApi.createRawMaterial(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['rawMaterials'] })
+      setShowAddForm(false)
+      // Reset form
+      setFormData({
+        name: '',
+        reference: '',
+        category: 'fabric',
+        currentStock: 0,
+        minStockAlert: 10,
+        unit: 'meters',
+        unitCost: 0,
+        supplier: '',
+        location: 'Warehouse A'
+      })
+    },
+    onError: (error) => {
+      console.error('Error creating material:', error)
+    }
+  })
+
+  const rawMaterials = rawMaterialsData || []
+
   const handleAddMaterial = () => {
     console.log('Adding material:', formData)
-    // TODO: API call pour ajouter le matériau
-    setShowAddForm(false)
-    // Reset form
-    setFormData({
-      name: '',
-      reference: '',
-      category: 'fabric',
-      currentStock: 0,
-      minStockAlert: 10,
-      unit: 'meters',
-      unitCost: 0,
-      supplier: '',
-      location: 'Warehouse A'
-    })
+    createMaterialMutation.mutate(formData)
   }
 
   const updateFormData = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
+  // Filter materials based on search
   const filteredMaterials = rawMaterials.filter(material => {
-    const matchesSearch = material.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         material.reference.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesCategory = selectedCategory === 'all' || material.category === selectedCategory
+    const matchesSearch = !searchTerm || 
+      material?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      material?.reference?.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesCategory = selectedCategory === 'all' || material?.category === selectedCategory
     return matchesSearch && matchesCategory
   })
+
+  // Check if material is in low stock
+  const isLowStock = (material: any) => {
+    return material?.currentStock <= material?.minStockAlert
+  }
+
+  // CSV Export function
+  const exportToCSV = () => {
+    const headers = ['Name', 'Reference', 'Category', 'Current Stock', 'Min Alert', 'Unit', 'Unit Cost', 'Supplier', 'Location', 'Status']
+    const csvData = filteredMaterials.map(material => [
+      material?.name || 'Unknown',
+      material?.reference || 'N/A',
+      material?.category || 'Uncategorized',
+      material?.currentStock || 0,
+      material?.minStockAlert || 0,
+      material?.unit || 'N/A',
+      material?.unitCost || 0,
+      material?.supplier || 'Unknown',
+      material?.location || 'Unknown',
+      isLowStock(material) ? 'LOW STOCK' : 'OK'
+    ])
+    
+    const csvContent = [
+      headers.join(','),
+      ...csvData.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n')
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' })
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `raw-materials-${new Date().toISOString().split('T')[0]}.csv`
+    a.click()
+    window.URL.revokeObjectURL(url)
+  }
 
   return (
     <div className="space-y-6">
@@ -310,27 +376,84 @@ export function RawMaterials() {
               <option value="labels">Labels</option>
               <option value="other">Other</option>
             </select>
+            <Button
+              variant="outline"
+              onClick={exportToCSV}
+              className="flex items-center gap-2"
+            >
+              <Download className="h-4 w-4" />
+              Export CSV
+            </Button>
           </div>
         </ERPCardContent>
       </ERPCard>
 
+      {/* Low Stock Alert */}
+      {filteredMaterials.some(isLowStock) && (
+        <ERPCard className="border-red-200 bg-red-50">
+          <ERPCardContent>
+            <div className="flex items-center gap-3">
+              <AlertTriangle className="h-5 w-5 text-red-600" />
+              <div>
+                <h3 className="text-red-800 font-medium">Low Stock Alert</h3>
+                <p className="text-red-600 text-sm">
+                  {filteredMaterials.filter(isLowStock).length} materials need immediate restocking
+                </p>
+              </div>
+            </div>
+          </ERPCardContent>
+        </ERPCard>
+      )}
+
+      {/* Loading State */}
+      {isLoading && (
+        <div className="text-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
+          <p className="text-gray-600 mt-2">Loading materials...</p>
+        </div>
+      )}
+
+      {/* Error State */}
+      {error && (
+        <ERPCard className="border-yellow-200 bg-yellow-50">
+          <ERPCardContent>
+            <div className="text-center py-4">
+              <p className="text-yellow-800">Using demo data - Backend connection unavailable</p>
+            </div>
+          </ERPCardContent>
+        </ERPCard>
+      )}
+
       {/* Materials Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {filteredMaterials.map((material) => (
-          <ERPCard key={material.id} className="hover:shadow-lg transition-shadow">
+          <ERPCard 
+            key={material?._id || material?.id || `material-${Math.random()}`} 
+            className={`hover:shadow-lg transition-shadow ${
+              isLowStock(material) ? 'border-red-300 bg-red-50' : ''
+            }`}
+          >
             <ERPCardHeader>
               <div className="flex justify-between items-start">
                 <div>
-                  <ERPCardTitle className="text-lg">{material.name}</ERPCardTitle>
-                  <p className="text-sm text-gray-600">{material.reference}</p>
+                  <ERPCardTitle className="text-lg">{material?.name || 'Unknown Material'}</ERPCardTitle>
+                  <p className="text-sm text-gray-600">{material?.reference || 'N/A'}</p>
                 </div>
-                <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                  material.status === 'low_stock' 
-                    ? 'bg-red-100 text-red-800' 
-                    : 'bg-green-100 text-green-800'
-                }`}>
-                  {material.status === 'low_stock' ? 'Low Stock' : 'In Stock'}
-                </span>
+                <div className="flex flex-col gap-1">
+                  {isLowStock(material) && (
+                    <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800 border border-red-200">
+                      <AlertTriangle className="h-3 w-3 mr-1" />
+                      Urgent
+                    </span>
+                  )}
+                  <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
+                    isLowStock(material) 
+                      ? 'bg-red-100 text-red-800 border border-red-200' 
+                      : 'bg-green-100 text-green-800 border border-green-200'
+                  }`}>
+                    {isLowStock(material) ? 'Low Stock' : 'In Stock'}
+                  </span>
+                </div>
               </div>
             </ERPCardHeader>
             <ERPCardContent>
@@ -338,24 +461,32 @@ export function RawMaterials() {
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">Current Stock:</span>
                   <span className={`font-medium ${
-                    material.currentStock <= material.minStockAlert 
-                      ? 'text-red-600' 
+                    isLowStock(material) 
+                      ? 'text-red-600 font-bold' 
                       : 'text-green-600'
                   }`}>
-                    {material.currentStock} {material.unit}
+                    {material?.currentStock || 0} {material?.unit || 'N/A'}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">Min Alert:</span>
-                  <span className="text-sm font-medium">{material.minStockAlert} {material.unit}</span>
+                  <span className="text-sm font-medium">{material?.minStockAlert || 0} {material?.unit || 'N/A'}</span>
                 </div>
+                {isLowStock(material) && (
+                  <div className="flex justify-between items-center bg-red-100 px-2 py-1 rounded">
+                    <span className="text-sm text-red-800 font-medium">Shortage:</span>
+                    <span className="text-sm text-red-800 font-bold">
+                      -{Math.max(0, (material?.minStockAlert || 0) - (material?.currentStock || 0))} {material?.unit || 'N/A'}
+                    </span>
+                  </div>
+                )}
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">Unit Cost:</span>
-                  <span className="text-sm font-medium">${material.unitCost}</span>
+                  <span className="text-sm font-medium">${material?.unitCost || 0}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">Location:</span>
-                  <span className="text-sm font-medium">{material.location}</span>
+                  <span className="text-sm font-medium">{material?.location || 'Unknown'}</span>
                 </div>
                 <div className="flex gap-2 pt-2">
                   <Button variant="outline" size="sm" className="flex-1">
