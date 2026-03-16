@@ -5,8 +5,8 @@ services:
     runtime: node
     plan: free
     buildCommand: npm install
-    startCommand: npm start
-    healthCheckPath: /api/health
+    startCommand: node server.js
+    healthCheckPath: /api/test
     autoDeploy: true
     
     # Environment Variables
@@ -14,7 +14,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: PORT
-        value: 3001
+        value: 10003
       - key: MONGODB_URI
         sync: false # Set this in Render dashboard
       - key: JWT_SECRET
@@ -25,5 +25,8 @@ services:
     # Build Configuration
     buildFilter:
       paths:
-        - backend/start-server.js
-        - backend/package.json
+        - server.js
+        - package.json
+        - database.js
+        - models/
+        - src/
