@@ -1,6 +1,11 @@
 import { useState } from 'react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { Check, Loader2, Save } from 'lucide-react'
 
 export function Settings() {
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false)
+  const queryClient = useQueryClient()
+  
   const [settings, setSettings] = useState({
     factoryName: 'Factory Manager ERP',
     timezone: 'UTC',
@@ -11,8 +16,27 @@ export function Settings() {
     autoBackup: true,
   })
 
+  // Mutation pour sauvegarder les settings
+  const saveSettingsMutation = useMutation({
+    mutationFn: async (data: any) => {
+      // Simuler API call
+      return new Promise(resolve => {
+        setTimeout(() => resolve(data), 1000)
+      })
+    },
+    onSuccess: () => {
+      setShowSuccessMessage(true)
+      setTimeout(() => setShowSuccessMessage(false), 2000)
+      console.log('Settings saved successfully:', settings)
+    },
+    onError: (error) => {
+      console.error('Error saving settings:', error)
+    }
+  })
+
   const handleSave = () => {
-    console.log('Settings saved:', settings)
+    console.log('Saving settings:', settings)
+    saveSettingsMutation.mutate(settings)
   }
 
   const updateField = (field: string, value: any) => {
@@ -25,6 +49,17 @@ export function Settings() {
 
   return (
     <div className="space-y-6 p-6">
+      {/* Success Message */}
+      {showSuccessMessage && (
+        <div className="fixed top-4 right-4 bg-green-50 border border-green-200 rounded-lg p-4 shadow-lg z-50 flex items-center gap-3">
+          <Check className="h-5 w-5 text-green-600" />
+          <div>
+            <h4 className="text-green-800 font-medium">Success!</h4>
+            <p className="text-green-600 text-sm">Settings saved successfully</p>
+          </div>
+        </div>
+      )}
+
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
@@ -32,9 +67,20 @@ export function Settings() {
         </div>
         <button 
           onClick={handleSave} 
-          className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md"
+          disabled={saveSettingsMutation.isPending}
+          className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white px-4 py-2 rounded-md flex items-center gap-2"
         >
-          Save Settings
+          {saveSettingsMutation.isPending ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Saving...
+            </>
+          ) : (
+            <>
+              <Save className="h-4 w-4" />
+              Save Settings
+            </>
+          )}
         </button>
       </div>
 
