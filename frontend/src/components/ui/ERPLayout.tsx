@@ -43,9 +43,9 @@ export function ERPLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation()
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}>
+      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 lg:flex-shrink-0`}>
         <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
           <div className="flex items-center">
             <Factory className="h-8 w-8 text-indigo-600" />
@@ -90,7 +90,7 @@ export function ERPLayout({ children }: { children: React.ReactNode }) {
       </div>
 
       {/* Main Content */}
-      <div className="lg:pl-64">
+      <div className="flex-1 min-w-0">
         {/* Top Bar */}
         <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
           <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
