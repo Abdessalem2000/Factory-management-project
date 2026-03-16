@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, lazy, Suspense, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { ERPCard, ERPCardHeader, ERPCardTitle, ERPCardContent } from '@/components/ui/ERPCard'
 import Button from '@/components/ui/Button'
@@ -6,6 +6,7 @@ import Select from '@/components/ui/Select'
 import Input from '@/components/ui/Input'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { reportingApi } from '@/lib/api'
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { 
   BarChart3, 
   PieChart, 
@@ -34,6 +35,9 @@ import {
   Edit,
   Trash2
 } from 'lucide-react'
+
+// Lazy load heavy components
+const RechartsComponent = lazy(() => import('@/components/ui/Chart').then(module => ({ default: module.SimpleBarChart })))
 
 // Types
 interface AnalyticsData {
@@ -235,81 +239,112 @@ export function AdvancedReporting() {
   const [selectedTemplate, setSelectedTemplate] = useState<ReportTemplate | null>(null)
   const [reportParameters, setReportParameters] = useState<Record<string, any>>({})
 
-  // Mock API calls - replace with actual API calls
-  const { data: reports, isLoading } = useQuery<Report[]>({
-    queryKey: ['reports', selectedPeriod, selectedType, selectedStatus],
-    queryFn: async () => {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      return mockReports
+  // Memoized query options to prevent unnecessary re-renders
+  const reportsQueryOptions = useMemo(() => ({
+    queryKey: ['reports', selectedPeriod, selectedType, selectedStatus] as const,
+    queryFn: async (): Promise<Report[]> => {
+      // Simulate API call with proper error handling
+      try {
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        return mockReports
+      } catch (error) {
+        console.error('Failed to fetch reports:', error)
+        return []
+      }
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes (v5 uses gcTime instead of cacheTime)
-  })
+    retry: 2,
+    refetchOnWindowFocus: false,
+  }), [selectedPeriod, selectedType, selectedStatus])
 
-  const { data: analytics } = useQuery<AnalyticsData>({
-    queryKey: ['reporting-analytics'],
-    queryFn: async () => {
-      await new Promise(resolve => setTimeout(resolve, 500))
-      return analyticsData
+  const analyticsQueryOptions = useMemo(() => ({
+    queryKey: ['reporting-analytics'] as const,
+    queryFn: async (): Promise<AnalyticsData> => {
+      try {
+        await new Promise(resolve => setTimeout(resolve, 500))
+        return analyticsData
+      } catch (error) {
+        console.error('Failed to fetch analytics:', error)
+        return analyticsData // Fallback data
+      }
     },
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
-  })
+    retry: 1,
+    refetchOnWindowFocus: false,
+  }), [])
 
-  const metrics = [
+  // Mock API calls with optimized options
+  const { data: reports, isLoading } = useQuery<Report[]>(reportsQueryOptions)
+  const { data: analytics } = useQuery<AnalyticsData>(analyticsQueryOptions)
+
+  // Memoize metrics to prevent unnecessary recalculations
+  const metrics = useMemo(() => [
     {
       title: 'Total Reports',
       value: analytics?.totalReports || 0,
       change: analytics?.reportsGenerated || 0,
-      changeType: 'increase',
+      changeType: 'increase' as const,
       icon: FileText,
       color: 'text-blue-600',
-      format: 'number'
+      format: 'number' as const
     },
     {
       title: 'Active Reports',
       value: analytics?.activeReports || 0,
       change: 12.5,
-      changeType: 'increase',
+      changeType: 'increase' as const,
       icon: Activity,
       color: 'text-green-600',
-      format: 'number'
+      format: 'number' as const
     },
     {
       title: 'Scheduled Reports',
       value: analytics?.scheduledReports || 0,
       change: -2.3,
-      changeType: 'decrease',
+      changeType: 'decrease' as const,
       icon: Clock,
       color: 'text-purple-600',
-      format: 'number'
+      format: 'number' as const
     },
     {
       title: 'Avg. Generation Time',
       value: analytics?.averageGenerationTime || 0,
       change: -8.7,
-      changeType: 'increase',
+      changeType: 'increase' as const,
       icon: Zap,
       color: 'text-orange-600',
-      format: 'time'
+      format: 'time' as const
     }
-  ]
+  ], [analytics])
 
   if (isLoading) return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="text-gray-900 text-xl">Loading advanced reporting...</div>
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center" role="status" aria-label="Loading reports">
+      <LoadingSpinner size="lg" />
+      <span className="ml-3 text-gray-900 text-xl sr-only">Loading advanced reporting...</span>
     </div>
   )
 
+  // Memoize filtered reports to prevent unnecessary re-renders
+  const filteredReports = useMemo(() => {
+    if (!reports) return []
+    
+    return reports.filter(report => {
+      if (selectedType !== 'all' && report.type !== selectedType) return false
+      if (selectedStatus !== 'all' && report.status !== selectedStatus) return false
+      return true
+    })
+  }, [reports, selectedType, selectedStatus])
+
   return (
-    <div className="space-y-6">
-      <div className="text-center">
+    <div className="space-y-6" role="main">
+      <header className="text-center">
         <h1 className="text-4xl font-bold text-gray-900 mb-2">
           Advanced Reporting
         </h1>
         <p className="text-gray-500 text-lg">Generate custom reports and gain deep insights</p>
-      </div>
+      </header>
 
       {/* Metrics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -382,7 +417,11 @@ export function AdvancedReporting() {
         <ERPCardHeader>
           <ERPCardTitle className="flex items-center justify-between">
             <span>Recent Reports</span>
-            <Button className="bg-indigo-600 hover:bg-indigo-700">
+            <Button 
+              className="bg-indigo-600 hover:bg-indigo-700"
+              onClick={() => setShowCreateModal(true)}
+              aria-label="Create new report"
+            >
               <Plus className="h-4 w-4 mr-2" />
               Create Report
             </Button>
@@ -390,29 +429,29 @@ export function AdvancedReporting() {
         </ERPCardHeader>
         <ERPCardContent>
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
+            <table className="min-w-full divide-y divide-gray-200" role="table">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" scope="col">
                     Report
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" scope="col">
                     Type
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" scope="col">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" scope="col">
                     Generated
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" scope="col">
                     Actions
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {reports?.map((report) => (
-                  <tr key={report.id} className="hover:bg-gray-50">
+                {filteredReports.map((report) => (
+                  <tr key={report.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
                         <div className="text-sm font-medium text-gray-900">{report.name}</div>
@@ -438,19 +477,35 @@ export function AdvancedReporting() {
                       {report.lastGenerated ? formatDate(report.lastGenerated) : 'Not generated'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-2" role="group">
                         {report.status === 'ready' && (
-                          <button className="text-indigo-600 hover:text-indigo-900">
+                          <button 
+                            className="text-indigo-600 hover:text-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded"
+                            aria-label={`Download ${report.name}`}
+                            title="Download report"
+                          >
                             <Download className="h-4 w-4" />
                           </button>
                         )}
-                        <button className="text-gray-400 hover:text-gray-600">
+                        <button 
+                          className="text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 rounded"
+                          aria-label={`View ${report.name}`}
+                          title="View report"
+                        >
                           <Eye className="h-4 w-4" />
                         </button>
-                        <button className="text-gray-400 hover:text-gray-600">
+                        <button 
+                          className="text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 rounded"
+                          aria-label={`Edit ${report.name}`}
+                          title="Edit report"
+                        >
                           <Edit className="h-4 w-4" />
                         </button>
-                        <button className="text-red-600 hover:text-red-900">
+                        <button 
+                          className="text-red-600 hover:text-red-900 focus:outline-none focus:ring-2 focus:ring-red-500 rounded"
+                          aria-label={`Delete ${report.name}`}
+                          title="Delete report"
+                        >
                           <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
@@ -459,6 +514,12 @@ export function AdvancedReporting() {
                 ))}
               </tbody>
             </table>
+            
+            {filteredReports.length === 0 && (
+              <div className="text-center py-8 text-gray-500">
+                No reports found matching your filters.
+              </div>
+            )}
           </div>
         </ERPCardContent>
       </ERPCard>
