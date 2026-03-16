@@ -39,6 +39,8 @@ export function Select({
   )
 }
 
+export { Select }
+
 export default Select
 
 interface SelectOptionProps {
