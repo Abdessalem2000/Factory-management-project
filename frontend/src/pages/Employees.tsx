@@ -1,7 +1,16 @@
 import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { ERPCard, ERPCardHeader, ERPCardTitle, ERPCardContent } from '@/components/ui/ERPCard'
 import Button from '@/components/ui/Button'
 import { Plus, Users, UserCheck, Briefcase } from 'lucide-react'
+
+// API Functions à créer:
+// const employeeApi = {
+//   getEmployees: (params) => axios.get('/api/employees', { params }),
+//   createEmployee: (data) => axios.post('/api/employees', data),
+//   updateEmployee: (id, data) => axios.put(`/api/employees/${id}`, data),
+//   deleteEmployee: (id) => axios.delete(`/api/employees/${id}`)
+// }
 
 export function Employees() {
   const [employees] = useState([
@@ -9,6 +18,15 @@ export function Employees() {
     { id: 2, name: 'Jane Smith', position: 'Quality Control', department: 'Quality', status: 'Active' },
     { id: 3, name: 'Mike Johnson', position: 'Machine Operator', department: 'Production', status: 'On Leave' },
   ])
+
+  // Future API integration:
+  // const { data: employeesData, isLoading, error } = useQuery({
+  //   queryKey: ['employees'],
+  //   queryFn: () => employeeApi.getEmployees().then(res => res.data),
+  //   retry: 1,
+  //   gcTime: 300000,
+  // })
+  // const employees = employeesData?.data || []
 
   return (
     <div className="space-y-6">
@@ -44,7 +62,7 @@ export function Employees() {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Active Employees</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {employees.filter(e => e.status === 'Active').length}
+                  {employees.filter(e => e?.status === 'Active').length}
                 </p>
               </div>
             </div>
@@ -58,7 +76,7 @@ export function Employees() {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Departments</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {new Set(employees.map(e => e.department)).size}
+                  {new Set(employees.map(e => e?.department).filter(Boolean)).size}
                 </p>
               </div>
             </div>
@@ -84,23 +102,23 @@ export function Employees() {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {employees.map((employee) => (
-                  <tr key={employee.id} className="hover:bg-gray-50">
+                  <tr key={employee?.id || `employee-${Math.random()}`} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {employee.name}
+                      {employee?.name || 'Unknown'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {employee.position}
+                      {employee?.position || 'Not specified'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {employee.department}
+                      {employee?.department || 'Not assigned'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        employee.status === 'Active' 
+                        employee?.status === 'Active' 
                           ? 'bg-green-100 text-green-800' 
                           : 'bg-yellow-100 text-yellow-800'
                       }`}>
-                        {employee.status}
+                        {employee?.status || 'Unknown'}
                       </span>
                     </td>
                   </tr>

@@ -1,7 +1,16 @@
 import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { ERPCard, ERPCardHeader, ERPCardTitle, ERPCardContent } from '@/components/ui/ERPCard'
 import Button from '@/components/ui/Button'
 import { Plus, Package, Settings } from 'lucide-react'
+
+// API Functions à créer:
+// const modelApi = {
+//   getModels: (params) => axios.get('/api/models', { params }),
+//   createModel: (data) => axios.post('/api/models', data),
+//   updateModel: (id, data) => axios.put(`/api/models/${id}`, data),
+//   deleteModel: (id) => axios.delete(`/api/models/${id}`)
+// }
 
 export function Models() {
   const [models] = useState([
@@ -9,6 +18,15 @@ export function Models() {
     { id: 2, name: 'Model B-2', category: 'Mechanical', version: 'v1.5', status: 'In Development' },
     { id: 3, name: 'Model C-3', category: 'Hybrid', version: 'v3.0', status: 'Active' },
   ])
+
+  // Future API integration:
+  // const { data: modelsData, isLoading, error } = useQuery({
+  //   queryKey: ['models'],
+  //   queryFn: () => modelApi.getModels().then(res => res.data),
+  //   retry: 1,
+  //   gcTime: 300000,
+  // })
+  // const models = modelsData?.data || []
 
   return (
     <div className="space-y-6">
@@ -44,7 +62,7 @@ export function Models() {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Active Models</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {models.filter(m => m.status === 'Active').length}
+                  {models.filter(m => m?.status === 'Active').length}
                 </p>
               </div>
             </div>
@@ -58,7 +76,7 @@ export function Models() {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Categories</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {new Set(models.map(m => m.category)).size}
+                  {new Set(models.map(m => m?.category).filter(Boolean)).size}
                 </p>
               </div>
             </div>
@@ -84,23 +102,23 @@ export function Models() {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {models.map((model) => (
-                  <tr key={model.id} className="hover:bg-gray-50">
+                  <tr key={model?.id || `model-${Math.random()}`} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {model.name}
+                      {model?.name || 'Unknown Model'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {model.category}
+                      {model?.category || 'Uncategorized'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {model.version}
+                      {model?.version || 'N/A'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        model.status === 'Active' 
+                        model?.status === 'Active' 
                           ? 'bg-green-100 text-green-800' 
                           : 'bg-yellow-100 text-yellow-800'
                       }`}>
-                        {model.status}
+                        {model?.status || 'Unknown'}
                       </span>
                     </td>
                   </tr>

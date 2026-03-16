@@ -33,9 +33,17 @@ export function SupplierManagement() {
 
   const { data: suppliersData, isLoading, error } = useQuery({
     queryKey: ['suppliers', filters, searchTerm],
-    queryFn: () => supplierApi.getSuppliers({ ...filters, search: searchTerm }).then(res => res.data),
-    retry: 1, // Limit retries to avoid infinite loops
-    gcTime: 300000, // 5 minutes cache
+    queryFn: async () => {
+      try {
+        const result = await supplierApi.getSuppliers({ ...filters, search: searchTerm })
+        return result?.data || { data: [] }
+      } catch (apiError) {
+        console.error('API Error:', apiError)
+        return { data: [] } // Fallback empty data
+      }
+    },
+    retry: 1,
+    gcTime: 300000,
   })
 
   const suppliers = suppliersData?.data || []
@@ -140,22 +148,35 @@ export function SupplierManagement() {
             </div>
           ) : (
             suppliers.map((supplier: any, index: number) => {
-              // Additional safety checks
+              // Multiple safety checks
               if (!supplier || typeof supplier !== 'object') {
                 console.warn(`Invalid supplier at index ${index}:`, supplier)
                 return null
               }
 
+              // Safe key generation
+              const safeKey = supplier?._id || supplier?.id || `supplier-${index}`
+
+              // Safe data extraction with fallbacks
+              const safeName = supplier?.name || supplier?.companyName || 'Unknown Supplier'
+              const safeContactPerson = supplier?.contactPerson || supplier?.contact?.name || 'No contact person'
+              const safeStatus = supplier?.status || 'Unknown'
+              const safeRating = typeof supplier?.rating === 'number' ? supplier.rating : 0
+              const safeEmail = supplier?.email || supplier?.contact?.email || 'No email'
+              const safePhone = supplier?.phone || supplier?.contact?.phone || 'No phone'
+              const safePaymentTerms = supplier?.paymentTerms || supplier?.terms || 'Not specified'
+              const safeCategories = Array.isArray(supplier?.categories) ? supplier.categories : []
+
               return (
-                <ERPCard key={supplier?._id || `supplier-${index}`} className="hover:shadow-lg transition-shadow">
+                <ERPCard key={safeKey} className="hover:shadow-lg transition-shadow">
                   <ERPCardHeader>
                     <div className="flex justify-between items-start">
                       <div>
-                        <ERPCardTitle className="text-lg">{supplier?.name || 'Unknown Supplier'}</ERPCardTitle>
-                        <p className="text-sm text-gray-600">{supplier?.contactPerson || 'No contact person'}</p>
+                        <ERPCardTitle className="text-lg">{safeName}</ERPCardTitle>
+                        <p className="text-sm text-gray-600">{safeContactPerson}</p>
                       </div>
-                      <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(supplier?.status)}`}>
-                        {supplier?.status || 'Unknown'}
+                      <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(safeStatus)}`}>
+                        {safeStatus}
                       </span>
                     </div>
                   </ERPCardHeader>
@@ -163,26 +184,26 @@ export function SupplierManagement() {
                     <div className="space-y-3">
                       {/* Rating */}
                       <div className="flex items-center gap-2">
-                        <div className="flex">{renderStars(supplier?.rating || 0)}</div>
-                        <span className="text-sm text-gray-600">({supplier?.rating || 0}.0)</span>
+                        <div className="flex">{renderStars(safeRating)}</div>
+                        <span className="text-sm text-gray-600">({safeRating}.0)</span>
                       </div>
 
                       {/* Contact Info */}
                       <div className="space-y-2 text-sm">
                         <div className="flex items-center gap-2 text-gray-600">
                           <Mail className="h-4 w-4" />
-                          <span className="truncate">{supplier?.email || 'No email'}</span>
+                          <span className="truncate">{safeEmail}</span>
                         </div>
                         <div className="flex items-center gap-2 text-gray-600">
                           <Phone className="h-4 w-4" />
-                          <span>{supplier?.phone || 'No phone'}</span>
+                          <span>{safePhone}</span>
                         </div>
                       </div>
 
                       {/* Categories */}
-                      {supplier?.categories && Array.isArray(supplier.categories) && supplier.categories.length > 0 && (
+                      {safeCategories.length > 0 && (
                         <div className="flex flex-wrap gap-1">
-                          {supplier.categories.slice(0, 2).map((category: any, catIndex: number) => (
+                          {safeCategories.slice(0, 2).map((category: any, catIndex: number) => (
                             <span
                               key={catIndex}
                               className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800"
@@ -190,9 +211,9 @@ export function SupplierManagement() {
                               {category || 'Unknown'}
                             </span>
                           ))}
-                          {supplier.categories.length > 2 && (
+                          {safeCategories.length > 2 && (
                             <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800">
-                              +{supplier.categories.length - 2} more
+                              +{safeCategories.length - 2} more
                             </span>
                           )}
                         </div>
@@ -200,7 +221,7 @@ export function SupplierManagement() {
 
                       {/* Payment Terms */}
                       <div className="text-sm text-gray-600">
-                        <span className="font-medium">Payment Terms:</span> {supplier?.paymentTerms || 'Not specified'}
+                        <span className="font-medium">Payment Terms:</span> {safePaymentTerms}
                       </div>
 
                       {/* Actions */}
