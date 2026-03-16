@@ -6,7 +6,7 @@ const Worker = require('./models/Worker'); // FIXED PATH
 const Transaction = require('./models/Transaction'); // FIXED PATH
 
 const app = express();
-const PORT = process.env.PORT || 10003; // NEW PORT TO FORCE DEPLOY
+const PORT = process.env.PORT || 3001; // RENDER PORT
 
 // Middleware
 app.use(cors({
