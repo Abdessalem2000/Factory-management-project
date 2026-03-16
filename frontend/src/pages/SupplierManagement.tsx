@@ -43,6 +43,17 @@ export function SupplierManagement() {
   // Debug log to track data
   console.log('Suppliers Data:', { suppliersData, suppliers, isLoading, error })
 
+  const renderStars = (rating: number) => {
+    return Array.from({ length: 5 }, (_, i) => (
+      <Star
+        key={i}
+        className={`h-4 w-4 ${
+          i < rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
+        }`}
+      />
+    ))
+  }
+
   try {
     return (
       <div className="space-y-6">
