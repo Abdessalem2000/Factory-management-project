@@ -6,13 +6,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card'
 import { workerApi } from '@/lib/api'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { FileImport } from '@/components/ui/FileImport'
+import { useToast } from '@/hooks/useToast'
+import { ToastContainer } from '@/components/ui/ToastContainer'
 
 export function WorkerManagement() {
   const [searchTerm, setSearchTerm] = useState('')
   const [showAddModal, setShowAddModal] = useState(false)
   const [showSuccessMessage, setShowSuccessMessage] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({})
   const queryClient = useQueryClient()
+  const toast = useToast()
   
   // Formulaire state
   const [formData, setFormData] = useState({
@@ -38,16 +42,52 @@ export function WorkerManagement() {
 
   const workers = workersData?.data || []
 
-  // Mutation pour ajouter un worker
+  // Validation function
+  const validateForm = () => {
+    const errors: Record<string, string> = {}
+    
+    if (!formData.firstName.trim()) errors.firstName = 'First name is required'
+    if (!formData.lastName.trim()) errors.lastName = 'Last name is required'
+    if (!formData.email.trim()) errors.email = 'Email is required'
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) errors.email = 'Invalid email format'
+    if (!formData.phone.trim()) errors.phone = 'Phone is required'
+    if (!formData.position.trim()) errors.position = 'Position is required'
+    if (!formData.department.trim()) errors.department = 'Department is required'
+    if (!formData.employeeId.trim()) errors.employeeId = 'Employee ID is required'
+    if (!formData.hourlyRate || formData.hourlyRate <= 0) errors.hourlyRate = 'Hourly rate must be greater than 0'
+    if (!formData.hireDate) errors.hireDate = 'Hire date is required'
+    
+    setFormErrors(errors)
+    return Object.keys(errors).length === 0
+  }
+
+  // Mutation pour ajouter un worker avec timeout et meilleure gestion d'erreur
   const createWorkerMutation = useMutation({
-    mutationFn: (data: any) => workerApi.createWorker(data),
-    onSuccess: () => {
+    mutationFn: async (data: any) => {
+      console.log('🚀 Données envoyées:', data)
+      
+      // Créer un timeout de 5 secondes
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => {
+          reject(new Error('Le serveur met du temps à répondre, réessayez'))
+        }, 5000)
+      })
+      
+      // Appel API normal
+      const apiPromise = workerApi.createWorker(data)
+      
+      // Race entre l'API et le timeout
+      return Promise.race([apiPromise, timeoutPromise])
+    },
+    onSuccess: (response) => {
+      console.log('✅ Succès API:', response)
       queryClient.invalidateQueries({ queryKey: ['workers'] })
+      toast.success('Worker added successfully!')
       setShowSuccessMessage(true)
       setTimeout(() => {
         setShowSuccessMessage(false)
         setShowAddModal(false)
-      }, 2000)
+      }, 1500)
       // Reset form
       setFormData({
         firstName: '',
@@ -64,19 +104,55 @@ export function WorkerManagement() {
         currency: 'DZD',
         paymentType: 'hourly'
       })
+      setFormErrors({})
     },
-    onError: (error) => {
-      console.error('Error creating worker:', error)
+    onError: (error: any) => {
+      console.error('❌ Erreur API:', error)
+      let errorMessage = 'Failed to add worker'
+      
+      if (error.message === 'Le serveur met du temps à répondre, réessayez') {
+        errorMessage = '⏱️ Le serveur met du temps à répondre, réessayez'
+      } else if (error.response?.data?.message) {
+        errorMessage = `❌ ${error.response.data.message}`
+      } else if (error.message) {
+        errorMessage = `❌ ${error.message}`
+      }
+      
+      toast.error(errorMessage)
     }
   })
 
   const handleAddWorker = () => {
-    console.log('Adding worker:', formData)
-    createWorkerMutation.mutate(formData)
+    console.log('🔍 Début de la soumission du formulaire')
+    
+    // Validation
+    if (!validateForm()) {
+      toast.warning('Please fill in all required fields correctly')
+      return
+    }
+    
+    // Afficher toast d'envoi
+    toast.info('📤 Envoi en cours...', 10000) // 10 secondes pour le timeout
+    
+    // Préparer les données
+    const workerData = {
+      ...formData,
+      hourlyRate: parseFloat(formData.hourlyRate.toString()),
+      skills: formData.skills.length > 0 ? formData.skills : ['General']
+    }
+    
+    console.log('📋 Données préparées pour l\'API:', workerData)
+    
+    // Lancer la mutation
+    createWorkerMutation.mutate(workerData)
   }
 
   const updateFormData = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }))
+    // Clear error when user starts typing
+    if (formErrors[field]) {
+      setFormErrors(prev => ({ ...prev, [field]: '' }))
+    }
   }
 
   // CSV Export function
@@ -162,10 +238,17 @@ export function WorkerManagement() {
                   type="text"
                   value={formData.firstName}
                   onChange={(e) => updateFormData('firstName', e.target.value)}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                  className={`w-full border rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 ${
+                    formErrors.firstName 
+                      ? 'border-red-300 bg-red-50 focus:ring-red-500 focus:border-red-500' 
+                      : 'border-gray-300'
+                  }`}
                   placeholder="e.g., Ahmed"
                   required
                 />
+                {formErrors.firstName && (
+                  <p className="mt-1 text-sm text-red-600">{formErrors.firstName}</p>
+                )}
               </div>
 
               <div>
@@ -174,10 +257,17 @@ export function WorkerManagement() {
                   type="text"
                   value={formData.lastName}
                   onChange={(e) => updateFormData('lastName', e.target.value)}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                  className={`w-full border rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 ${
+                    formErrors.lastName 
+                      ? 'border-red-300 bg-red-50 focus:ring-red-500 focus:border-red-500' 
+                      : 'border-gray-300'
+                  }`}
                   placeholder="e.g., Mohamed"
                   required
                 />
+                {formErrors.lastName && (
+                  <p className="mt-1 text-sm text-red-600">{formErrors.lastName}</p>
+                )}
               </div>
 
               <div>
@@ -186,10 +276,17 @@ export function WorkerManagement() {
                   type="email"
                   value={formData.email}
                   onChange={(e) => updateFormData('email', e.target.value)}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                  className={`w-full border rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 ${
+                    formErrors.email 
+                      ? 'border-red-300 bg-red-50 focus:ring-red-500 focus:border-red-500' 
+                      : 'border-gray-300'
+                  }`}
                   placeholder="e.g., ahmed@example.com"
                   required
                 />
+                {formErrors.email && (
+                  <p className="mt-1 text-sm text-red-600">{formErrors.email}</p>
+                )}
               </div>
 
               <div>
@@ -251,11 +348,18 @@ export function WorkerManagement() {
                   type="number"
                   value={formData.hourlyRate}
                   onChange={(e) => updateFormData('hourlyRate', parseFloat(e.target.value) || 0)}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                  className={`w-full border rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 ${
+                    formErrors.hourlyRate 
+                      ? 'border-red-300 bg-red-50 focus:ring-red-500 focus:border-red-500' 
+                      : 'border-gray-300'
+                  }`}
                   placeholder="3500"
                   min="0"
                   required
                 />
+                {formErrors.hourlyRate && (
+                  <p className="mt-1 text-sm text-red-600">{formErrors.hourlyRate}</p>
+                )}
               </div>
 
               <div>
@@ -495,6 +599,12 @@ export function WorkerManagement() {
           ))
         )}
       </div>
+
+      {/* Toast Container */}
+      <ToastContainer 
+        toasts={toast.toasts} 
+        onRemoveToast={toast.removeToast} 
+      />
     </div>
   )
 }
