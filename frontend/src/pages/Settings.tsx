@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Check, Loader2, Save } from 'lucide-react'
+import { Check, Loader2, Save, Moon, Sun } from 'lucide-react'
+import { useTheme } from '@/hooks/useTheme'
 
 export function Settings() {
   const [showSuccessMessage, setShowSuccessMessage] = useState(false)
   const queryClient = useQueryClient()
+  const { theme, toggleTheme } = useTheme()
   
   const [settings, setSettings] = useState({
     factoryName: 'Factory Manager ERP',
@@ -12,7 +14,7 @@ export function Settings() {
     currency: 'USD',
     emailNotifications: true,
     pushNotifications: false,
-    darkMode: false,
+    darkMode: theme === 'dark',
     autoBackup: true,
   })
 
@@ -155,15 +157,36 @@ export function Settings() {
       <div className="bg-white rounded-lg shadow p-6">
         <h2 className="text-lg font-medium text-gray-900 mb-4">Appearance</h2>
         <div className="space-y-4">
-          <label className="flex items-center">
-            <input
-              type="checkbox"
-              checked={settings.darkMode}
-              onChange={(e) => updateField('darkMode', e.target.checked)}
-              className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-            />
-            <span className="ml-2 text-sm text-gray-700">Dark Mode</span>
-          </label>
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-sm font-medium text-gray-700">Dark Mode</span>
+              <p className="text-xs text-gray-500">Toggle between light and dark theme</p>
+            </div>
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="relative inline-flex h-6 w-11 items-center rounded-full bg-gray-200 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:bg-indigo-600"
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  theme === 'dark' ? 'translate-x-6' : 'translate-x-1'
+                }`}
+              />
+            </button>
+          </div>
+          <div className="flex items-center gap-2 text-sm text-gray-600">
+            {theme === 'dark' ? (
+              <>
+                <Moon className="h-4 w-4" />
+                <span>Dark mode is active</span>
+              </>
+            ) : (
+              <>
+                <Sun className="h-4 w-4" />
+                <span>Light mode is active</span>
+              </>
+            )}
+          </div>
         </div>
       </div>
 

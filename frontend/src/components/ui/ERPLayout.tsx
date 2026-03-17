@@ -16,6 +16,7 @@ import {
   Search,
   User
 } from 'lucide-react'
+import { useTheme } from '@/hooks/useTheme'
 
 interface SidebarItem {
   title: string
@@ -41,15 +42,16 @@ const sidebarItems: SidebarItem[] = [
 export function ERPLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const location = useLocation()
+  const { theme } = useTheme()
 
   return (
-    <div className="min-h-screen bg-gray-50 flex w-full max-w-7xl mx-auto shadow-2xl rounded-lg overflow-hidden">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex w-full max-w-7xl mx-auto shadow-2xl rounded-lg overflow-hidden">
       {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 lg:flex-shrink-0`}>
-        <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
+      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-800 shadow-xl transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 lg:flex-shrink-0`}>
+        <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center">
             <Factory className="h-8 w-8 text-indigo-600" />
-            <span className="ml-2 text-xl font-bold text-gray-900">Factory Manager</span>
+            <span className="ml-2 text-xl font-bold text-gray-900 dark:text-white">Factory Manager</span>
           </div>
           <button
             onClick={() => setSidebarOpen(false)}
@@ -69,8 +71,8 @@ export function ERPLayout({ children }: { children: React.ReactNode }) {
                   to={item.href}
                   className={`flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                     isActive
-                      ? 'bg-indigo-50 text-indigo-700 border-r-2 border-indigo-600'
-                      : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                      ? 'bg-indigo-50 text-indigo-700 border-r-2 border-indigo-600 dark:bg-indigo-900/20 dark:text-indigo-400'
+                      : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700'
                   }`}
                 >
                   <div className="flex items-center">
@@ -92,11 +94,11 @@ export function ERPLayout({ children }: { children: React.ReactNode }) {
       {/* Main Content */}
       <div className="flex-1 min-w-0">
         {/* Top Bar */}
-        <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
+        <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-40">
           <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="lg:hidden text-gray-400 hover:text-gray-600 p-2 rounded-md hover:bg-gray-100"
+              className="lg:hidden text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
               aria-label="Open sidebar"
             >
               <Menu className="h-5 w-5" />
@@ -108,13 +110,13 @@ export function ERPLayout({ children }: { children: React.ReactNode }) {
                 <input
                   type="text"
                   placeholder="Search..."
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg leading-5 bg-white dark:bg-gray-700 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                 />
               </div>
             </div>
 
             <div className="flex items-center space-x-4">
-              <button className="relative p-2 text-gray-400 hover:text-gray-600 rounded-md hover:bg-gray-100">
+              <button className="relative p-2 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700">
                 <Bell className="h-5 w-5" />
                 <span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full"></span>
               </button>
@@ -123,8 +125,8 @@ export function ERPLayout({ children }: { children: React.ReactNode }) {
                   <User className="h-4 w-4 text-white" />
                 </div>
                 <div className="hidden lg:block">
-                  <div className="text-sm font-medium text-gray-900">Admin User</div>
-                  <div className="text-xs text-gray-500">Administrator</div>
+                  <div className="text-sm font-medium text-gray-900 dark:text-white">Admin User</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">Administrator</div>
                 </div>
               </div>
             </div>

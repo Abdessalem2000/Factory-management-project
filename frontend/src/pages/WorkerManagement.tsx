@@ -16,17 +16,19 @@ export function WorkerManagement() {
   
   // Formulaire state
   const [formData, setFormData] = useState({
-    name: '',
+    firstName: '',
+    lastName: '',
     email: '',
     phone: '',
     position: '',
     department: '',
-    salary: 0,
+    employeeId: '',
+    hourlyRate: 0,
     hireDate: '',
     status: 'active',
-    address: '',
-    emergencyContact: '',
-    emergencyPhone: ''
+    skills: [] as string[],
+    currency: 'DZD',
+    paymentType: 'hourly'
   })
 
   const { data: workersData, isLoading, error } = useQuery({
@@ -48,17 +50,19 @@ export function WorkerManagement() {
       }, 2000)
       // Reset form
       setFormData({
-        name: '',
+        firstName: '',
+        lastName: '',
         email: '',
         phone: '',
         position: '',
         department: '',
-        salary: 0,
+        employeeId: '',
+        hourlyRate: 0,
         hireDate: '',
         status: 'active',
-        address: '',
-        emergencyContact: '',
-        emergencyPhone: ''
+        skills: [],
+        currency: 'DZD',
+        paymentType: 'hourly'
       })
     },
     onError: (error) => {
@@ -153,13 +157,25 @@ export function WorkerManagement() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">First Name *</label>
                 <input
                   type="text"
-                  value={formData.name}
-                  onChange={(e) => updateFormData('name', e.target.value)}
+                  value={formData.firstName}
+                  onChange={(e) => updateFormData('firstName', e.target.value)}
                   className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="e.g., John Doe"
+                  placeholder="e.g., Ahmed"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Last Name *</label>
+                <input
+                  type="text"
+                  value={formData.lastName}
+                  onChange={(e) => updateFormData('lastName', e.target.value)}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="e.g., Mohamed"
                   required
                 />
               </div>
@@ -171,7 +187,7 @@ export function WorkerManagement() {
                   value={formData.email}
                   onChange={(e) => updateFormData('email', e.target.value)}
                   className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="e.g., john@example.com"
+                  placeholder="e.g., ahmed@example.com"
                   required
                 />
               </div>
@@ -218,13 +234,25 @@ export function WorkerManagement() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Salary (DZD) *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Employee ID *</label>
+                <input
+                  type="text"
+                  value={formData.employeeId}
+                  onChange={(e) => updateFormData('employeeId', e.target.value)}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="e.g., EMP001"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Hourly Rate (DZD) *</label>
                 <input
                   type="number"
-                  value={formData.salary}
-                  onChange={(e) => updateFormData('salary', parseFloat(e.target.value) || 0)}
+                  value={formData.hourlyRate}
+                  onChange={(e) => updateFormData('hourlyRate', parseFloat(e.target.value) || 0)}
                   className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="0"
+                  placeholder="3500"
                   min="0"
                   required
                 />
@@ -255,37 +283,29 @@ export function WorkerManagement() {
                 </select>
               </div>
 
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
-                <textarea
-                  value={formData.address}
-                  onChange={(e) => updateFormData('address', e.target.value)}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Payment Type</label>
+                <select
+                  value={formData.paymentType}
+                  onChange={(e) => updateFormData('paymentType', e.target.value)}
                   className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
-                  rows={2}
-                  placeholder="Worker address..."
-                />
+                >
+                  <option value="hourly">Hourly</option>
+                  <option value="salary">Salary</option>
+                </select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Emergency Contact</label>
-                <input
-                  type="text"
-                  value={formData.emergencyContact}
-                  onChange={(e) => updateFormData('emergencyContact', e.target.value)}
+                <label className="block text-sm font-medium text-gray-700 mb-1">Currency</label>
+                <select
+                  value={formData.currency}
+                  onChange={(e) => updateFormData('currency', e.target.value)}
                   className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Emergency contact name"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Emergency Phone</label>
-                <input
-                  type="tel"
-                  value={formData.emergencyPhone}
-                  onChange={(e) => updateFormData('emergencyPhone', e.target.value)}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Emergency contact phone"
-                />
+                >
+                  <option value="DZD">Algerian Dinar (DZD)</option>
+                  <option value="USD">US Dollar (USD)</option>
+                  <option value="EUR">Euro (EUR)</option>
+                </select>
               </div>
             </div>
 
@@ -475,188 +495,6 @@ export function WorkerManagement() {
           ))
         )}
       </div>
-
-      {/* Add Worker Modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-gray-900">Add Worker</h2>
-              <button
-                onClick={() => setShowAddModal(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => updateFormData('name', e.target.value)}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="e.g., John Doe"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
-                <input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => updateFormData('email', e.target.value)}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="e.g., john@example.com"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Phone *</label>
-                <input
-                  type="tel"
-                  value={formData.phone}
-                  onChange={(e) => updateFormData('phone', e.target.value)}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="e.g., +213 123 456 789"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Position *</label>
-                <input
-                  type="text"
-                  value={formData.position}
-                  onChange={(e) => updateFormData('position', e.target.value)}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="e.g., Machine Operator"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Department *</label>
-                <select
-                  value={formData.department}
-                  onChange={(e) => updateFormData('department', e.target.value)}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
-                  required
-                >
-                  <option value="">Select Department</option>
-                  <option value="Production">Production</option>
-                  <option value="Quality Control">Quality Control</option>
-                  <option value="Maintenance">Maintenance</option>
-                  <option value="Administration">Administration</option>
-                  <option value="Warehouse">Warehouse</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Salary (DZD) *</label>
-                <input
-                  type="number"
-                  value={formData.salary}
-                  onChange={(e) => updateFormData('salary', parseFloat(e.target.value) || 0)}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="0"
-                  min="0"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Hire Date *</label>
-                <input
-                  type="date"
-                  value={formData.hireDate}
-                  onChange={(e) => updateFormData('hireDate', e.target.value)}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Status *</label>
-                <select
-                  value={formData.status}
-                  onChange={(e) => updateFormData('status', e.target.value)}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
-                  required
-                >
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                  <option value="on_leave">On Leave</option>
-                </select>
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
-                <textarea
-                  value={formData.address}
-                  onChange={(e) => updateFormData('address', e.target.value)}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
-                  rows={2}
-                  placeholder="Worker address..."
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Emergency Contact</label>
-                <input
-                  type="text"
-                  value={formData.emergencyContact}
-                  onChange={(e) => updateFormData('emergencyContact', e.target.value)}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Emergency contact name"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Emergency Phone</label>
-                <input
-                  type="tel"
-                  value={formData.emergencyPhone}
-                  onChange={(e) => updateFormData('emergencyPhone', e.target.value)}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Emergency contact phone"
-                />
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-3 mt-6">
-              <Button
-                variant="outline"
-                onClick={() => setShowAddModal(false)}
-                disabled={createWorkerMutation.isPending}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleAddWorker}
-                disabled={createWorkerMutation.isPending}
-                className="flex items-center gap-2"
-              >
-                {createWorkerMutation.isPending ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Adding...
-                  </>
-                ) : (
-                  <>
-                    <Plus className="h-4 w-4" />
-                    Add Worker
-                  </>
-                )}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
