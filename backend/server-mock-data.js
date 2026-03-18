@@ -1208,7 +1208,23 @@ app.use('*', (req, res) => {
   });
 });
 
-// Start server
+// AI Audit Endpoint
+app.post('/api/ai-audit', async (req, res) => {
+  try {
+    const factoryData = req.body;
+    const auditReport = await generateFactoryAudit(factoryData);
+    res.json({ success: true, data: auditReport });
+  } catch (error) {
+    console.error('AI Audit Error:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'AI Audit temporarily unavailable. Please try again later.' 
+    });
+  }
+});
+
+// Import AI service
+const { generateFactoryAudit } = require('./src/services/aiService');
 app.listen(PORT, () => {
   console.log(`🚀 Factory Management API Server running on port ${PORT}`);
   console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
