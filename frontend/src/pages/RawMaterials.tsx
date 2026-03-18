@@ -50,13 +50,17 @@ export function RawMaterials() {
           category: selectedCategory !== 'all' ? selectedCategory : undefined,
           search: searchTerm 
         })
-        return result?.data || []
+        console.log('Raw Materials API Response:', result)
+        // Extract data from response - handle different response formats
+        const materialsArray = result?.data || result || []
+        console.log('Raw Materials array:', materialsArray)
+        return Array.isArray(materialsArray) ? materialsArray : []
       } catch (apiError) {
         console.error('API Error:', apiError)
         // Fallback to mock data if API fails
         return [
           {
-            _id: '1',
+            id: '1',
             name: 'Cotton Fabric - Blue',
             reference: 'CF-BLUE-001',
             category: 'fabric',
@@ -69,7 +73,7 @@ export function RawMaterials() {
             location: 'Warehouse A',
           },
           {
-            _id: '2',
+            id: '2',
             name: 'Zippers - Metal',
             reference: 'ZIP-MET-002',
             category: 'zippers',
@@ -82,7 +86,7 @@ export function RawMaterials() {
             location: 'Warehouse B',
           },
           {
-            _id: '3',
+            id: '3',
             name: 'Thread - White',
             reference: 'THR-WHT-003',
             category: 'thread',
@@ -95,7 +99,7 @@ export function RawMaterials() {
             location: 'Warehouse A',
           },
           {
-            _id: '4',
+            id: '4',
             name: 'Buttons - Pearl',
             reference: 'BTN-PRL-004',
             category: 'buttons',
@@ -113,6 +117,8 @@ export function RawMaterials() {
     retry: 1,
     gcTime: 300000,
   })
+
+  const rawMaterials = Array.isArray(rawMaterialsData) ? rawMaterialsData : []
 
   // Mutation pour ajouter un matériau
   const createMaterialMutation = useMutation({
@@ -142,8 +148,6 @@ export function RawMaterials() {
       // TODO: Show error message to user
     }
   })
-
-  const rawMaterials = rawMaterialsData || []
 
   const handleAddMaterial = () => {
     console.log('Adding material:', formData)
@@ -502,9 +506,9 @@ export function RawMaterials() {
 
       {/* Materials Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {filteredMaterials.map((material) => (
+        {Array.isArray(filteredMaterials) && filteredMaterials.map((material) => (
           <ERPCard 
-            key={material?._id || material?.id || `material-${Math.random()}`} 
+            key={material?.id || `material-${Math.random()}`} 
             className={`hover:shadow-lg transition-shadow ${
               isLowStock(material) ? 'border-red-300 bg-red-50' : ''
             }`}

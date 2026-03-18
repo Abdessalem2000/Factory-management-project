@@ -27,7 +27,11 @@ export function Incomes() {
     queryFn: async () => {
       try {
         const result = await financialApi.getIncomes()
-        return result?.data || []
+        console.log('API Response:', result)
+        // Extract data from response - handle different response formats
+        const incomesArray = result?.data || result || []
+        console.log('Incomes array:', incomesArray)
+        return Array.isArray(incomesArray) ? incomesArray : []
       } catch (apiError) {
         console.error('API Error:', apiError)
         // Fallback to mock data
@@ -42,7 +46,7 @@ export function Incomes() {
     gcTime: 300000,
   })
 
-  const incomes = incomesData || []
+  const incomes = Array.isArray(incomesData) ? incomesData : []
 
   // Mutation pour ajouter un revenu
   const createIncomeMutation = useMutation({
@@ -229,22 +233,34 @@ export function Incomes() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {incomes.map((income) => (
-                  <tr key={income.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {income.description}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {income.source}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-medium">
-                      +${income.amount.toLocaleString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {income.date}
+                {Array.isArray(incomes) && incomes.length > 0 ? (
+                  incomes.map((income) => (
+                    <tr key={income.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {income.description}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {income.source}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-medium">
+                        +${income.amount?.toLocaleString() || 0}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {income.date}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
+                      <div className="flex flex-col items-center">
+                        <TrendingUp className="h-12 w-12 text-gray-300 mb-2" />
+                        <p className="text-lg font-medium">No incomes found</p>
+                        <p className="text-sm">Add your first income to get started</p>
+                      </div>
                     </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>

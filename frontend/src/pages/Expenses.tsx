@@ -26,8 +26,12 @@ export function Expenses() {
     queryKey: ['expenses'],
     queryFn: async () => {
       try {
-        const result = await financialApi.getExpenses()
-        return result?.data || []
+        const result = await financialApi.getExpensesList()
+        console.log('Expenses API Response:', result)
+        // Extract data from response - handle different response formats
+        const expensesArray = result?.data || result || []
+        console.log('Expenses array:', expensesArray)
+        return Array.isArray(expensesArray) ? expensesArray : []
       } catch (apiError) {
         console.error('API Error:', apiError)
         // Fallback to mock data
@@ -42,11 +46,11 @@ export function Expenses() {
     gcTime: 300000,
   })
 
-  const expenses = expensesData || []
+  const expenses = Array.isArray(expensesData) ? expensesData : []
 
   // Mutation pour ajouter une dépense
   const createExpenseMutation = useMutation({
-    mutationFn: (data: any) => financialApi.createExpense(data),
+    mutationFn: (data: any) => financialApi.createExpenseItem(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['expenses'] })
       setShowSuccessMessage(true)
@@ -229,22 +233,34 @@ export function Expenses() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {expenses.map((expense) => (
-                  <tr key={expense.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {expense.description}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {expense.category}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      ${expense.amount.toLocaleString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {expense.date}
+                {Array.isArray(expenses) && expenses.length > 0 ? (
+                  expenses.map((expense) => (
+                    <tr key={expense.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {expense.description}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {expense.category}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600 font-medium">
+                        -${expense.amount?.toLocaleString() || 0}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {expense.date}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
+                      <div className="flex flex-col items-center">
+                        <TrendingUp className="h-12 w-12 text-gray-300 mb-2" />
+                        <p className="text-lg font-medium">No expenses found</p>
+                        <p className="text-sm">Add your first expense to get started</p>
+                      </div>
                     </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>

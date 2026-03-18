@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { ERPCard, ERPCardHeader, ERPCardTitle, ERPCardContent } from '@/components/ui/ERPCard'
 import { Button } from '@/components/ui/Button'
-import { rawMaterialsApi } from '@/lib/api'
+import { rawMaterialsApi, financialApi, workerApi, supplierApi, productionApi } from '@/lib/api'
+import { generateFactoryAudit, downloadAsPDF, type FactoryData } from '@/lib/ai'
+import { UserButton } from '@/lib/auth.tsx'
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -15,18 +17,20 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Download,
-  ExternalLink
+  ExternalLink,
+  Brain,
+  Loader2
 } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts'
 
 // Mock data - will be replaced with real API calls
 const monthlyData = [
-  { month: 'Jan', expenses: 45000, production: 120000, income: 180000 },
-  { month: 'Feb', expenses: 52000, production: 135000, income: 195000 },
-  { month: 'Mar', expenses: 48000, production: 142000, income: 210000 },
-  { month: 'Apr', expenses: 61000, production: 155000, income: 225000 },
-  { month: 'May', expenses: 55000, production: 168000, income: 240000 },
-  { month: 'Jun', expenses: 58000, production: 175000, income: 255000 }
+  { month: 'Jan', expenses: 280000, production: 420000, income: 380000 },
+  { month: 'Feb', expenses: 295000, production: 445000, income: 410000 },
+  { month: 'Mar', expenses: 310000, production: 470000, income: 435000 },
+  { month: 'Apr', expenses: 285000, production: 490000, income: 455000 },
+  { month: 'May', expenses: 320000, production: 510000, income: 480000 },
+  { month: 'Jun', expenses: 340000, production: 530000, income: 510000 }
 ]
 
 const productionData = [
@@ -44,14 +48,17 @@ const lowStockMaterials = [
 ]
 
 const kpiData = [
-  { title: 'Total Production', value: '1,245', change: '+12.5%', trend: 'up', icon: Factory, color: 'bg-blue-500' },
-  { title: 'Revenue', value: 'DZD 255K', change: '+8.2%', trend: 'up', icon: DollarSign, color: 'bg-green-500' },
-  { title: 'Expenses', value: 'DZD 58K', change: '+3.1%', trend: 'up', icon: TrendingUp, color: 'bg-red-500' },
+  { title: 'Total Production', value: '12,450', change: '+12.5%', trend: 'up', icon: Factory, color: 'bg-blue-500' },
+  { title: 'Revenue', value: 'DZD 2.55M', change: '+8.2%', trend: 'up', icon: DollarSign, color: 'bg-green-500' },
+  { title: 'Expenses', value: 'DZD 1.8M', change: '+3.1%', trend: 'up', icon: TrendingUp, color: 'bg-red-500' },
   { title: 'Active Orders', value: '47', change: '-5.3%', trend: 'down', icon: ShoppingCart, color: 'bg-purple-500' }
 ]
 
 export function ERPDashboard() {
   const [selectedPeriod, setSelectedPeriod] = useState('6months')
+  const [isExporting, setIsExporting] = useState(false)
+  const [isGeneratingAudit, setIsGeneratingAudit] = useState(false)
+  const [auditReport, setAuditReport] = useState<string | null>(null)
 
   // Handler pour naviguer vers les matériaux
   const handleViewMaterials = () => {
@@ -65,21 +72,122 @@ export function ERPDashboard() {
     queryFn: async () => {
       try {
         const result = await rawMaterialsApi.getRawMaterials()
-        return result?.data || []
+        console.log('Raw Materials API Response:', result)
+        // Extract data from response - handle different response formats
+        const materialsArray = result?.data || result || []
+        console.log('Raw Materials array:', materialsArray)
+        return Array.isArray(materialsArray) ? materialsArray : []
       } catch (apiError) {
         console.error('API Error:', apiError)
         // Fallback to mock data
         return [
-          { _id: '1', name: 'Cotton Fabric - Blue', currentStock: 45, minStockAlert: 100, unit: 'meters' },
-          { _id: '2', name: 'Zippers - Metal', currentStock: 12, minStockAlert: 50, unit: 'pieces' },
-          { _id: '3', name: 'Thread - White', currentStock: 8, minStockAlert: 25, unit: 'rolls' },
-          { _id: '4', name: 'Buttons - Pearl', currentStock: 15, minStockAlert: 30, unit: 'pieces' }
+          { id: '1', name: 'Cotton Fabric - Blue', currentStock: 45, minStockAlert: 100, unit: 'meters' },
+          { id: '2', name: 'Zippers - Metal', currentStock: 12, minStockAlert: 50, unit: 'pieces' },
+          { id: '3', name: 'Thread - White', currentStock: 8, minStockAlert: 25, unit: 'rolls' },
+          { id: '4', name: 'Buttons - Pearl', currentStock: 15, minStockAlert: 30, unit: 'pieces' }
         ]
       }
     },
     retry: 1,
     gcTime: 300000,
   })
+
+  // Récupération des données pour l'audit AI
+  const { data: workersData } = useQuery({
+    queryKey: ['workers-audit'],
+    queryFn: async () => {
+      try {
+        const result = await workerApi.getWorkers()
+        return result?.data || []
+      } catch (error) {
+        return []
+      }
+    },
+    retry: 1
+  })
+
+  const { data: incomesData } = useQuery({
+    queryKey: ['incomes-audit'],
+    queryFn: async () => {
+      try {
+        const result = await financialApi.getIncomes()
+        return result?.data || []
+      } catch (error) {
+        return []
+      }
+    },
+    retry: 1
+  })
+
+  const { data: expensesData } = useQuery({
+    queryKey: ['expenses-audit'],
+    queryFn: async () => {
+      try {
+        const result = await financialApi.getExpensesList()
+        return result?.data || []
+      } catch (error) {
+        return []
+      }
+    },
+    retry: 1
+  })
+
+  const { data: suppliersData } = useQuery({
+    queryKey: ['suppliers-audit'],
+    queryFn: async () => {
+      try {
+        const result = await supplierApi.getSuppliers()
+        return result?.data || []
+      } catch (error) {
+        return []
+      }
+    },
+    retry: 1
+  })
+
+  const { data: productionData } = useQuery({
+    queryKey: ['production-audit'],
+    queryFn: async () => {
+      try {
+        const result = await productionApi.getProductionOrders()
+        return result?.data || []
+      } catch (error) {
+        return []
+      }
+    },
+    retry: 1
+  })
+
+  // AI Audit Generation
+  const handleGenerateAudit = async () => {
+    setIsGeneratingAudit(true)
+    setAuditReport(null)
+    
+    try {
+      const factoryData: FactoryData = {
+        workers: workersData || [],
+        incomes: incomesData || [],
+        expenses: expensesData || [],
+        rawMaterials: rawMaterialsData || [],
+        suppliers: suppliersData || [],
+        productionOrders: productionData || []
+      }
+      
+      const audit = await generateFactoryAudit(factoryData)
+      setAuditReport(audit)
+    } catch (error) {
+      console.error('Audit generation failed:', error)
+      setAuditReport('Failed to generate audit report. Please check your OpenAI API key.')
+    } finally {
+      setIsGeneratingAudit(false)
+    }
+  }
+
+  const handleDownloadAudit = () => {
+    if (auditReport) {
+      downloadAsPDF(auditReport, 'factory-audit-report.txt')
+    }
+  }
 
   // Calculer les matériaux en stock faible
   const lowStockMaterials = (rawMaterialsData || []).filter(material => 
@@ -113,25 +221,34 @@ export function ERPDashboard() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Factory Dashboard</h1>
-          <p className="text-gray-500">Overview of your factory operations</p>
+          <h1 className="text-3xl font-bold text-gray-900">Factory Dashboard</h1>
+          <p className="text-gray-600 mt-2">Real-time overview of your manufacturing operations</p>
         </div>
-        <div className="flex items-center space-x-3">
-          <select 
-            value={selectedPeriod}
-            onChange={(e) => setSelectedPeriod(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          >
-            <option value="1month">Last Month</option>
-            <option value="3months">Last 3 Months</option>
-            <option value="6months">Last 6 Months</option>
-            <option value="1year">Last Year</option>
-          </select>
+        <div className="flex items-center gap-4">
           <Button 
+            onClick={handleGenerateAudit}
+            disabled={isGeneratingAudit}
+            className="bg-purple-600 hover:bg-purple-700 flex items-center gap-2"
+          >
+            {isGeneratingAudit ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Generating AI Audit...
+              </>
+            ) : (
+              <>
+                <Brain className="h-4 w-4" />
+                AI Production Audit
+              </>
+            )}
+          </Button>
+          <Button 
+            className={`flex items-center gap-2 ${
+              isExporting ? 'bg-green-50 border-green-300 text-green-700' : ''
+            }`}
             onClick={exportDashboardToCSV}
-            className="bg-indigo-600 hover:bg-indigo-700 flex items-center gap-2"
           >
             <Download className="h-4 w-4" />
             Export Report
@@ -273,6 +390,33 @@ export function ERPDashboard() {
         </ERPCard>
       </div>
 
+      {/* AI Audit Report */}
+      {auditReport && (
+        <ERPCard>
+          <ERPCardHeader>
+            <ERPCardTitle className="text-lg font-semibold text-gray-900 flex items-center">
+              <Brain className="h-5 w-5 text-purple-500 mr-2" />
+              AI Production Audit Report
+            </ERPCardTitle>
+          </ERPCardHeader>
+          <ERPCardContent>
+            <div className="space-y-4">
+              <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                <pre className="whitespace-pre-wrap text-sm text-gray-800 font-mono">
+                  {auditReport}
+                </pre>
+              </div>
+              <div className="flex justify-end">
+                <Button onClick={handleDownloadAudit} className="bg-purple-600 hover:bg-purple-700">
+                  <Download className="h-4 w-4 mr-2" />
+                  Download Report
+                </Button>
+              </div>
+            </div>
+          </ERPCardContent>
+        </ERPCard>
+      )}
+
       {/* Low Stock Alert */}
       <ERPCard>
         <ERPCardHeader>
@@ -290,13 +434,13 @@ export function ERPDashboard() {
                   <div>
                     <p className="font-medium text-gray-900">{material.name}</p>
                     <p className="text-sm text-gray-500">
-                      Current: {material.current} {material.unit} | Min: {material.min} {material.unit}
+                      Current: {material.currentStock} {material.unit} | Min: {material.minStockAlert} {material.unit}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
                   <span className="text-red-600 font-medium">
-                    {((material.min - material.current) / material.min * 100).toFixed(0)}% below min
+                    {((material.minStockAlert - material.currentStock) / material.minStockAlert * 100).toFixed(0)}% below min
                   </span>
                   <Button size="sm" className="bg-red-600 hover:bg-red-700">
                     Order Now
