@@ -12,6 +12,7 @@ export function WorkerManagement() {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
+    email: '',
     position: '',
     department: 'Production',
     employeeId: '',
@@ -28,7 +29,13 @@ export function WorkerManagement() {
 
   const { data: workersData, isLoading, error } = useQuery({
     queryKey: ['workers', searchTerm],
-    queryFn: () => workerApi.getWorkers({ search: searchTerm }).then(res => res.data),
+    queryFn: () => workerApi.getWorkers({ search: searchTerm }).then(res => {
+      console.log('🔍 API Response:', res);
+      console.log('📊 Response data:', res.data);
+      console.log('📋 Response type:', typeof res.data);
+      console.log('📋 Is array:', Array.isArray(res.data));
+      return res.data;
+    }),
   })
 
   const workers = workersData?.data || []
@@ -53,6 +60,7 @@ export function WorkerManagement() {
     setFormData({
       firstName: '',
       lastName: '',
+      email: '',
       position: '',
       department: 'Production',
       employeeId: '',
@@ -137,7 +145,7 @@ export function WorkerManagement() {
           </div>
         ) : (
           workers.map((worker: any) => (
-            <Card key={worker._id} className="hover:shadow-lg transition-shadow">
+            <Card key={worker.id} className="hover:shadow-lg transition-shadow">
               <CardHeader>
                 <div className="flex justify-between items-start">
                   <div>
@@ -191,7 +199,7 @@ export function WorkerManagement() {
                   )}
 
                   {/* Skills */}
-                  {worker.skills && worker.skills.length > 0 && (
+                  {worker.skills && Array.isArray(worker.skills) && worker.skills.length > 0 && (
                     <div className="flex flex-wrap gap-1">
                       {worker.skills.slice(0, 3).map((skill: string, index: number) => (
                         <span
@@ -264,6 +272,18 @@ export function WorkerManagement() {
                     placeholder="محمد"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <input
+                  type="email"
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  value={formData.email}
+                  onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                  placeholder="worker@factory.dz"
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -360,7 +380,7 @@ export function WorkerManagement() {
                   </Button>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {formData.skills.map((skill, index) => (
+                  {formData.skills && Array.isArray(formData.skills) && formData.skills.map((skill, index) => (
                     <span
                       key={index}
                       className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800"

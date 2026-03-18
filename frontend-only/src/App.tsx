@@ -5,6 +5,7 @@ import { ProductionOrders } from './pages/ProductionOrders'
 import { FinancialTracking } from './pages/FinancialTracking'
 import { SupplierManagement } from './pages/SupplierManagement'
 import { WorkerManagement } from './pages/WorkerManagement'
+import { WorkerTest } from './pages/WorkerTest'
 import { Analytics } from './pages/Analytics'
 import { AnalyticsTest } from './pages/Analytics-test'
 
@@ -18,6 +19,7 @@ function App() {
         <Route path="/financial" element={<FinancialTracking />} />
         <Route path="/suppliers" element={<SupplierManagement />} />
         <Route path="/workers" element={<WorkerManagement />} />
+        <Route path="/workers-test" element={<WorkerTest />} />
         <Route path="/analytics" element={<Analytics />} />
         <Route path="/analytics-test" element={<AnalyticsTest />} />
       </Routes>

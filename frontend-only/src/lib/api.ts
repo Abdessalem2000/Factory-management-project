@@ -107,12 +107,12 @@ export const searchApi = {
   searchTransactions: (query: string) => api.get('/transactions/search', { params: { query } }),
 }
 export const workerApi = {
-  getWorkers: (params?: any) => api.get('/worker', { params }),
-  getWorker: (id: string) => api.get(`/worker/${id}`),
-  createWorker: (data: any) => api.post('/worker', data),
-  updateWorker: (id: string, data: any) => api.put(`/worker/${id}`, data),
-  deleteWorker: (id: string) => api.delete(`/worker/${id}`),
-  getStats: () => api.get('/worker/stats/overview'),
-  getByDepartment: (department: string) => api.get(`/worker/by-department/${department}`),
-  getBySkill: (skill: string) => api.get(`/worker/by-skill/${skill}`),
+  getWorkers: (params?: any) => api.get('/workers', { params }),
+  getWorker: (id: string) => api.get(`/workers/${id}`),
+  createWorker: (data: any) => api.post('/workers', data),
+  updateWorker: (id: string, data: any) => api.put(`/workers/${id}`, data),
+  deleteWorker: (id: string) => api.delete(`/workers/${id}`),
+  getStats: () => api.get('/workers/stats/overview'),
+  getByDepartment: (department: string) => api.get(`/workers/by-department/${department}`),
+  getBySkill: (skill: string) => api.get(`/workers/by-skill/${skill}`),
 }
