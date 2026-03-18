@@ -5,8 +5,8 @@ services:
     runtime: node
     plan: free
     buildCommand: npm install
-    startCommand: node server.js
-    healthCheckPath: /api/test
+    startCommand: node server-mock-data.js
+    healthCheckPath: /health
     autoDeploy: true
     
     # Environment Variables
@@ -14,19 +14,6 @@ services:
       - key: NODE_ENV
         value: production
       - key: PORT
-        value: 3001
-      - key: MONGODB_URI
-        sync: false # Set this in Render dashboard
-      - key: JWT_SECRET
-        sync: false # Set this in Render dashboard
+        value: 3000
       - key: FRONTEND_URL
-        value: https://factory-management-platform-Abdessalem2000.vercel.app
-        
-    # Build Configuration
-    buildFilter:
-      paths:
-        - server.js
-        - package.json
-        - database.js
-        - models/
-        - src/
+        value: https://factory-management-platform.vercel.app

@@ -1,0 +1,316 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Workers table
+model Worker {
+  id          String   @id @default(cuid())
+  employeeId  String   @unique
+  firstName   String
+  lastName    String
+  email       String   @unique
+  position    String
+  department  String
+  status      WorkerStatus @default(ACTIVE)
+  hourlyRate  Float
+  currency    String   @default("DZD")
+  paymentType PaymentType @default(HOURLY)
+  hireDate    DateTime @default(now())
+  skills      String[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  expenses    Expense[]
+  incomes     Income[]
+
+  @@map("workers")
+}
+
+// Suppliers table
+model Supplier {
+  id            String         @id @default(cuid())
+  name          String
+  contactPerson String
+  email         String         @unique
+  phone         String
+  taxId         String?
+  paymentTerms  String
+  categories    String[]
+  status         SupplierStatus @default(ACTIVE)
+  rating         Float          @default(3)
+  notes         String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  // Relations
+  address       Address?
+  rawMaterials  RawMaterial[]
+  expenses      Expense[]
+  incomes       Income[]
+
+  @@map("suppliers")
+}
+
+model Address {
+  id         String @id @default(cuid())
+  street     String
+  city       String
+  state      String
+  zipCode    String
+  country    String
+  supplierId String @unique
+
+  // Relations
+  supplier   Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+
+  @@map("addresses")
+}
+
+// Raw Materials table
+model RawMaterial {
+  id              String            @id @default(cuid())
+  name            String
+  reference       String            @unique
+  category        RawMaterialCategory
+  unit            RawMaterialUnit
+  currentStock    Float
+  minStockAlert   Float
+  unitCost        Float
+  lastRestocked   DateTime          @default(now())
+  description     String?
+  location        String
+  status          RawMaterialStatus @default(ACTIVE)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  // Relations
+  supplierId      String?
+  supplier        Supplier?         @relation(fields: [supplierId], references: [id])
+
+  @@map("raw_materials")
+}
+
+// Production Orders table
+model ProductionOrder {
+  id              String              @id @default(cuid())
+  orderNumber     String              @unique
+  customerName    String
+  productType     String
+  quantity        Int
+  unitPrice       Float
+  totalAmount     Float
+  status          OrderStatus         @default(PENDING)
+  priority        OrderPriority       @default(MEDIUM)
+  startDate       DateTime?
+  endDate         DateTime?
+  deliveryDate    DateTime?
+  notes           String?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  // Relations
+  steps           ProductionStep[]
+  expenses        Expense[]
+  incomes         Income[]
+
+  @@map("production_orders")
+}
+
+model ProductionStep {
+  id          String           @id @default(cuid())
+  name        String
+  description String?
+  status      StepStatus       @default(PENDING)
+  startDate   DateTime?
+  endDate     DateTime?
+  duration    Int?             // in minutes
+  notes       String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  // Relations
+  orderId     String
+  order       ProductionOrder  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("production_steps")
+}
+
+// Expenses table
+model Expense {
+  id             String          @id @default(cuid())
+  reference      String          @unique
+  description    String
+  amount         Float
+  category       ExpenseCategory
+  subcategory    String?
+  date           DateTime
+  paymentMethod  PaymentMethod
+  status         ExpenseStatus   @default(PENDING)
+  invoiceNumber  String?
+  dueDate        DateTime?
+  tags           String[]
+  department     String
+  project        String?
+  isRecurring    Boolean         @default(false)
+  recurringFreq  RecurringFreq?
+  nextDate       DateTime?
+  endDate        DateTime?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  // Relations
+  supplierId     String?
+  supplier       Supplier?       @relation(fields: [supplierId], references: [id])
+  workerId       String?
+  worker         Worker?         @relation(fields: [workerId], references: [id])
+  orderId        String?
+  order          ProductionOrder? @relation(fields: [orderId], references: [id])
+
+  @@map("expenses")
+}
+
+// Incomes table
+model Income {
+  id             String         @id @default(cuid())
+  reference      String         @unique
+  description    String
+  amount         Float
+  category       IncomeCategory
+  subcategory    String?
+  date           DateTime
+  paymentMethod  PaymentMethod
+  status         IncomeStatus   @default(PENDING)
+  invoiceNumber  String?
+  dueDate        DateTime?
+  tags           String[]
+  department     String
+  project        String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  // Relations
+  supplierId     String?
+  supplier       Supplier?      @relation(fields: [supplierId], references: [id])
+  workerId       String?
+  worker         Worker?        @relation(fields: [workerId], references: [id])
+  orderId        String?
+  order          ProductionOrder? @relation(fields: [orderId], references: [id])
+
+  @@map("incomes")
+}
+
+// Enums
+enum WorkerStatus {
+  ACTIVE
+  INACTIVE
+  TERMINATED
+}
+
+enum PaymentType {
+  HOURLY
+  SALARY
+  CONTRACT
+}
+
+enum SupplierStatus {
+  ACTIVE
+  INACTIVE
+  BLACKLISTED
+}
+
+enum RawMaterialCategory {
+  FABRIC
+  THREAD
+  BUTTONS
+  ZIPPERS
+  LABELS
+  PACKAGING
+  OTHER
+}
+
+enum RawMaterialUnit {
+  METERS
+  KILOGRAMS
+  PIECES
+  BOXES
+  ROLLS
+}
+
+enum RawMaterialStatus {
+  ACTIVE
+  DISCONTINUED
+  OUT_OF_STOCK
+}
+
+enum OrderStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  DELIVERED
+}
+
+enum OrderPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum StepStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum ExpenseCategory {
+  RAW_MATERIALS
+  SALARIES
+  UTILITIES
+  MAINTENANCE
+  TRANSPORT
+  OTHER
+}
+
+enum IncomeCategory {
+  PRODUCT_SALES
+  SERVICES
+  INVESTMENTS
+  OTHER
+}
+
+enum PaymentMethod {
+  CASH
+  BANK_TRANSFER
+  CHECK
+  CREDIT_CARD
+}
+
+enum ExpenseStatus {
+  PENDING
+  PAID
+  CANCELLED
+}
+
+enum IncomeStatus {
+  PENDING
+  RECEIVED
+  CANCELLED
+}
+
+enum RecurringFreq {
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
+}

@@ -2,18 +2,31 @@
   "name": "factory-management-backend",
   "version": "1.0.0",
   "description": "Backend API for Factory Management Platform",
-  "main": "server.js",
+  "main": "server-mock-data.js",
   "scripts": {
     "dev": "nodemon index-database.js",
+    "dev:prisma": "nodemon server-prisma.js",
+    "dev:simple": "nodemon server-prisma-simple.js",
+    "dev:mock": "nodemon server-mock-data.js",
     "build": "tsc",
-    "start": "node server.js",
+    "start": "node server-mock-data.js",
+    "start:prisma": "node server-prisma.js",
+    "start:simple": "node server-prisma-simple.js",
+    "start:mock": "node server-mock-data.js",
     "seed": "node seed-database.js",
     "test": "jest",
-    "lint": "eslint src/**/*.ts"
+    "lint": "eslint src/**/*.ts",
+    "prisma:generate": "prisma generate",
+    "prisma:push": "prisma db push",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:studio": "prisma studio",
+    "prisma:seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@prisma/client": "^5.22.0",
     "@types/nodemailer": "^7.0.11",
     "@types/puppeteer": "^5.4.7",
+    "axios": "^1.13.6",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
@@ -24,10 +37,16 @@
     "mongoose": "^8.0.3",
     "morgan": "^1.10.0",
     "nodemailer": "^8.0.2",
+    "prisma": "^5.22.0",
     "puppeteer": "^24.39.1",
     "simple-statistics": "^7.8.9",
     "socket.io": "^4.8.3",
+    "supabase": "^2.81.0",
+    "tsx": "^4.21.0",
     "zod": "^3.22.4"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
