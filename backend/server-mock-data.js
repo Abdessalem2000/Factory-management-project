@@ -311,9 +311,20 @@ app.use(helmet());
 
 // CORS configuration
 app.use(cors({
-  origin: ['https://factory-management-platform.vercel.app', 'http://localhost:5173'],
-  credentials: true
+  origin: ['https://factory-management-project-btx5.vercel.app', 'https://factory-management-platform.vercel.app', 'http://localhost:5173'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
+// OPTIONS preflight handler
+app.options('*', (req, res) => {
+  res.header('Access-Control-Allow-Origin', 'https://factory-management-project-btx5.vercel.app')
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+  res.header('Access-Control-Allow-Credentials', 'true')
+  res.sendStatus(200)
+})
 
 // Rate limiting
 const limiter = rateLimit({
