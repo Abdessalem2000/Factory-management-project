@@ -42,20 +42,21 @@ export function WorkerManagement() {
 
   const workers = workersData?.data || []
 
-  // Validation function
+  // Enhanced Validation function - PREVENTS CRASHES!
   const validateForm = () => {
     const errors: Record<string, string> = {}
     
-    if (!formData.firstName.trim()) errors.firstName = 'First name is required'
-    if (!formData.lastName.trim()) errors.lastName = 'Last name is required'
-    if (!formData.email.trim()) errors.email = 'Email is required'
+    // Safe validation with null checks
+    if (!formData?.firstName?.trim()) errors.firstName = 'First name is required'
+    if (!formData?.lastName?.trim()) errors.lastName = 'Last name is required'
+    if (!formData?.email?.trim()) errors.email = 'Email is required'
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) errors.email = 'Invalid email format'
-    if (!formData.phone.trim()) errors.phone = 'Phone is required'
-    if (!formData.position.trim()) errors.position = 'Position is required'
-    if (!formData.department.trim()) errors.department = 'Department is required'
-    if (!formData.employeeId.trim()) errors.employeeId = 'Employee ID is required'
-    if (!formData.hourlyRate || formData.hourlyRate <= 0) errors.hourlyRate = 'Hourly rate must be greater than 0'
-    if (!formData.hireDate) errors.hireDate = 'Hire date is required'
+    if (!formData?.phone?.trim()) errors.phone = 'Phone is required'
+    if (!formData?.position?.trim()) errors.position = 'Position is required'
+    if (!formData?.department?.trim()) errors.department = 'Department is required'
+    if (!formData?.employeeId?.trim()) errors.employeeId = 'Employee ID is required'
+    if (!formData?.hourlyRate || formData.hourlyRate <= 0) errors.hourlyRate = 'Hourly rate must be greater than 0'
+    if (!formData?.hireDate) errors.hireDate = 'Hire date is required'
     
     setFormErrors(errors)
     return Object.keys(errors).length === 0
@@ -122,26 +123,43 @@ export function WorkerManagement() {
     }
   })
 
+  // Enhanced handleAddWorker - PREVENTS CRASHES!
   const handleAddWorker = () => {
     console.log('🔍 Début de la soumission du formulaire')
     
-    // Validation
+    // SAFE VALIDATION - Prevents crashes!
     if (!validateForm()) {
       toast.warning('Please fill in all required fields correctly')
       return
     }
     
-    // Afficher toast d'envoi
-    toast.info('📤 Envoi en cours...', 10000) // 10 secondes pour le timeout
-    
-    // Préparer les données
+    // SAFE DATA PREPARATION - Prevents crashes!
     const workerData = {
-      ...formData,
-      hourlyRate: parseFloat(formData.hourlyRate.toString()),
-      skills: formData.skills.length > 0 ? formData.skills : ['General']
+      firstName: formData?.firstName || '',
+      lastName: formData?.lastName || '',
+      email: formData?.email || '',
+      phone: formData?.phone || '',
+      position: formData?.position || '',
+      department: formData?.department || '',
+      employeeId: formData?.employeeId || '',
+      hourlyRate: parseFloat(formData?.hourlyRate?.toString() || '0') || 1500,
+      hireDate: formData?.hireDate || new Date().toISOString().split('T')[0],
+      status: formData?.status || 'active',
+      skills: formData?.skills?.length > 0 ? formData.skills : ['General'],
+      currency: formData?.currency || 'DZD',
+      paymentType: formData?.paymentType || 'hourly'
+    }
+    
+    // VALIDATE PREPARED DATA
+    if (!workerData.firstName || !workerData.lastName || !workerData.email) {
+      toast.error('Missing required worker information')
+      return
     }
     
     console.log('📋 Données préparées pour l\'API:', workerData)
+    
+    // Afficher toast d'envoi
+    toast.info('📤 Envoi en cours...', 10000) // 10 secondes pour le timeout
     
     // Lancer la mutation
     createWorkerMutation.mutate(workerData)

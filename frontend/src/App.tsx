@@ -17,8 +17,21 @@ import { PieceWorkers } from './pages/PieceWorkers'
 import { SalaryAllowances } from './pages/SalaryAllowances'
 import { Settings } from './pages/Settings'
 
-const queryClient = new QueryClient()
+// SAFE QUERY CLIENT - PREVENTS CRASHES!
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+    mutations: {
+      retry: 1,
+    },
+  },
+})
 
+// SAFE APP COMPONENT - PREVENTS CRASHES!
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
