@@ -8,13 +8,16 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// CORS configuration - MUST be above routes
+// CORS configuration - WILDCARD for demo - MUST be above routes
 app.use(cors({
-  origin: ['https://factory-management-project-btx5.vercel.app', 'http://localhost:5173'],
+  origin: '*', 
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
   credentials: true
 }));
+
+// OPTIONS preflight handler for wildcard CORS
+app.options('*', cors());
 
 // Mock Algerian data
 const mockWorkers = [
