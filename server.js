@@ -7,9 +7,20 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Health check endpoint
+// Health check endpoints
 app.get('/', (req, res) => {
   res.json({ status: 'OK', message: 'Factory Backend is running!' });
+});
+
+app.get('/health', (req, res) => {
+  res.json({ status: 'OK' });
+});
+
+app.get('/api/health', (req, res) => { 
+  res.json({ 
+    status: 'healthy', 
+    mongodb: mongoose.connection.readyState === 1 
+  });
 });
 
 mongoose.connect(process.env.MONGODB_URI)
