@@ -6,21 +6,39 @@ const API_BASE = '/api'; // Proxy to backend
 function App() {
   const [workers, setWorkers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [addingWorker, setAddingWorker] = useState(false);
 
   useEffect(() => {
-    axios.get(`${API_BASE}/workers`).then(res => {
-      setWorkers(res.data);
-      setLoading(false);
-    });
+    const fetchWorkers = async () => {
+      try {
+        const res = await axios.get(`${API_BASE}/workers`);
+        setWorkers(res.data);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching workers:', error);
+        setLoading(false);
+      }
+    };
+    fetchWorkers();
   }, []);
 
   const addWorker = async (e) => {
     e.preventDefault();
-    const data = Object.fromEntries(new FormData(e.target));
-    data.salary = parseFloat(data.salary);
-    await axios.post(`${API_BASE}/workers`, data);
-    e.target.reset();
-    axios.get(`${API_BASE}/workers`).then(res => setWorkers(res.data));
+    setAddingWorker(true);
+    try {
+      const data = Object.fromEntries(new FormData(e.target));
+      data.salary = parseFloat(data.salary);
+      await axios.post(`${API_BASE}/workers`, data);
+      e.target.reset();
+      // Refresh workers list
+      const res = await axios.get(`${API_BASE}/workers`);
+      setWorkers(res.data);
+    } catch (error) {
+      console.error('Error adding worker:', error);
+      alert('Error adding worker. Please try again.');
+    } finally {
+      setAddingWorker(false);
+    }
   };
 
   if (loading) return <div>Loading...</div>;
@@ -35,8 +53,8 @@ function App() {
           <input name="name" placeholder="Name *" required style={{ padding: '10px', flex: 1 }} />
           <input name="position" placeholder="Position *" required style={{ padding: '10px', flex: 1 }} />
           <input name="salary" type="number" placeholder="Salary *" step="0.01" required style={{ padding: '10px', width: '120px' }} />
-          <button type="submit" style={{ padding: '10px 20px', background: '#28a745', color: 'white', border: 'none', borderRadius: '4px' }}>
-            Add Worker
+          <button type="submit" disabled={addingWorker} style={{ padding: '10px 20px', background: addingWorker ? '#6c757d' : '#28a745', color: 'white', border: 'none', borderRadius: '4px' }}>
+            {addingWorker ? 'Adding...' : 'Add Worker'}
           </button>
         </form>
       </div>
