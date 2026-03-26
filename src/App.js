@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 
-const API_BASE = '/api'; // Proxy to backend
+const API_BASE = process.env.REACT_APP_API_URL || '/api'; // Use environment variable
 
 function App() {
   const [workers, setWorkers] = useState([]);
@@ -12,7 +12,7 @@ function App() {
     const fetchWorkers = async () => {
       try {
         const res = await axios.get(`${API_BASE}/workers`);
-        setWorkers(res.data);
+        setWorkers(res.data.data || res.data); // Handle both response formats
         setLoading(false);
       } catch (error) {
         console.error('Error fetching workers:', error);
@@ -32,7 +32,7 @@ function App() {
       e.target.reset();
       // Refresh workers list
       const res = await axios.get(`${API_BASE}/workers`);
-      setWorkers(res.data);
+      setWorkers(res.data.data || res.data);
     } catch (error) {
       console.error('Error adding worker:', error);
       alert('Error adding worker. Please try again.');
@@ -50,7 +50,8 @@ function App() {
       <div style={{ background: '#f5f5f5', padding: '20px', borderRadius: '8px', margin: '20px 0' }}>
         <h2>Add Worker</h2>
         <form onSubmit={addWorker} style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-          <input name="name" placeholder="Name *" required style={{ padding: '10px', flex: 1 }} />
+          <input name="firstName" placeholder="First Name *" required style={{ padding: '10px', flex: 1 }} />
+          <input name="lastName" placeholder="Last Name *" required style={{ padding: '10px', flex: 1 }} />
           <input name="position" placeholder="Position *" required style={{ padding: '10px', flex: 1 }} />
           <input name="salary" type="number" placeholder="Salary *" step="0.01" required style={{ padding: '10px', width: '120px' }} />
           <button type="submit" disabled={addingWorker} style={{ padding: '10px 20px', background: addingWorker ? '#6c757d' : '#28a745', color: 'white', border: 'none', borderRadius: '4px' }}>
@@ -71,7 +72,7 @@ function App() {
               borderRadius: '8px', 
               boxShadow: '0 2px 4px rgba(0,0,0,0.1)' 
             }}>
-              <strong>{worker.name}</strong> - {worker.position} 
+              <strong>{worker.firstName} {worker.lastName}</strong> - {worker.position}
               <span style={{ float: 'right', color: '#28a745', fontWeight: 'bold' }}>
                 ${worker.salary?.toLocaleString()}
               </span>
