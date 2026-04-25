@@ -304,10 +304,10 @@ export default function App() {
       {/* ORDERS */}
       {tab === "orders" && (
         <div>
-          {/* Prominent Create Order Button */}
+          {/* Prominent Create Order Button - Always Shows Form */}
           <div style={{ textAlign: 'center', marginBottom: '30px' }}>
             <button 
-              onClick={() => setShowOrderForm(!showOrderForm)}
+              onClick={() => setShowOrderForm(true)}
               style={{
                 padding: '16px 32px',
                 background: 'linear-gradient(135deg, #2563eb, #1d4ed8)',
@@ -321,11 +321,11 @@ export default function App() {
                 transition: 'all 0.3s'
               }}
             >
-              {showOrderForm ? '📋 Hide Order Form' : '📋 Create New Order'}
+              📋 Create New Order
             </button>
           </div>
 
-          {/* Create Order Form */}
+          {/* Create Order Form - Always Visible When Button Clicked */}
           {showOrderForm && (
             <div id="orderForm" style={{ 
               background: '#f8fafc', 
@@ -336,55 +336,125 @@ export default function App() {
               boxShadow: '0 8px 25px rgba(37, 99, 235, 0.15)' 
             }}>
               <h2 style={{ color: '#1e293b', margin: '0 0 20px 0', textAlign: 'center' }}>📋 Create Order</h2>
-              <form onSubmit={addOrder} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
-                <select name="clientId" required style={{ padding: '12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '16px' }}>
-                  <option value="">Select Client *</option>
-                  {clients.map(client => <option key={client._id} value={client._id}>{client.name}</option>)}
-                </select>
-                <select name="salesAgentId" required style={{ padding: '12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '16px' }}>
-                  <option value="">Select Sales Agent *</option>
-                  {workers.filter(w => w.role === 'Sales Agent').map(agent => <option key={agent._id} value={agent._id}>{agent.name}</option>)}
-                </select>
-                <select name="productId" required style={{ padding: '12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '16px' }}>
-                  <option value="">Select Product *</option>
-                  {products.map(product => <option key={product._id} value={product._id}>{product.name} - {product.price?.wholesale} DZD</option>)}
-                </select>
-                <input name="quantity" type="number" placeholder="Quantity *" min="1" required style={{ padding: '12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '16px' }} />
-                <input name="unitPrice" type="number" placeholder="Unit Price (DZD) *" step="100" required style={{ padding: '12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '16px' }} />
-                <input name="discount" type="number" placeholder="Discount (%)" step="0.01" min="0" max="100" style={{ padding: '12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '16px' }} />
-                <select name="paymentMethod" required style={{ padding: '12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '16px' }}>
-                  <option value="">Payment Method *</option>
-                  <option value="Cash">Cash</option>
-                  <option value="Credit">Credit</option>
-                  <option value="Bank Transfer">Bank Transfer</option>
-                  <option value="Mobile Money">Mobile Money</option>
-                </select>
-                <select name="deliveryType" required style={{ padding: '12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '16px' }}>
-                  <option value="">Delivery Type *</option>
-                  <option value="Delivery">Delivery</option>
-                  <option value="Pickup">Pickup</option>
-                </select>
-                <input name="deliveryAddress" placeholder="Delivery Address *" required style={{ padding: '12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '16px' }} />
-                <input name="scheduledDate" type="date" required style={{ padding: '12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '16px' }} />
-                <textarea name="notes" placeholder="Order Notes" rows="3" style={{ padding: '12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '16px', gridColumn: '1 / -1' }}></textarea>
-                <button 
-                  type="submit" 
-                  disabled={addingOrder} 
-                  style={{ 
-                    padding: '12px 24px', 
-                    background: addingOrder ? '#64748b' : '#2563eb', 
-                    color: 'white', 
-                    border: 'none', 
-                    borderRadius: '8px',
-                    fontSize: '16px',
-                    fontWeight: '600',
-                    cursor: addingOrder ? 'not-allowed' : 'pointer',
-                    transition: 'all 0.3s'
-                  }}
-                >
-                  {addingOrder ? 'Creating...' : '📋 Create Order'}
-                </button>
-              </form>
+              
+              {/* Loading State Check */}
+              {loading ? (
+                <div style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
+                  <div style={{ fontSize: '18px', marginBottom: '10px' }}>⏳ Loading data...</div>
+                  <div style={{ fontSize: '14px' }}>Please wait while we load clients and products</div>
+                </div>
+              ) : (
+                <form onSubmit={addOrder} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+                  {/* Client Dropdown with Validation */}
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '5px', color: '#374151', fontWeight: '500' }}>Client *</label>
+                    <select name="clientId" required style={{ padding: '12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '16px', width: '100%' }}>
+                      <option value="">Select Client *</option>
+                      {clients.length === 0 ? (
+                        <option value="" disabled>No clients available - please add clients first</option>
+                      ) : (
+                        clients.map(client => <option key={client._id} value={client._id}>{client.name}</option>)
+                      )}
+                    </select>
+                  </div>
+
+                  {/* Sales Agent Dropdown with Validation */}
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '5px', color: '#374151', fontWeight: '500' }}>Sales Agent *</label>
+                    <select name="salesAgentId" required style={{ padding: '12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '16px', width: '100%' }}>
+                      <option value="">Select Sales Agent *</option>
+                      {workers.filter(w => w.role === 'Sales Agent').length === 0 ? (
+                        <option value="" disabled>No sales agents available</option>
+                      ) : (
+                        workers.filter(w => w.role === 'Sales Agent').map(agent => <option key={agent._id} value={agent._id}>{agent.name}</option>)
+                      )}
+                    </select>
+                  </div>
+
+                  {/* Product Dropdown with Validation */}
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '5px', color: '#374151', fontWeight: '500' }}>Product *</label>
+                    <select name="productId" required style={{ padding: '12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '16px', width: '100%' }}>
+                      <option value="">Select Product *</option>
+                      {products.length === 0 ? (
+                        <option value="" disabled>No products available - please add products first</option>
+                      ) : (
+                        products.map(product => <option key={product._id} value={product._id}>{product.name} - {product.price?.wholesale || 0} DZD</option>)
+                      )}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '5px', color: '#374151', fontWeight: '500' }}>Quantity *</label>
+                    <input name="quantity" type="number" placeholder="Quantity *" min="1" required style={{ padding: '12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '16px', width: '100%' }} />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '5px', color: '#374151', fontWeight: '500' }}>Unit Price (DZD) *</label>
+                    <input name="unitPrice" type="number" placeholder="Unit Price (DZD) *" step="100" required style={{ padding: '12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '16px', width: '100%' }} />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '5px', color: '#374151', fontWeight: '500' }}>Discount (%)</label>
+                    <input name="discount" type="number" placeholder="Discount (%)" step="0.01" min="0" max="100" style={{ padding: '12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '16px', width: '100%' }} />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '5px', color: '#374151', fontWeight: '500' }}>Payment Method *</label>
+                    <select name="paymentMethod" required style={{ padding: '12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '16px', width: '100%' }}>
+                      <option value="">Payment Method *</option>
+                      <option value="Cash">Cash</option>
+                      <option value="Credit">Credit</option>
+                      <option value="Bank Transfer">Bank Transfer</option>
+                      <option value="Mobile Money">Mobile Money</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '5px', color: '#374151', fontWeight: '500' }}>Delivery Type *</label>
+                    <select name="deliveryType" required style={{ padding: '12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '16px', width: '100%' }}>
+                      <option value="">Delivery Type *</option>
+                      <option value="Delivery">Delivery</option>
+                      <option value="Pickup">Pickup</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '5px', color: '#374151', fontWeight: '500' }}>Delivery Address *</label>
+                    <input name="deliveryAddress" placeholder="Delivery Address *" required style={{ padding: '12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '16px', width: '100%' }} />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '5px', color: '#374151', fontWeight: '500' }}>Scheduled Date *</label>
+                    <input name="scheduledDate" type="date" required style={{ padding: '12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '16px', width: '100%' }} />
+                  </div>
+
+                  <div style={{ gridColumn: '1 / -1' }}>
+                    <label style={{ display: 'block', marginBottom: '5px', color: '#374151', fontWeight: '500' }}>Order Notes</label>
+                    <textarea name="notes" placeholder="Order Notes" rows="3" style={{ padding: '12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '16px', width: '100%' }}></textarea>
+                  </div>
+
+                  <div style={{ gridColumn: '1 / -1', textAlign: 'center' }}>
+                    <button 
+                      type="submit" 
+                      disabled={addingOrder || clients.length === 0 || products.length === 0} 
+                      style={{ 
+                        padding: '12px 24px', 
+                        background: (addingOrder || clients.length === 0 || products.length === 0) ? '#64748b' : '#2563eb', 
+                        color: 'white', 
+                        border: 'none', 
+                        borderRadius: '8px',
+                        fontSize: '16px',
+                        fontWeight: '600',
+                        cursor: (addingOrder || clients.length === 0 || products.length === 0) ? 'not-allowed' : 'pointer',
+                        transition: 'all 0.3s'
+                      }}
+                    >
+                      {addingOrder ? 'Creating...' : (clients.length === 0 || products.length === 0 ? '⚠️ Add Clients & Products First' : '📋 Create Order')}
+                    </button>
+                  </div>
+                </form>
+              )}
             </div>
           )}
 
