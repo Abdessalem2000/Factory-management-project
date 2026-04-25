@@ -52,7 +52,7 @@ export default function App() {
   const [lang, setLang] = useState("en");
   const t = tData[lang];
 
-  const [tab, setTab] = useState("dashboard");
+  const [activeTab, setActiveTab] = useState("dashboard");
   const [loading, setLoading] = useState(true);
 
   const [clients, setClients] = useState([]);
@@ -251,14 +251,14 @@ export default function App() {
       {/* NAV */}
       <div style={{ display: "flex", gap: 10 }}>
         {["dashboard", "clients", "orders", "products"].map((x) => (
-          <button key={x} onClick={() => setTab(x)}>
+          <button key={x} onClick={() => setActiveTab(x)}>
             {t[x]}
           </button>
         ))}
       </div>
 
       {/* DASHBOARD */}
-      {tab === "dashboard" && (
+      {activeTab === "dashboard" && (
         <div>
           <h3>Clients: {clients.length}</h3>
           <h3>Orders: {orders.length}</h3>
@@ -267,7 +267,7 @@ export default function App() {
       )}
 
       {/* CLIENTS */}
-      {tab === "clients" && (
+      {activeTab === "clients" && (
         <div>
           <form onSubmit={addClient}>
             <input name="name" placeholder="Name" required />
@@ -281,7 +281,7 @@ export default function App() {
       )}
 
       {/* PRODUCTS */}
-      {tab === "products" && (
+      {activeTab === "products" && (
         <div>
           <form onSubmit={addProduct}>
             <input name="name" placeholder="Name" required />
@@ -302,7 +302,7 @@ export default function App() {
       )}
 
       {/* ORDERS */}
-      {tab === "orders" && (
+      {activeTab === "orders" && (
         <div>
           {/* CREATE ORDER BUTTON - ALWAYS VISIBLE */}
           <div style={{ 
