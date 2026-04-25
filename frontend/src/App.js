@@ -200,6 +200,7 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [addingClient, setAddingClient] = useState(false);
   const [addingOrder, setAddingOrder] = useState(false);
+  const [showOrderForm, setShowOrderForm] = useState(true);
   const [addingProduct, setAddingProduct] = useState(false);
   const [addingBrand, setAddingBrand] = useState(false);
 
@@ -648,9 +649,31 @@ function App() {
       {/* Orders Tab */}
       {activeTab === 'orders' && (
         <div>
+          {/* Prominent Create Order Button */}
+          <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+            <button 
+              onClick={() => setShowOrderForm(!showOrderForm)}
+              style={{
+                padding: '16px 32px',
+                background: 'linear-gradient(135deg, #2563eb, #1d4ed8)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '12px',
+                fontSize: '18px',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                boxShadow: '0 4px 15px rgba(37, 99, 235, 0.3)',
+                transition: 'all 0.3s'
+              }}
+            >
+              {showOrderForm ? '📋 Hide Order Form' : '📋 Create New Order'}
+            </button>
+          </div>
+
           {/* Create Order Form */}
-          <div style={{ background: '#f8fafc', padding: '25px', borderRadius: '12px', marginBottom: '30px', border: '1px solid #e2e8f0' }}>
-            <h2 style={{ color: '#1e293b', margin: '0 0 20px 0' }}>{t.addOrder}</h2>
+          {showOrderForm && (
+          <div id="orderForm" style={{ background: '#f8fafc', padding: '25px', borderRadius: '12px', marginBottom: '30px', border: '2px solid #2563eb', boxShadow: '0 8px 25px rgba(37, 99, 235, 0.15)' }}>
+            <h2 style={{ color: '#1e293b', margin: '0 0 20px 0', textAlign: 'center' }}>📋 {t.addOrder}</h2>
             <form onSubmit={addOrder} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
               <select name="clientId" required style={{ padding: '12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '16px' }}>
                 <option value="">Select Client *</option>
@@ -694,10 +717,29 @@ function App() {
               </button>
             </form>
           </div>
+          )}
 
           {/* Orders List */}
           <div style={{ background: 'white', padding: '25px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-            <h2 style={{ color: '#1e293b', margin: '0 0 20px 0' }}>{t.orders} ({orders.length})</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h2 style={{ color: '#1e293b', margin: '0' }}>{t.orders} ({orders.length})</h2>
+              <button 
+                onClick={() => setShowOrderForm(true)}
+                style={{
+                  padding: '10px 20px',
+                  background: '#2563eb',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s'
+                }}
+              >
+                ➕ Add Order
+              </button>
+            </div>
             <div style={{ display: 'grid', gap: '12px' }}>
               {orders.length === 0 ? (
                 <p style={{ color: '#64748b', textAlign: 'center', padding: '20px' }}>{t.noOrders}</p>
