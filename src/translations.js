@@ -1,0 +1,127 @@
+// Multi-language support for Algerian market
+export const translations = {
+  en: {
+    title: "🏭 Factory Management System",
+    subtitle: "Real-time Production & Financial Dashboard",
+    dashboard: "Dashboard",
+    workers: "Workers",
+    income: "Income Records",
+    totalWorkers: "Total Workers",
+    totalIncome: "Total Income",
+    totalSalary: "Total Salary",
+    avgSalary: "Average Salary",
+    profitMargin: "Profit Margin",
+    revenuePerEmployee: "Revenue/Employee",
+    monthlyRevenue: "Monthly Revenue",
+    efficiencyScore: "Efficiency Score",
+    addWorker: "Add New Worker",
+    addIncome: "Add Income",
+    quickActions: "Quick Actions",
+    exportReport: "Export Report",
+    generatePDF: "Generate PDF",
+    settings: "Settings",
+    refreshData: "Refresh Data",
+    advancedAnalytics: "Advanced Analytics",
+    performanceMetrics: "Performance Metrics",
+    productionEfficiency: "Production Efficiency",
+    costManagement: "Cost Management",
+    teamProductivity: "Team Productivity",
+    name: "Full Name",
+    position: "Position",
+    department: "Department",
+    salary: "Salary",
+    description: "Income Source",
+    amount: "Amount",
+    type: "Type",
+    currency: "DZD",
+    loading: "🏭 Loading Factory Management System...",
+    noWorkers: "No workers yet. Add one above!",
+    noIncome: "No income records yet. Add one above!",
+    adding: "Adding...",
+    addWorkerBtn: "➕ Add Worker",
+    addIncomeBtn: "💵 Add Income"
+  },
+  fr: {
+    title: "🏭 Système de Gestion d'Usine",
+    subtitle: "Tableau de Bord de Production et Finance en Temps Réel",
+    dashboard: "Tableau de Bord",
+    workers: "Employés",
+    income: "Relevés de Revenus",
+    totalWorkers: "Total Employés",
+    totalIncome: "Revenus Totaux",
+    totalSalary: "Salaires Totaux",
+    avgSalary: "Salaire Moyen",
+    profitMargin: "Marge de Profit",
+    revenuePerEmployee: "Revenu/Employé",
+    monthlyRevenue: "Revenu Mensuel",
+    efficiencyScore: "Score d'Efficacité",
+    addWorker: "Ajouter un Nouvel Employé",
+    addIncome: "Ajouter un Revenu",
+    quickActions: "Actions Rapides",
+    exportReport: "Exporter le Rapport",
+    generatePDF: "Générer PDF",
+    settings: "Paramètres",
+    refreshData: "Actualiser les Données",
+    advancedAnalytics: "Analyses Avancées",
+    performanceMetrics: "Métriques de Performance",
+    productionEfficiency: "Efficacité de Production",
+    costManagement: "Gestion des Coûts",
+    teamProductivity: "Productivité d'Équipe",
+    name: "Nom Complet",
+    position: "Poste",
+    department: "Département",
+    salary: "Salaire",
+    description: "Source de Revenu",
+    amount: "Montant",
+    type: "Type",
+    currency: "DZD",
+    loading: "🏭 Chargement du Système de Gestion d'Usine...",
+    noWorkers: "Aucun employé encore. Ajoutez-en un ci-dessus!",
+    noIncome: "Aucun relevé de revenu encore. Ajoutez-en un ci-dessus!",
+    adding: "Ajout en cours...",
+    addWorkerBtn: "➕ Ajouter Employé",
+    addIncomeBtn: "💵 Ajouter Revenu"
+  }
+};
+
+export const departments = {
+  en: {
+    'Production': 'Production',
+    'Quality': 'Quality Control',
+    'Logistics': 'Logistics',
+    'Maintenance': 'Maintenance',
+    'Sales': 'Sales',
+    'Admin': 'Administration',
+    'Engineering': 'Engineering',
+    'Finance': 'Finance'
+  },
+  fr: {
+    'Production': 'Production',
+    'Quality': 'Contrôle Qualité',
+    'Logistics': 'Logistique',
+    'Maintenance': 'Maintenance',
+    'Sales': 'Ventes',
+    'Admin': 'Administration',
+    'Engineering': 'Ingénierie',
+    'Finance': 'Finance'
+  }
+};
+
+export const incomeTypes = {
+  en: {
+    'Revenue': 'Revenue',
+    'Service': 'Service',
+    'Rental': 'Rental',
+    'Product': 'Product Sales',
+    'Consulting': 'Consulting',
+    'Other': 'Other'
+  },
+  fr: {
+    'Revenue': 'Revenus',
+    'Service': 'Services',
+    'Rental': 'Location',
+    'Product': 'Ventes de Produits',
+    'Consulting': 'Consultation',
+    'Other': 'Autre'
+  }
+};
