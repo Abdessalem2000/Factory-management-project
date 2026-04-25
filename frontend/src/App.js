@@ -304,25 +304,37 @@ export default function App() {
       {/* ORDERS */}
       {tab === "orders" && (
         <div>
-          {/* Prominent Create Order Button - Always Shows Form */}
-          <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+          {/* CREATE ORDER BUTTON - ALWAYS VISIBLE */}
+          <div style={{ 
+            textAlign: 'center', 
+            marginBottom: '30px',
+            padding: '20px',
+            background: '#f0f9ff',
+            border: '2px solid #2563eb',
+            borderRadius: '12px'
+          }}>
+            <h3 style={{ color: '#1e40af', margin: '0 0 15px 0' }}>Create Your First Order</h3>
             <button 
               onClick={() => setShowOrderForm(true)}
               style={{
-                padding: '16px 32px',
-                background: 'linear-gradient(135deg, #2563eb, #1d4ed8)',
+                padding: '20px 40px',
+                background: '#2563eb',
                 color: 'white',
-                border: 'none',
+                border: '3px solid #1d4ed8',
                 borderRadius: '12px',
-                fontSize: '18px',
+                fontSize: '20px',
                 fontWeight: 'bold',
                 cursor: 'pointer',
-                boxShadow: '0 4px 15px rgba(37, 99, 235, 0.3)',
-                transition: 'all 0.3s'
+                boxShadow: '0 4px 15px rgba(37, 99, 235, 0.5)',
+                transition: 'all 0.3s',
+                textTransform: 'uppercase'
               }}
             >
-              📋 Create New Order
+              📋 CREATE NEW ORDER
             </button>
+            <p style={{ color: '#64748b', margin: '10px 0 0 0', fontSize: '14px' }}>
+              Click the button above to add a new order
+            </p>
           </div>
 
           {/* Create Order Form - Always Visible When Button Clicked */}
