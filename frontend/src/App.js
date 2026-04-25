@@ -66,6 +66,7 @@ export default function App() {
   const [dashboard, setDashboard] = useState({});
 
   const [showOrderForm, setShowOrderForm] = useState(false);
+  const [addingOrder, setAddingOrder] = useState(false);
   const [loadingAction, setLoadingAction] = useState(false);
 
   /* ===================== FETCH DATA ===================== */
@@ -192,7 +193,7 @@ export default function App() {
 
   const addOrder = async (e) => {
     e.preventDefault();
-    setLoadingAction(true);
+    setAddingOrder(true);
 
     try {
       const f = Object.fromEntries(new FormData(e.target));
@@ -220,11 +221,12 @@ export default function App() {
       await axios.post(`${API_BASE}/orders`, data);
       e.target.reset();
       refresh("orders", setOrders);
+      alert("✅ Order created successfully!");
     } catch (err) {
-      alert("Error creating order");
+      alert("❌ Error creating order");
     }
 
-    setLoadingAction(false);
+    setAddingOrder(false);
   };
 
   /* ===================== UI ===================== */
@@ -302,22 +304,162 @@ export default function App() {
       {/* ORDERS */}
       {tab === "orders" && (
         <div>
-          <button onClick={() => setShowOrderForm(!showOrderForm)}>
-            Toggle Form
-          </button>
+          {/* Prominent Create Order Button */}
+          <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+            <button 
+              onClick={() => setShowOrderForm(!showOrderForm)}
+              style={{
+                padding: '16px 32px',
+                background: 'linear-gradient(135deg, #2563eb, #1d4ed8)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '12px',
+                fontSize: '18px',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                boxShadow: '0 4px 15px rgba(37, 99, 235, 0.3)',
+                transition: 'all 0.3s'
+              }}
+            >
+              {showOrderForm ? '📋 Hide Order Form' : '📋 Create New Order'}
+            </button>
+          </div>
 
+          {/* Create Order Form */}
           {showOrderForm && (
-            <form onSubmit={addOrder}>
-              <input name="quantity" placeholder="Qty" />
-              <input name="unitPrice" placeholder="Price" />
-              <input name="deliveryAddress" placeholder="Address" />
-              <button>Create</button>
-            </form>
+            <div id="orderForm" style={{ 
+              background: '#f8fafc', 
+              padding: '25px', 
+              borderRadius: '12px', 
+              marginBottom: '30px', 
+              border: '2px solid #2563eb', 
+              boxShadow: '0 8px 25px rgba(37, 99, 235, 0.15)' 
+            }}>
+              <h2 style={{ color: '#1e293b', margin: '0 0 20px 0', textAlign: 'center' }}>📋 Create Order</h2>
+              <form onSubmit={addOrder} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+                <select name="clientId" required style={{ padding: '12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '16px' }}>
+                  <option value="">Select Client *</option>
+                  {clients.map(client => <option key={client._id} value={client._id}>{client.name}</option>)}
+                </select>
+                <select name="salesAgentId" required style={{ padding: '12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '16px' }}>
+                  <option value="">Select Sales Agent *</option>
+                  {workers.filter(w => w.role === 'Sales Agent').map(agent => <option key={agent._id} value={agent._id}>{agent.name}</option>)}
+                </select>
+                <select name="productId" required style={{ padding: '12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '16px' }}>
+                  <option value="">Select Product *</option>
+                  {products.map(product => <option key={product._id} value={product._id}>{product.name} - {product.price?.wholesale} DZD</option>)}
+                </select>
+                <input name="quantity" type="number" placeholder="Quantity *" min="1" required style={{ padding: '12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '16px' }} />
+                <input name="unitPrice" type="number" placeholder="Unit Price (DZD) *" step="100" required style={{ padding: '12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '16px' }} />
+                <input name="discount" type="number" placeholder="Discount (%)" step="0.01" min="0" max="100" style={{ padding: '12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '16px' }} />
+                <select name="paymentMethod" required style={{ padding: '12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '16px' }}>
+                  <option value="">Payment Method *</option>
+                  <option value="Cash">Cash</option>
+                  <option value="Credit">Credit</option>
+                  <option value="Bank Transfer">Bank Transfer</option>
+                  <option value="Mobile Money">Mobile Money</option>
+                </select>
+                <select name="deliveryType" required style={{ padding: '12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '16px' }}>
+                  <option value="">Delivery Type *</option>
+                  <option value="Delivery">Delivery</option>
+                  <option value="Pickup">Pickup</option>
+                </select>
+                <input name="deliveryAddress" placeholder="Delivery Address *" required style={{ padding: '12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '16px' }} />
+                <input name="scheduledDate" type="date" required style={{ padding: '12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '16px' }} />
+                <textarea name="notes" placeholder="Order Notes" rows="3" style={{ padding: '12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '16px', gridColumn: '1 / -1' }}></textarea>
+                <button 
+                  type="submit" 
+                  disabled={addingOrder} 
+                  style={{ 
+                    padding: '12px 24px', 
+                    background: addingOrder ? '#64748b' : '#2563eb', 
+                    color: 'white', 
+                    border: 'none', 
+                    borderRadius: '8px',
+                    fontSize: '16px',
+                    fontWeight: '600',
+                    cursor: addingOrder ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.3s'
+                  }}
+                >
+                  {addingOrder ? 'Creating...' : '📋 Create Order'}
+                </button>
+              </form>
+            </div>
           )}
 
-          {orders.map((o) => (
-            <div key={o._id}>{o.orderNumber}</div>
-          ))}
+          {/* Orders List */}
+          <div style={{ background: 'white', padding: '25px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h2 style={{ color: '#1e293b', margin: '0' }}>Orders ({orders.length})</h2>
+              <button 
+                onClick={() => setShowOrderForm(true)}
+                style={{
+                  padding: '10px 20px',
+                  background: '#2563eb',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s'
+                }}
+              >
+                ➕ Add Order
+              </button>
+            </div>
+            <div style={{ display: 'grid', gap: '12px' }}>
+              {orders.length === 0 ? (
+                <p style={{ color: '#64748b', textAlign: 'center', padding: '20px' }}>No orders yet. Create your first order!</p>
+              ) : (
+                orders.map(order => (
+                  <div key={order._id} style={{ 
+                    padding: '15px', 
+                    background: '#f8fafc', 
+                    borderRadius: '8px', 
+                    border: '1px solid #e2e8f0',
+                    transition: 'all 0.3s'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                      <div>
+                        <strong style={{ color: '#1e293b', fontSize: '1.1em' }}>{order.orderNumber}</strong>
+                        <p style={{ margin: '5px 0 0 0', color: '#64748b' }}>
+                          🏪 {order.client?.name} • 👤 {order.salesAgent?.name}
+                        </p>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <span style={{ 
+                          color: order.status === 'Delivered' ? '#10b981' : order.status === 'Cancelled' ? '#ef4444' : '#f59e0b', 
+                          fontWeight: 'bold', fontSize: '1.1em' 
+                        }}>
+                          {order.status}
+                        </span>
+                        <p style={{ margin: '5px 0 0 0', color: '#64748b', fontSize: '0.9em' }}>
+                          {new Date(order.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                    <div style={{ display: 'grid', gap: '5px', marginBottom: '10px' }}>
+                      {order.items?.map((item, index) => (
+                        <div key={index} style={{ fontSize: '0.9em', color: '#64748b' }}>
+                          • {item.product?.name} x {item.quantity} = {item.totalPrice?.toLocaleString()} DZD
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid #e5e7eb' }}>
+                      <span style={{ fontWeight: 'bold', color: '#1e293b' }}>
+                        Total: {order.pricing?.total?.toLocaleString()} DZD
+                      </span>
+                      <span style={{ fontSize: '0.9em', color: '#64748b' }}>
+                        💳 {order.payment?.method} • {order.payment?.status}
+                      </span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>
