@@ -110,3 +110,5 @@ Thumbs.db
 Dockerfile
 docker-compose.yml
 .dockerignore
+
+.vercel

@@ -309,6 +309,51 @@ function App() {
     }
   };
 
+  const addOrder = async (e) => {
+    e.preventDefault();
+    setAddingOrder(true);
+    try {
+      const formData = Object.fromEntries(new FormData(e.target));
+      const orderData = {
+        client: formData.clientId,
+        salesAgent: formData.salesAgentId,
+        items: [{
+          product: formData.productId,
+          quantity: parseInt(formData.quantity),
+          unitPrice: parseFloat(formData.unitPrice),
+          totalPrice: parseFloat(formData.quantity) * parseFloat(formData.unitPrice),
+          discount: 0,
+          tax: 0
+        }],
+        pricing: {
+          discount: parseFloat(formData.discount) || 0,
+          tax: parseFloat(formData.tax) || 0
+        },
+        payment: {
+          method: formData.paymentMethod,
+          status: 'Pending'
+        },
+        delivery: {
+          type: formData.deliveryType,
+          address: formData.deliveryAddress,
+          scheduledDate: formData.scheduledDate
+        },
+        notes: formData.notes
+      };
+      
+      await axios.post(`${API_BASE}/orders`, orderData);
+      e.target.reset();
+      const ordersRes = await axios.get(`${API_BASE}/orders`);
+      setOrders(ordersRes.data);
+      alert('✅ Order created successfully!');
+    } catch (error) {
+      console.error('Error creating order:', error);
+      alert(`❌ Error creating order: ${error.response?.data?.error || error.message}`);
+    } finally {
+      setAddingOrder(false);
+    }
+  };
+
   if (loading) return <div style={{ textAlign: 'center', padding: '50px' }}>{t.loading}</div>;
 
   return (
@@ -372,19 +417,19 @@ function App() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px', marginBottom: '30px' }}>
             <div style={{ background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', color: 'white', padding: '20px', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
               <h3 style={{ margin: '0 0 10px 0', fontSize: '1.1em' }}>🏪 {t.totalClients}</h3>
-              <p style={{ margin: '0', fontSize: '2em', fontWeight: 'bold' }}>{dashboard.clients || 0}</p>
+              <p style={{ margin: '0', fontSize: '2em', fontWeight: 'bold' }}>{(dashboard.clients || clients.length || 0)}</p>
             </div>
             <div style={{ background: 'linear-gradient(135deg, #10b981, #059669)', color: 'white', padding: '20px', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
               <h3 style={{ margin: '0 0 10px 0', fontSize: '1.1em' }}>📋 {t.totalOrders}</h3>
-              <p style={{ margin: '0', fontSize: '2em', fontWeight: 'bold' }}>{dashboard.orders || 0}</p>
+              <p style={{ margin: '0', fontSize: '2em', fontWeight: 'bold' }}>{(dashboard.orders || orders.length || 0)}</p>
             </div>
             <div style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)', color: 'white', padding: '20px', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
               <h3 style={{ margin: '0 0 10px 0', fontSize: '1.1em' }}>💰 {t.totalRevenue}</h3>
-              <p style={{ margin: '0', fontSize: '2em', fontWeight: 'bold' }}>{(dashboard.totalRevenue || 0).toLocaleString()} {t.currency}</p>
+              <p style={{ margin: '0', fontSize: '2em', fontWeight: 'bold' }}>{(dashboard.totalRevenue || orders.reduce((sum, order) => sum + (order.pricing?.total || 0), 0)).toLocaleString()} {t.currency}</p>
             </div>
             <div style={{ background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)', color: 'white', padding: '20px', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
               <h3 style={{ margin: '0 0 10px 0', fontSize: '1.1em' }}>📦 {t.brands}</h3>
-              <p style={{ margin: '0', fontSize: '2em', fontWeight: 'bold' }}>{dashboard.brands || 0}</p>
+              <p style={{ margin: '0', fontSize: '2em', fontWeight: 'bold' }}>{(dashboard.brands || brands.length || 0)}</p>
             </div>
           </div>
 
@@ -602,57 +647,107 @@ function App() {
 
       {/* Orders Tab */}
       {activeTab === 'orders' && (
-        <div style={{ background: 'white', padding: '25px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-          <h2 style={{ color: '#1e293b', margin: '0 0 20px 0' }}>{t.orders} ({orders.length})</h2>
-          <div style={{ display: 'grid', gap: '12px' }}>
-            {orders.length === 0 ? (
-              <p style={{ color: '#64748b', textAlign: 'center', padding: '20px' }}>{t.noOrders}</p>
-            ) : (
-              orders.map(order => (
-                <div key={order._id} style={{ 
-                  padding: '15px', 
-                  background: '#f8fafc', 
-                  borderRadius: '8px', 
-                  border: '1px solid #e2e8f0',
-                  transition: 'all 0.3s'
-                }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                    <div>
-                      <strong style={{ color: '#1e293b', fontSize: '1.1em' }}>{order.orderNumber}</strong>
-                      <p style={{ margin: '5px 0 0 0', color: '#64748b' }}>
-                        🏪 {order.client?.name} • 👤 {order.salesAgent?.name}
-                      </p>
-                    </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <span style={{ 
-                        color: order.status === 'Delivered' ? '#10b981' : order.status === 'Cancelled' ? '#ef4444' : '#f59e0b', 
-                        fontWeight: 'bold', fontSize: '1.1em' 
-                      }}>
-                        {order.status}
-                      </span>
-                      <p style={{ margin: '5px 0 0 0', color: '#64748b', fontSize: '0.9em' }}>
-                        {new Date(order.createdAt).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
-                  <div style={{ display: 'grid', gap: '5px', marginBottom: '10px' }}>
-                    {order.items?.map((item, index) => (
-                      <div key={index} style={{ fontSize: '0.9em', color: '#64748b' }}>
-                        • {item.product?.name} x {item.quantity} = {item.totalPrice?.toLocaleString()} {t.currency}
+        <div>
+          {/* Create Order Form */}
+          <div style={{ background: '#f8fafc', padding: '25px', borderRadius: '12px', marginBottom: '30px', border: '1px solid #e2e8f0' }}>
+            <h2 style={{ color: '#1e293b', margin: '0 0 20px 0' }}>{t.addOrder}</h2>
+            <form onSubmit={addOrder} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+              <select name="clientId" required style={{ padding: '12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '16px' }}>
+                <option value="">Select Client *</option>
+                {clients.map(client => <option key={client._id} value={client._id}>{client.name}</option>)}
+              </select>
+              <select name="salesAgentId" required style={{ padding: '12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '16px' }}>
+                <option value="">Select Sales Agent *</option>
+                {workers.filter(w => w.role === 'Sales Agent').map(agent => <option key={agent._id} value={agent._id}>{agent.name}</option>)}
+              </select>
+              <select name="productId" required style={{ padding: '12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '16px' }}>
+                <option value="">Select Product *</option>
+                {products.map(product => <option key={product._id} value={product._id}>{product.name} - {product.price?.wholesale} DZD</option>)}
+              </select>
+              <input name="quantity" type="number" placeholder="Quantity *" min="1" required style={{ padding: '12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '16px' }} />
+              <input name="unitPrice" type="number" placeholder="Unit Price (DZD) *" step="100" required style={{ padding: '12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '16px' }} />
+              <input name="discount" type="number" placeholder="Discount (%)" step="0.01" min="0" max="100" style={{ padding: '12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '16px' }} />
+              <select name="paymentMethod" required style={{ padding: '12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '16px' }}>
+                <option value="">Payment Method *</option>
+                {t.paymentMethods.map(method => <option key={method} value={method}>{method}</option>)}
+              </select>
+              <select name="deliveryType" required style={{ padding: '12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '16px' }}>
+                <option value="">Delivery Type *</option>
+                <option value="Delivery">Delivery</option>
+                <option value="Pickup">Pickup</option>
+              </select>
+              <input name="deliveryAddress" placeholder="Delivery Address *" required style={{ padding: '12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '16px' }} />
+              <input name="scheduledDate" type="date" required style={{ padding: '12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '16px' }} />
+              <textarea name="notes" placeholder="Order Notes" rows="3" style={{ padding: '12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '16px', gridColumn: '1 / -1' }}></textarea>
+              <button type="submit" disabled={addingOrder} style={{ 
+                padding: '12px 24px', 
+                background: addingOrder ? '#64748b' : '#2563eb', 
+                color: 'white', 
+                border: 'none', 
+                borderRadius: '8px',
+                fontSize: '16px',
+                fontWeight: '600',
+                cursor: addingOrder ? 'not-allowed' : 'pointer',
+                transition: 'all 0.3s'
+              }}>
+                {addingOrder ? 'Creating...' : '📋 Create Order'}
+              </button>
+            </form>
+          </div>
+
+          {/* Orders List */}
+          <div style={{ background: 'white', padding: '25px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+            <h2 style={{ color: '#1e293b', margin: '0 0 20px 0' }}>{t.orders} ({orders.length})</h2>
+            <div style={{ display: 'grid', gap: '12px' }}>
+              {orders.length === 0 ? (
+                <p style={{ color: '#64748b', textAlign: 'center', padding: '20px' }}>{t.noOrders}</p>
+              ) : (
+                orders.map(order => (
+                  <div key={order._id} style={{ 
+                    padding: '15px', 
+                    background: '#f8fafc', 
+                    borderRadius: '8px', 
+                    border: '1px solid #e2e8f0',
+                    transition: 'all 0.3s'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                      <div>
+                        <strong style={{ color: '#1e293b', fontSize: '1.1em' }}>{order.orderNumber}</strong>
+                        <p style={{ margin: '5px 0 0 0', color: '#64748b' }}>
+                          🏪 {order.client?.name} • 👤 {order.salesAgent?.name}
+                        </p>
                       </div>
-                    ))}
+                      <div style={{ textAlign: 'right' }}>
+                        <span style={{ 
+                          color: order.status === 'Delivered' ? '#10b981' : order.status === 'Cancelled' ? '#ef4444' : '#f59e0b', 
+                          fontWeight: 'bold', fontSize: '1.1em' 
+                        }}>
+                          {order.status}
+                        </span>
+                        <p style={{ margin: '5px 0 0 0', color: '#64748b', fontSize: '0.9em' }}>
+                          {new Date(order.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                    <div style={{ display: 'grid', gap: '5px', marginBottom: '10px' }}>
+                      {order.items?.map((item, index) => (
+                        <div key={index} style={{ fontSize: '0.9em', color: '#64748b' }}>
+                          • {item.product?.name} x {item.quantity} = {item.totalPrice?.toLocaleString()} {t.currency}
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid #e5e7eb' }}>
+                      <span style={{ fontWeight: 'bold', color: '#1e293b' }}>
+                        Total: {order.pricing?.total?.toLocaleString()} {t.currency}
+                      </span>
+                      <span style={{ fontSize: '0.9em', color: '#64748b' }}>
+                        💳 {order.payment?.method} • {order.payment?.status}
+                      </span>
+                    </div>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid #e5e7eb' }}>
-                    <span style={{ fontWeight: 'bold', color: '#1e293b' }}>
-                      Total: {order.pricing?.total?.toLocaleString()} {t.currency}
-                    </span>
-                    <span style={{ fontSize: '0.9em', color: '#64748b' }}>
-                      💳 {order.payment?.method} • {order.payment?.status}
-                    </span>
-                  </div>
-                </div>
-              ))
-            )}
+                ))
+              )}
+            </div>
           </div>
         </div>
       )}
