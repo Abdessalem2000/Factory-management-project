@@ -201,11 +201,10 @@ export default function App() {
     return <div style={{ textAlign: "center" }}>{t.loading}</div>;
 
   return (
-    <div style={{ padding: 20, fontFamily: "Arial" }}>
+    <div className="container">
       {/* HEADER */}
-      <div style={{ display: "flex", justifyContent: "space-between" }}>
+      <div className="header">
         <h2>{t.title}</h2>
-
         <div>
           <button onClick={() => setLang("en")}>EN</button>
           <button onClick={() => setLang("fr")}>FR</button>
@@ -215,9 +214,13 @@ export default function App() {
       <p>{t.subtitle}</p>
 
       {/* NAV */}
-      <div style={{ display: "flex", gap: 10 }}>
+      <div className="nav">
         {["dashboard", "clients", "orders", "products"].map((x) => (
-          <button key={x} onClick={() => setActiveTab(x)}>
+          <button 
+            key={x} 
+            onClick={() => setActiveTab(x)}
+            className={activeTab === x ? "active" : ""}
+          >
             {t[x]}
           </button>
         ))}
@@ -225,45 +228,90 @@ export default function App() {
 
       {/* DASHBOARD */}
       {activeTab === "dashboard" && (
-        <div>
-          <h3>Clients: {clients.length}</h3>
-          <h3>Orders: {orders.length}</h3>
-          <h3>Products: {products.length}</h3>
+        <div className="dashboard">
+          <div className="dashboard-card">
+            <h3>Clients</h3>
+            <p>{clients.length}</p>
+          </div>
+          <div className="dashboard-card">
+            <h3>Orders</h3>
+            <p>{orders.length}</p>
+          </div>
+          <div className="dashboard-card">
+            <h3>Products</h3>
+            <p>{products.length}</p>
+          </div>
         </div>
       )}
 
       {/* CLIENTS */}
       {activeTab === "clients" && (
-        <div>
-          <form onSubmit={addClient}>
-            <input name="name" placeholder="Name" required />
-            <button disabled={loadingAction}>Add</button>
+        <div className="card">
+          <h3>Clients</h3>
+          <form onSubmit={addClient} className="form">
+            <div className="form-group">
+              <input name="name" placeholder="Name" required />
+            </div>
+            <button type="submit" disabled={loadingAction} className="btn">
+              {loadingAction ? 'Adding...' : 'Add Client'}
+            </button>
           </form>
 
-          {clients.map((c) => (
-            <div key={c._id}>{c.name}</div>
-          ))}
+          <div className="list">
+            {clients.length === 0 ? (
+              <p>No clients yet</p>
+            ) : (
+              clients.map((c) => (
+                <div key={c._id} className="list-item">
+                  <h4>{c.name}</h4>
+                  <p>Client</p>
+                </div>
+              ))
+            )}
+          </div>
         </div>
       )}
 
       {/* PRODUCTS */}
       {activeTab === "products" && (
-        <div>
-          <form onSubmit={addProduct}>
-            <input name="name" placeholder="Name" required />
-            <input name="sku" placeholder="SKU" required />
-            <input name="retailPrice" placeholder="Retail" />
-            <input name="wholesalePrice" placeholder="Wholesale" />
-            <input name="cost" placeholder="Cost" />
-            <input name="quantity" placeholder="Qty" />
-            <button>Add</button>
+        <div className="card">
+          <h3>Products</h3>
+          <form onSubmit={addProduct} className="form">
+            <div className="form-group">
+              <input name="name" placeholder="Name" required />
+            </div>
+            <div className="form-group">
+              <input name="sku" placeholder="SKU" required />
+            </div>
+            <div className="form-group">
+              <input name="retailPrice" placeholder="Retail Price" />
+            </div>
+            <div className="form-group">
+              <input name="wholesalePrice" placeholder="Wholesale Price" />
+            </div>
+            <div className="form-group">
+              <input name="cost" placeholder="Cost" />
+            </div>
+            <div className="form-group">
+              <input name="quantity" placeholder="Quantity" />
+            </div>
+            <button type="submit" disabled={loadingAction} className="btn">
+              {loadingAction ? 'Adding...' : 'Add Product'}
+            </button>
           </form>
 
-          {products.map((p) => (
-            <div key={p._id}>
-              {p.name} - {p.price?.retail}
-            </div>
-          ))}
+          <div className="list">
+            {products.length === 0 ? (
+              <p>No products yet</p>
+            ) : (
+              products.map((p) => (
+                <div key={p._id} className="list-item">
+                  <h4>{p.name}</h4>
+                  <p>{p.price?.retail || 0} DZD</p>
+                </div>
+              ))
+            )}
+          </div>
         </div>
       )}
 
