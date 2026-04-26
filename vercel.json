@@ -1,9 +1,10 @@
 {
   "version": 2,
-  "buildCommand": "npm run build",
-  "outputDirectory": "build",
+  "buildCommand": "cd frontend && npm run build",
+  "outputDirectory": "frontend/build",
   "installCommand": "npm install",
   "framework": "create-react-app",
+  "root": ".",
   "routes": [
     {
       "src": "/static/(.*)",
@@ -19,6 +20,6 @@
   },
   "env": {
     "REACT_APP_API_URL": "https://factory-management-project.onrender.com",
-    "CACHE_BUST": "2024-04-26-orders-button-fixed-final"
+    "CACHE_BUST": "2024-04-26-syntax-fixed"
   }
 }
