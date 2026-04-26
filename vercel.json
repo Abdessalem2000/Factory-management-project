@@ -19,6 +19,6 @@
   },
   "env": {
     "REACT_APP_API_URL": "https://factory-management-project.onrender.com",
-    "CACHE_BUST": "2024-04-26-orders-fixed"
+    "CACHE_BUST": "2024-04-26-orders-button-fixed-final"
   }
 }
