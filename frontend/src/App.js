@@ -317,30 +317,16 @@ export default function App() {
 
       {/* ORDERS */}
       {activeTab === "orders" && (
-        <div>
+        <div className="card">
+          <h3>Orders</h3>
+          
           {/* CREATE ORDER BUTTON - ALWAYS VISIBLE */}
-          <div style={{
-            background: '#dbeafe',
-            padding: '30px',
-            border: '3px solid #2563eb',
-            borderRadius: '12px',
-            textAlign: 'center',
-            marginBottom: '20px'
-          }}>
-            <h2 style={{ color: '#1e40af', margin: '0 0 15px 0' }}>Create Order</h2>
+          <div className="alert alert-info">
+            <h2>Create Order</h2>
             <button 
               onClick={() => setShowOrderForm(true)}
-              style={{
-                padding: '20px 40px',
-                fontSize: '20px',
-                background: '#2563eb',
-                color: 'white',
-                border: 'none',
-                borderRadius: '10px',
-                cursor: 'pointer',
-                fontWeight: 'bold',
-                boxShadow: '0 4px 15px rgba(37, 99, 235, 0.3)'
-              }}
+              className="btn btn-success"
+              style={{ fontSize: '20px', padding: '20px 40px' }}
             >
               📋 CREATE NEW ORDER
             </button>
@@ -348,28 +334,21 @@ export default function App() {
 
           {/* Create Order Form - Always Visible When Button Clicked */}
           {showOrderForm && (
-            <div id="orderForm" style={{ 
-              background: '#f8fafc', 
-              padding: '25px', 
-              borderRadius: '12px', 
-              marginBottom: '30px', 
-              border: '2px solid #2563eb', 
-              boxShadow: '0 8px 25px rgba(37, 99, 235, 0.15)' 
-            }}>
-              <h2 style={{ color: '#1e293b', margin: '0 0 20px 0', textAlign: 'center' }}>📋 Create Order</h2>
+            <div className="card" style={{ marginBottom: '30px' }}>
+              <h2 style={{ textAlign: 'center' }}>📋 Create Order</h2>
               
               {/* Loading State Check */}
               {loading ? (
-                <div style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
-                  <div style={{ fontSize: '18px', marginBottom: '10px' }}>⏳ Loading data...</div>
-                  <div style={{ fontSize: '14px' }}>Please wait while we load clients and products</div>
+                <div className="loading">
+                  <div className="spinner"></div>
+                  <p>Loading data...</p>
                 </div>
               ) : (
-                <form onSubmit={addOrder} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+                <form onSubmit={addOrder} className="form" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
                   {/* Client Dropdown with Validation */}
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '5px', color: '#374151', fontWeight: '500' }}>Client *</label>
-                    <select name="clientId" required style={{ padding: '12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '16px', width: '100%' }}>
+                  <div className="form-group">
+                    <label>Client *</label>
+                    <select name="clientId" required>
                       <option value="">Select Client *</option>
                       {clients.length === 0 ? (
                         <option value="" disabled>No clients available - please add clients first</option>
@@ -380,9 +359,9 @@ export default function App() {
                   </div>
 
                   {/* Sales Agent Dropdown with Validation */}
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '5px', color: '#374151', fontWeight: '500' }}>Sales Agent *</label>
-                    <select name="salesAgentId" required style={{ padding: '12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '16px', width: '100%' }}>
+                  <div className="form-group">
+                    <label>Sales Agent *</label>
+                    <select name="salesAgentId" required>
                       <option value="">Select Sales Agent *</option>
                       {workers.filter(w => w.role === 'Sales Agent').length === 0 ? (
                         <option value="" disabled>No sales agents available</option>
@@ -393,9 +372,9 @@ export default function App() {
                   </div>
 
                   {/* Product Dropdown with Validation */}
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '5px', color: '#374151', fontWeight: '500' }}>Product *</label>
-                    <select name="productId" required style={{ padding: '12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '16px', width: '100%' }}>
+                  <div className="form-group">
+                    <label>Product *</label>
+                    <select name="productId" required>
                       <option value="">Select Product *</option>
                       {products.length === 0 ? (
                         <option value="" disabled>No products available - please add products first</option>
@@ -405,24 +384,24 @@ export default function App() {
                     </select>
                   </div>
 
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '5px', color: '#374151', fontWeight: '500' }}>Quantity *</label>
-                    <input name="quantity" type="number" placeholder="Quantity *" min="1" required style={{ padding: '12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '16px', width: '100%' }} />
+                  <div className="form-group">
+                    <label>Quantity *</label>
+                    <input name="quantity" type="number" placeholder="Quantity *" min="1" required />
                   </div>
 
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '5px', color: '#374151', fontWeight: '500' }}>Unit Price (DZD) *</label>
-                    <input name="unitPrice" type="number" placeholder="Unit Price (DZD) *" step="100" required style={{ padding: '12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '16px', width: '100%' }} />
+                  <div className="form-group">
+                    <label>Unit Price (DZD) *</label>
+                    <input name="unitPrice" type="number" placeholder="Unit Price (DZD) *" step="100" required />
                   </div>
 
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '5px', color: '#374151', fontWeight: '500' }}>Discount (%)</label>
-                    <input name="discount" type="number" placeholder="Discount (%)" step="0.01" min="0" max="100" style={{ padding: '12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '16px', width: '100%' }} />
+                  <div className="form-group">
+                    <label>Discount (%)</label>
+                    <input name="discount" type="number" placeholder="Discount (%)" step="0.01" min="0" max="100" />
                   </div>
 
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '5px', color: '#374151', fontWeight: '500' }}>Payment Method *</label>
-                    <select name="paymentMethod" required style={{ padding: '12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '16px', width: '100%' }}>
+                  <div className="form-group">
+                    <label>Payment Method *</label>
+                    <select name="paymentMethod" required>
                       <option value="">Payment Method *</option>
                       <option value="Cash">Cash</option>
                       <option value="Credit">Credit</option>
@@ -431,45 +410,35 @@ export default function App() {
                     </select>
                   </div>
 
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '5px', color: '#374151', fontWeight: '500' }}>Delivery Type *</label>
-                    <select name="deliveryType" required style={{ padding: '12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '16px', width: '100%' }}>
+                  <div className="form-group">
+                    <label>Delivery Type *</label>
+                    <select name="deliveryType" required>
                       <option value="">Delivery Type *</option>
                       <option value="Delivery">Delivery</option>
                       <option value="Pickup">Pickup</option>
                     </select>
                   </div>
 
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '5px', color: '#374151', fontWeight: '500' }}>Delivery Address *</label>
-                    <input name="deliveryAddress" placeholder="Delivery Address *" required style={{ padding: '12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '16px', width: '100%' }} />
+                  <div className="form-group">
+                    <label>Delivery Address *</label>
+                    <input name="deliveryAddress" placeholder="Delivery Address *" required />
                   </div>
 
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '5px', color: '#374151', fontWeight: '500' }}>Scheduled Date *</label>
-                    <input name="scheduledDate" type="date" required style={{ padding: '12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '16px', width: '100%' }} />
+                  <div className="form-group">
+                    <label>Scheduled Date *</label>
+                    <input name="scheduledDate" type="date" required />
                   </div>
 
-                  <div style={{ gridColumn: '1 / -1' }}>
-                    <label style={{ display: 'block', marginBottom: '5px', color: '#374151', fontWeight: '500' }}>Order Notes</label>
-                    <textarea name="notes" placeholder="Order Notes" rows="3" style={{ padding: '12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '16px', width: '100%' }}></textarea>
+                  <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                    <label>Order Notes</label>
+                    <textarea name="notes" placeholder="Order Notes" rows="3"></textarea>
                   </div>
 
                   <div style={{ gridColumn: '1 / -1', textAlign: 'center' }}>
                     <button 
                       type="submit" 
                       disabled={addingOrder || clients.length === 0 || products.length === 0} 
-                      style={{ 
-                        padding: '12px 24px', 
-                        background: (addingOrder || clients.length === 0 || products.length === 0) ? '#64748b' : '#2563eb', 
-                        color: 'white', 
-                        border: 'none', 
-                        borderRadius: '8px',
-                        fontSize: '16px',
-                        fontWeight: '600',
-                        cursor: (addingOrder || clients.length === 0 || products.length === 0) ? 'not-allowed' : 'pointer',
-                        transition: 'all 0.3s'
-                      }}
+                      className="btn"
                     >
                       {addingOrder ? 'Creating...' : (clients.length === 0 || products.length === 0 ? '⚠️ Add Clients & Products First' : '📋 Create Order')}
                     </button>
@@ -480,76 +449,52 @@ export default function App() {
           )}
 
           {/* Orders List */}
-          <div style={{ background: 'white', padding: '25px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+          <div className="list">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h2 style={{ color: '#1e293b', margin: '0' }}>Orders ({orders.length})</h2>
+              <h2>Orders ({orders.length})</h2>
               <button 
                 onClick={() => setShowOrderForm(true)}
-                style={{
-                  padding: '10px 20px',
-                  background: '#2563eb',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s'
-                }}
+                className="btn"
               >
                 ➕ Add Order
               </button>
             </div>
-            <div style={{ display: 'grid', gap: '12px' }}>
-              {orders.length === 0 ? (
-                <p style={{ color: '#64748b', textAlign: 'center', padding: '20px' }}>No orders yet. Create your first order!</p>
-              ) : (
-                orders.map(order => (
-                  <div key={order._id} style={{ 
-                    padding: '15px', 
-                    background: '#f8fafc', 
-                    borderRadius: '8px', 
-                    border: '1px solid #e2e8f0',
-                    transition: 'all 0.3s'
-                  }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                      <div>
-                        <strong style={{ color: '#1e293b', fontSize: '1.1em' }}>{order.orderNumber}</strong>
-                        <p style={{ margin: '5px 0 0 0', color: '#64748b' }}>
-                          🏪 {order.client?.name} • 👤 {order.salesAgent?.name}
-                        </p>
-                      </div>
-                      <div style={{ textAlign: 'right' }}>
-                        <span style={{ 
-                          color: order.status === 'Delivered' ? '#10b981' : order.status === 'Cancelled' ? '#ef4444' : '#f59e0b', 
-                          fontWeight: 'bold', fontSize: '1.1em' 
-                        }}>
-                          {order.status}
-                        </span>
-                        <p style={{ margin: '5px 0 0 0', color: '#64748b', fontSize: '0.9em' }}>
-                          {new Date(order.createdAt).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
-                    <div style={{ display: 'grid', gap: '5px', marginBottom: '10px' }}>
-                      {order.items?.map((item, index) => (
-                        <div key={index} style={{ fontSize: '0.9em', color: '#64748b' }}>
-                          • {item.product?.name} x {item.quantity} = {item.totalPrice?.toLocaleString()} DZD
-                        </div>
-                      ))}
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid #e5e7eb' }}>
-                      <span style={{ fontWeight: 'bold', color: '#1e293b' }}>
-                        Total: {order.pricing?.total?.toLocaleString()} DZD
-                      </span>
-                      <span style={{ fontSize: '0.9em', color: '#64748b' }}>
-                        💳 {order.payment?.method} • {order.payment?.status}
-                      </span>
-                    </div>
+            {orders.length === 0 ? (
+              <p style={{ textAlign: 'center', padding: '20px' }}>No orders yet. Create your first order!</p>
+            ) : (
+              orders.map(order => (
+                <div key={order._id} className="list-item">
+                  <div>
+                    <h4>{order.orderNumber}</h4>
+                    <p>🏪 {order.client?.name} • 👤 {order.salesAgent?.name}</p>
                   </div>
-                ))
-              )}
-            </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <span style={{ 
+                      color: order.status === 'Delivered' ? '#10b981' : order.status === 'Cancelled' ? '#ef4444' : '#f59e0b', 
+                      fontWeight: 'bold', fontSize: '1.1em' 
+                    }}>
+                      {order.status}
+                    </span>
+                    <p>{new Date(order.createdAt).toLocaleDateString()}</p>
+                  </div>
+                  <div style={{ gridColumn: '1 / -1' }}>
+                    {order.items?.map((item, index) => (
+                      <div key={index} style={{ fontSize: '0.9em', color: '#64748b' }}>
+                        • {item.product?.name} x {item.quantity} = {item.totalPrice?.toLocaleString()} DZD
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid #e5e7eb' }}>
+                    <span style={{ fontWeight: 'bold', color: '#1e293b' }}>
+                      Total: {order.pricing?.total?.toLocaleString()} DZD
+                    </span>
+                    <span style={{ fontSize: '0.9em', color: '#64748b' }}>
+                      💳 {order.payment?.method} • {order.payment?.status}
+                    </span>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       )}
