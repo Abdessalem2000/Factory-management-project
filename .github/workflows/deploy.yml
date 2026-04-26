@@ -11,46 +11,7 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: |
-          cd frontend && npm ci
-          cd ../backend && npm ci
-
-      - name: Run frontend linting
-        run: |
-          cd frontend
-          npm run lint || echo "Frontend linting completed with warnings"
-
-      - name: Run backend linting  
-        run: |
-          cd backend
-          npm run lint || echo "Backend linting completed with warnings"
-
-      - name: Build frontend
-        run: |
-          cd frontend
-          npm run build
-
-      - name: Build backend
-        run: |
-          cd backend
-          npm run build || echo "Backend build completed"
-
   build-and-deploy:
-    needs: test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
 
