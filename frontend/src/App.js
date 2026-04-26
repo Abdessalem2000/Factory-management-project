@@ -302,32 +302,35 @@ export default function App() {
       )}
 
       {/* ORDERS */}
-     {activeTab === 'orders' && (
-  <div>
-    <div style={{
-      background: '#dbeafe',
-      padding: '30px',
-      border: '3px solid #2563eb',
-      borderRadius: '12px',
-      textAlign: 'center',
-      marginBottom: '20px'
-    }}>
-      <h2 style={{ color: '#1e40af' }}>Create Order</h2>
-
-      <button style={{
-        padding: '20px 40px',
-        fontSize: '20px',
-        background: '#2563eb',
-        color: 'white',
-        border: 'none',
-        borderRadius: '10px',
-        cursor: 'pointer'
-      }}>
-        📋 CREATE NEW ORDER
-      </button>
-    </div>
-  </div>
-)}
+      {activeTab === "orders" && (
+        <div>
+          {/* CREATE ORDER BUTTON - ALWAYS VISIBLE */}
+          <div style={{
+            background: '#dbeafe',
+            padding: '30px',
+            border: '3px solid #2563eb',
+            borderRadius: '12px',
+            textAlign: 'center',
+            marginBottom: '20px'
+          }}>
+            <h2 style={{ color: '#1e40af', margin: '0 0 15px 0' }}>Create Order</h2>
+            <button 
+              onClick={() => setShowOrderForm(true)}
+              style={{
+                padding: '20px 40px',
+                fontSize: '20px',
+                background: '#2563eb',
+                color: 'white',
+                border: 'none',
+                borderRadius: '10px',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+                boxShadow: '0 4px 15px rgba(37, 99, 235, 0.3)'
+              }}
+            >
+              📋 CREATE NEW ORDER
+            </button>
+          </div>
 
           {/* Create Order Form - Always Visible When Button Clicked */}
           {showOrderForm && (
