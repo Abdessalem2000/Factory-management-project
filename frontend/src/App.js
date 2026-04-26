@@ -57,13 +57,8 @@ export default function App() {
 
   const [clients, setClients] = useState([]);
   const [products, setProducts] = useState([]);
-  const [brands, setBrands] = useState([]);
   const [orders, setOrders] = useState([]);
   const [workers, setWorkers] = useState([]);
-  const [deliveries, setDeliveries] = useState([]);
-  const [income, setIncome] = useState([]);
-  const [expenses, setExpenses] = useState([]);
-  const [dashboard, setDashboard] = useState({});
 
   const [showOrderForm, setShowOrderForm] = useState(false);
   const [addingOrder, setAddingOrder] = useState(false);
@@ -77,34 +72,19 @@ export default function App() {
         const [
           w,
           c,
-          b,
           p,
           o,
-          d,
-          i,
-          e,
-          dash,
         ] = await Promise.all([
           axios.get(`${API_BASE}/workers`),
           axios.get(`${API_BASE}/clients`),
-          axios.get(`${API_BASE}/brands`),
           axios.get(`${API_BASE}/products`),
           axios.get(`${API_BASE}/orders`),
-          axios.get(`${API_BASE}/deliveries`),
-          axios.get(`${API_BASE}/income`),
-          axios.get(`${API_BASE}/expenses`),
-          axios.get(`${API_BASE}/dashboard`),
         ]);
 
         setWorkers(w.data);
         setClients(c.data);
-        setBrands(b.data);
         setProducts(p.data);
         setOrders(o.data);
-        setDeliveries(d.data);
-        setIncome(i.data);
-        setExpenses(e.data);
-        setDashboard(dash.data);
       } catch (err) {
         console.log(err);
       } finally {
@@ -136,22 +116,6 @@ export default function App() {
       refresh("clients", setClients);
     } catch (err) {
       alert("Error adding client");
-    }
-    setLoadingAction(false);
-  };
-
-  const addBrand = async (e) => {
-    e.preventDefault();
-    setLoadingAction(true);
-    try {
-      await axios.post(
-        `${API_BASE}/brands`,
-        Object.fromEntries(new FormData(e.target))
-      );
-      e.target.reset();
-      refresh("brands", setBrands);
-    } catch (err) {
-      alert("Error adding brand");
     }
     setLoadingAction(false);
   };
