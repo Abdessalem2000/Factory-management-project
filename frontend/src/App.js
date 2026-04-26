@@ -1,270 +1,355 @@
-/* eslint-disable */
+/* Algerian FMCG Distribution ERP - Magical Interface */
 import { useState, useEffect } from "react";
 import axios from "axios";
 import './App.css';
 
-const API_BASE =
-  process.env.REACT_APP_API_URL ||
-  "https://factory-management-project.onrender.com/api";
+const API_BASE = process.env.REACT_APP_API_URL || "https://factory-management-project.onrender.com/api";
 
-/* ===================== TRANSLATIONS ===================== */
-
+/* Algerian Market Translations */
 const tData = {
   en: {
-    title: "🚚 FMCG Distribution ERP",
-    subtitle: "Pre-sales & Distribution Management System",
+    title: "Algerian FMCG Distribution ERP",
+    subtitle: "Complete Distribution Management System for Algerian Markets",
     dashboard: "Dashboard",
     clients: "Clients",
-    orders: "Orders",
+    orders: "Orders", 
     products: "Products",
-    delivery: "Delivery",
-    workers: "Team",
-    income: "Income",
-    expenses: "Expenses",
-    currency: "DZD",
     loading: "Loading...",
     noClients: "No clients yet",
-    noOrders: "No orders yet",
+    noOrders: "No orders yet", 
     noProducts: "No products yet",
-    noBrands: "No brands yet",
+    currency: "DZD",
+    createOrder: "Create New Order",
+    addClient: "Add Client",
+    addProduct: "Add Product",
+    clientName: "Client Name",
+    productName: "Product Name",
+    quantity: "Quantity",
+    price: "Price",
+    total: "Total",
+    status: "Status",
+    date: "Date",
+    actions: "Actions"
   },
   fr: {
-    title: "🚚 ERP FMCG",
-    subtitle: "Gestion Distribution",
+    title: "ERP Distribution FMCG Algérie",
+    subtitle: "Système Complet de Gestion de Distribution pour les Marchés Algériens",
     dashboard: "Tableau de bord",
     clients: "Clients",
     orders: "Commandes",
-    products: "Produits",
-    delivery: "Livraison",
-    workers: "Équipe",
-    income: "Revenus",
-    expenses: "Dépenses",
-    currency: "DZD",
+    products: "Produits", 
     loading: "Chargement...",
     noClients: "Aucun client",
     noOrders: "Aucune commande",
     noProducts: "Aucun produit",
-    noBrands: "Aucune marque",
-  },
+    currency: "DZD",
+    createOrder: "Créer une commande",
+    addClient: "Ajouter un client",
+    addProduct: "Ajouter un produit",
+    clientName: "Nom du client",
+    productName: "Nom du produit",
+    quantity: "Quantité",
+    price: "Prix",
+    total: "Total",
+    status: "Statut",
+    date: "Date",
+    actions: "Actions"
+  }
 };
 
-/* ===================== APP ===================== */
-
+/* Main Application Component */
 export default function App() {
   const [lang, setLang] = useState("en");
   const t = tData[lang];
-
+  
   const [activeTab, setActiveTab] = useState("dashboard");
   const [loading, setLoading] = useState(true);
-
+  
   const [clients, setClients] = useState([]);
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
   const [workers, setWorkers] = useState([]);
-
+  
   const [showOrderForm, setShowOrderForm] = useState(false);
-  const [addingOrder, setAddingOrder] = useState(false);
+  const [showClientForm, setShowClientForm] = useState(false);
+  const [showProductForm, setShowProductForm] = useState(false);
   const [loadingAction, setLoadingAction] = useState(false);
+  const [addingOrder, setAddingOrder] = useState(false);
 
-  /* ===================== FETCH DATA ===================== */
-
+  /* Fetch Data from API */
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [
-          w,
-          c,
-          p,
-          o,
-        ] = await Promise.all([
+        const [w, c, p, o] = await Promise.all([
           axios.get(`${API_BASE}/workers`),
           axios.get(`${API_BASE}/clients`),
           axios.get(`${API_BASE}/products`),
-          axios.get(`${API_BASE}/orders`),
+          axios.get(`${API_BASE}/orders`)
         ]);
-
-        setWorkers(w.data);
-        setClients(c.data);
-        setProducts(p.data);
-        setOrders(o.data);
+        
+        setWorkers(w.data || []);
+        setClients(c.data || []);
+        setProducts(p.data || []);
+        setOrders(o.data || []);
       } catch (err) {
-        console.log(err);
+        console.log("API Error:", err);
+        // Set empty data if API fails
+        setWorkers([]);
+        setClients([]);
+        setProducts([]);
+        setOrders([]);
       } finally {
         setLoading(false);
       }
     };
-
+    
     fetchData();
   }, []);
 
-  /* ===================== HELPERS ===================== */
-
+  /* Refresh Data Helper */
   const refresh = async (url, setter) => {
-    const res = await axios.get(`${API_BASE}/${url}`);
-    setter(res.data);
+    try {
+      const res = await axios.get(`${API_BASE}/${url}`);
+      setter(res.data || []);
+    } catch (err) {
+      console.log(`Refresh ${url} error:`, err);
+    }
   };
 
-  /* ===================== ACTIONS ===================== */
-
+  /* Add Client */
   const addClient = async (e) => {
     e.preventDefault();
     setLoadingAction(true);
+    
     try {
-      await axios.post(
-        `${API_BASE}/clients`,
-        Object.fromEntries(new FormData(e.target))
-      );
+      const formData = new FormData(e.target);
+      const clientData = {
+        name: formData.get('name'),
+        phone: formData.get('phone'),
+        email: formData.get('email'),
+        address: formData.get('address'),
+        city: formData.get('city'),
+        province: formData.get('province')
+      };
+      
+      await axios.post(`${API_BASE}/clients`, clientData);
       e.target.reset();
       refresh("clients", setClients);
+      setShowClientForm(false);
+      alert("Client added successfully!");
     } catch (err) {
       alert("Error adding client");
     }
+    
     setLoadingAction(false);
   };
 
+  /* Add Product */
   const addProduct = async (e) => {
     e.preventDefault();
     setLoadingAction(true);
-
+    
     try {
-      const f = Object.fromEntries(new FormData(e.target));
-
-      const data = {
-        name: f.name,
-        sku: f.sku,
-        barcode: f.barcode,
-        brand: f.brandId,
+      const formData = new FormData(e.target);
+      const productData = {
+        name: formData.get('name'),
+        sku: formData.get('sku'),
+        barcode: formData.get('barcode'),
         price: {
-          retail: +f.retailPrice,
-          wholesale: +f.wholesalePrice,
-          cost: +f.cost,
+          retail: parseFloat(formData.get('retailPrice')) || 0,
+          wholesale: parseFloat(formData.get('wholesalePrice')) || 0,
+          cost: parseFloat(formData.get('cost')) || 0
         },
         inventory: {
-          quantity: +f.quantity,
-          minStock: +f.minStock,
-          available: +f.quantity,
-          reserved: 0,
-        },
+          quantity: parseInt(formData.get('quantity')) || 0,
+          minStock: parseInt(formData.get('minStock')) || 0
+        }
       };
-
-      await axios.post(`${API_BASE}/products`, data);
+      
+      await axios.post(`${API_BASE}/products`, productData);
       e.target.reset();
       refresh("products", setProducts);
+      setShowProductForm(false);
+      alert("Product added successfully!");
     } catch (err) {
       alert("Error adding product");
     }
-
+    
     setLoadingAction(false);
   };
 
+  /* Add Order */
   const addOrder = async (e) => {
     e.preventDefault();
     setAddingOrder(true);
-
+    
     try {
-      const f = Object.fromEntries(new FormData(e.target));
-
-      const data = {
-        client: f.clientId,
-        salesAgent: f.salesAgentId,
-        items: [
-          {
-            product: f.productId,
-            quantity: +f.quantity,
-            unitPrice: +f.unitPrice,
-            totalPrice: +f.quantity * +f.unitPrice,
-          },
-        ],
-        payment: { method: f.paymentMethod, status: "Pending" },
-        delivery: {
-          type: f.deliveryType,
-          address: f.deliveryAddress,
-          scheduledDate: f.scheduledDate,
+      const formData = new FormData(e.target);
+      const orderData = {
+        client: formData.get('clientId'),
+        salesAgent: formData.get('salesAgentId'),
+        items: [{
+          product: formData.get('productId'),
+          quantity: parseInt(formData.get('quantity')),
+          unitPrice: parseFloat(formData.get('unitPrice')),
+          totalPrice: parseInt(formData.get('quantity')) * parseFloat(formData.get('unitPrice'))
+        }],
+        payment: {
+          method: formData.get('paymentMethod'),
+          status: "Pending"
         },
-        notes: f.notes,
+        delivery: {
+          type: formData.get('deliveryType'),
+          address: formData.get('deliveryAddress'),
+          scheduledDate: formData.get('scheduledDate')
+        },
+        notes: formData.get('notes')
       };
-
-      await axios.post(`${API_BASE}/orders`, data);
+      
+      await axios.post(`${API_BASE}/orders`, orderData);
       e.target.reset();
       refresh("orders", setOrders);
-      alert("✅ Order created successfully!");
+      setShowOrderForm(false);
+      alert("Order created successfully!");
     } catch (err) {
-      alert("❌ Error creating order");
+      alert("Error creating order");
     }
-
+    
     setAddingOrder(false);
   };
 
-  /* ===================== UI ===================== */
-
-  if (loading)
-    return <div style={{ textAlign: "center" }}>{t.loading}</div>;
+  /* Loading State */
+  if (loading) {
+    return (
+      <div className="container">
+        <div className="loading">
+          <div className="spinner"></div>
+          <p>{t.loading}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container">
-      {/* HEADER */}
+      {/* Magical Header */}
       <div className="header">
         <h2>{t.title}</h2>
         <div>
-          <button onClick={() => setLang("en")}>EN</button>
-          <button onClick={() => setLang("fr")}>FR</button>
+          <button onClick={() => setLang("en")}>English</button>
+          <button onClick={() => setLang("fr")}>Français</button>
         </div>
       </div>
-
+      
       <p>{t.subtitle}</p>
 
-      {/* NAV */}
+      {/* Professional Navigation */}
       <div className="nav">
-        {["dashboard", "clients", "orders", "products"].map((x) => (
+        {["dashboard", "clients", "orders", "products"].map((tab) => (
           <button 
-            key={x} 
-            onClick={() => setActiveTab(x)}
-            className={activeTab === x ? "active" : ""}
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={activeTab === tab ? "active" : ""}
           >
-            {t[x]}
+            {t[tab]}
           </button>
         ))}
       </div>
 
-      {/* DASHBOARD */}
+      {/* Dashboard */}
       {activeTab === "dashboard" && (
         <div className="dashboard">
           <div className="dashboard-card">
-            <h3>Clients</h3>
+            <h3>{t.clients}</h3>
             <p>{clients.length}</p>
           </div>
           <div className="dashboard-card">
-            <h3>Orders</h3>
+            <h3>{t.orders}</h3>
             <p>{orders.length}</p>
           </div>
           <div className="dashboard-card">
-            <h3>Products</h3>
+            <h3>{t.products}</h3>
             <p>{products.length}</p>
           </div>
+          <div className="dashboard-card">
+            <h3>Revenue</h3>
+            <p>
+              {orders.reduce((total, order) => total + (order.pricing?.total || 0), 0).toLocaleString()} {t.currency}
+            </p>
+          </div>
         </div>
       )}
 
-      {/* CLIENTS */}
+      {/* Clients Section */}
       {activeTab === "clients" && (
         <div className="card">
-          <h3>Clients</h3>
-          <form onSubmit={addClient} className="form">
-            <div className="form-group">
-              <input name="name" placeholder="Name" required />
-            </div>
-            <button type="submit" disabled={loadingAction} className="btn">
-              {loadingAction ? 'Adding...' : 'Add Client'}
-            </button>
-          </form>
+          <h3>{t.clients}</h3>
+          
+          {/* Add Client Button */}
+          <button 
+            onClick={() => setShowClientForm(!showClientForm)}
+            className="btn btn-success"
+            style={{ marginBottom: '20px' }}
+          >
+            {showClientForm ? 'Cancel' : ' ' + t.addClient}
+          </button>
 
+          {/* Add Client Form */}
+          {showClientForm && (
+            <div className="form">
+              <form onSubmit={addClient}>
+                <div className="form-group">
+                  <label>{t.clientName} *</label>
+                  <input name="name" placeholder="Enter client name" required />
+                </div>
+                <div className="form-group">
+                  <label>Phone *</label>
+                  <input name="phone" placeholder="Enter phone number" required />
+                </div>
+                <div className="form-group">
+                  <label>Email</label>
+                  <input name="email" type="email" placeholder="Enter email address" />
+                </div>
+                <div className="form-group">
+                  <label>Address</label>
+                  <input name="address" placeholder="Enter address" />
+                </div>
+                <div className="form-group">
+                  <label>City</label>
+                  <input name="city" placeholder="Enter city" />
+                </div>
+                <div className="form-group">
+                  <label>Province</label>
+                  <select name="province">
+                    <option value="">Select Province</option>
+                    <option value="Alger">Alger</option>
+                    <option value="Oran">Oran</option>
+                    <option value="Constantine">Constantine</option>
+                    <option value="Annaba">Annaba</option>
+                    <option value="Blida">Blida</option>
+                    <option value="Batna">Batna</option>
+                  </select>
+                </div>
+                <button type="submit" disabled={loadingAction} className="btn">
+                  {loadingAction ? 'Adding...' : ' ' + t.addClient}
+                </button>
+              </form>
+            </div>
+          )}
+
+          {/* Clients List */}
           <div className="list">
             {clients.length === 0 ? (
-              <p>No clients yet</p>
+              <p style={{ textAlign: 'center', padding: '40px' }}>{t.noClients}</p>
             ) : (
-              clients.map((c) => (
-                <div key={c._id} className="list-item">
-                  <h4>{c.name}</h4>
-                  <p>Client</p>
+              clients.map((client) => (
+                <div key={client._id} className="list-item">
+                  <div>
+                    <h4>{client.name}</h4>
+                    <p>{client.phone || 'N/A'}</p>
+                    <p>{client.email || 'N/A'}</p>
+                    <p>{client.city || 'N/A'}, {client.province || 'N/A'}</p>
+                  </div>
                 </div>
               ))
             )}
@@ -272,42 +357,76 @@ export default function App() {
         </div>
       )}
 
-      {/* PRODUCTS */}
+      {/* Products Section */}
       {activeTab === "products" && (
         <div className="card">
-          <h3>Products</h3>
-          <form onSubmit={addProduct} className="form">
-            <div className="form-group">
-              <input name="name" placeholder="Name" required />
-            </div>
-            <div className="form-group">
-              <input name="sku" placeholder="SKU" required />
-            </div>
-            <div className="form-group">
-              <input name="retailPrice" placeholder="Retail Price" />
-            </div>
-            <div className="form-group">
-              <input name="wholesalePrice" placeholder="Wholesale Price" />
-            </div>
-            <div className="form-group">
-              <input name="cost" placeholder="Cost" />
-            </div>
-            <div className="form-group">
-              <input name="quantity" placeholder="Quantity" />
-            </div>
-            <button type="submit" disabled={loadingAction} className="btn">
-              {loadingAction ? 'Adding...' : 'Add Product'}
-            </button>
-          </form>
+          <h3>{t.products}</h3>
+          
+          {/* Add Product Button */}
+          <button 
+            onClick={() => setShowProductForm(!showProductForm)}
+            className="btn btn-success"
+            style={{ marginBottom: '20px' }}
+          >
+            {showProductForm ? 'Cancel' : ' ' + t.addProduct}
+          </button>
 
+          {/* Add Product Form */}
+          {showProductForm && (
+            <div className="form">
+              <form onSubmit={addProduct}>
+                <div className="form-group">
+                  <label>{t.productName} *</label>
+                  <input name="name" placeholder="Enter product name" required />
+                </div>
+                <div className="form-group">
+                  <label>SKU *</label>
+                  <input name="sku" placeholder="Enter SKU" required />
+                </div>
+                <div className="form-group">
+                  <label>Barcode</label>
+                  <input name="barcode" placeholder="Enter barcode" />
+                </div>
+                <div className="form-group">
+                  <label>Retail Price ({t.currency})</label>
+                  <input name="retailPrice" type="number" step="0.01" placeholder="0.00" />
+                </div>
+                <div className="form-group">
+                  <label>Wholesale Price ({t.currency})</label>
+                  <input name="wholesalePrice" type="number" step="0.01" placeholder="0.00" />
+                </div>
+                <div className="form-group">
+                  <label>Cost ({t.currency})</label>
+                  <input name="cost" type="number" step="0.01" placeholder="0.00" />
+                </div>
+                <div className="form-group">
+                  <label>{t.quantity} *</label>
+                  <input name="quantity" type="number" placeholder="0" required />
+                </div>
+                <div className="form-group">
+                  <label>Minimum Stock</label>
+                  <input name="minStock" type="number" placeholder="0" />
+                </div>
+                <button type="submit" disabled={loadingAction} className="btn">
+                  {loadingAction ? 'Adding...' : ' ' + t.addProduct}
+                </button>
+              </form>
+            </div>
+          )}
+
+          {/* Products List */}
           <div className="list">
             {products.length === 0 ? (
-              <p>No products yet</p>
+              <p style={{ textAlign: 'center', padding: '40px' }}>{t.noProducts}</p>
             ) : (
-              products.map((p) => (
-                <div key={p._id} className="list-item">
-                  <h4>{p.name}</h4>
-                  <p>{p.price?.retail || 0} DZD</p>
+              products.map((product) => (
+                <div key={product._id} className="list-item">
+                  <div>
+                    <h4>{product.name}</h4>
+                    <p>SKU: {product.sku || 'N/A'}</p>
+                    <p>Retail: {product.price?.retail || 0} {t.currency}</p>
+                    <p>Stock: {product.inventory?.quantity || 0}</p>
+                  </div>
                 </div>
               ))
             )}
@@ -315,132 +434,111 @@ export default function App() {
         </div>
       )}
 
-      {/* ORDERS */}
+      {/* Orders Section */}
       {activeTab === "orders" && (
         <div className="card">
-          <h3>Orders</h3>
+          <h3>{t.orders}</h3>
           
-          {/* CREATE ORDER BUTTON - ALWAYS VISIBLE */}
-          <div className="alert alert-info">
-            <h2>Create Order</h2>
-            <button 
-              onClick={() => setShowOrderForm(true)}
-              className="btn btn-success"
-              style={{ fontSize: '20px', padding: '20px 40px' }}
-            >
-              📋 CREATE NEW ORDER
-            </button>
-          </div>
+          {/* Create Order Button */}
+          <button 
+            onClick={() => setShowOrderForm(!showOrderForm)}
+            className="btn btn-success"
+            style={{ marginBottom: '20px', fontSize: '18px', padding: '15px 30px' }}
+          >
+            {showOrderForm ? 'Cancel' : ' ' + t.createOrder}
+          </button>
 
-          {/* Create Order Form - Always Visible When Button Clicked */}
+          {/* Create Order Form */}
           {showOrderForm && (
-            <div className="card" style={{ marginBottom: '30px' }}>
-              <h2 style={{ textAlign: 'center' }}>📋 Create Order</h2>
+            <div className="form">
+              <h2 style={{ textAlign: 'center', marginBottom: '30px' }}>{t.createOrder}</h2>
               
-              {/* Loading State Check */}
-              {loading ? (
-                <div className="loading">
-                  <div className="spinner"></div>
-                  <p>Loading data...</p>
+              {clients.length === 0 || products.length === 0 ? (
+                <div className="alert alert-warning">
+                  <p>Please add clients and products first before creating orders!</p>
                 </div>
               ) : (
-                <form onSubmit={addOrder} className="form" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
-                  {/* Client Dropdown with Validation */}
+                <form onSubmit={addOrder} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px' }}>
                   <div className="form-group">
                     <label>Client *</label>
                     <select name="clientId" required>
-                      <option value="">Select Client *</option>
-                      {clients.length === 0 ? (
-                        <option value="" disabled>No clients available - please add clients first</option>
-                      ) : (
-                        clients.map(client => <option key={client._id} value={client._id}>{client.name}</option>)
-                      )}
+                      <option value="">Select Client</option>
+                      {clients.map(client => (
+                        <option key={client._id} value={client._id}>{client.name}</option>
+                      ))}
                     </select>
                   </div>
-
-                  {/* Sales Agent Dropdown with Validation */}
+                  
                   <div className="form-group">
-                    <label>Sales Agent *</label>
-                    <select name="salesAgentId" required>
-                      <option value="">Select Sales Agent *</option>
-                      {workers.filter(w => w.role === 'Sales Agent').length === 0 ? (
-                        <option value="" disabled>No sales agents available</option>
-                      ) : (
-                        workers.filter(w => w.role === 'Sales Agent').map(agent => <option key={agent._id} value={agent._id}>{agent.name}</option>)
-                      )}
+                    <label>Sales Agent</label>
+                    <select name="salesAgentId">
+                      <option value="">Select Sales Agent</option>
+                      {workers.filter(w => w.role === 'Sales Agent').map(agent => (
+                        <option key={agent._id} value={agent._id}>{agent.name}</option>
+                      ))}
                     </select>
                   </div>
-
-                  {/* Product Dropdown with Validation */}
+                  
                   <div className="form-group">
                     <label>Product *</label>
                     <select name="productId" required>
-                      <option value="">Select Product *</option>
-                      {products.length === 0 ? (
-                        <option value="" disabled>No products available - please add products first</option>
-                      ) : (
-                        products.map(product => <option key={product._id} value={product._id}>{product.name} - {product.price?.wholesale || 0} DZD</option>)
-                      )}
+                      <option value="">Select Product</option>
+                      {products.map(product => (
+                        <option key={product._id} value={product._id}>
+                          {product.name} - {product.price?.wholesale || 0} {t.currency}
+                        </option>
+                      ))}
                     </select>
                   </div>
-
+                  
                   <div className="form-group">
-                    <label>Quantity *</label>
-                    <input name="quantity" type="number" placeholder="Quantity *" min="1" required />
+                    <label>{t.quantity} *</label>
+                    <input name="quantity" type="number" min="1" placeholder="1" required />
                   </div>
-
+                  
                   <div className="form-group">
-                    <label>Unit Price (DZD) *</label>
-                    <input name="unitPrice" type="number" placeholder="Unit Price (DZD) *" step="100" required />
+                    <label>Unit Price ({t.currency}) *</label>
+                    <input name="unitPrice" type="number" step="0.01" min="0" placeholder="0.00" required />
                   </div>
-
-                  <div className="form-group">
-                    <label>Discount (%)</label>
-                    <input name="discount" type="number" placeholder="Discount (%)" step="0.01" min="0" max="100" />
-                  </div>
-
+                  
                   <div className="form-group">
                     <label>Payment Method *</label>
                     <select name="paymentMethod" required>
-                      <option value="">Payment Method *</option>
+                      <option value="">Select Payment Method</option>
                       <option value="Cash">Cash</option>
                       <option value="Credit">Credit</option>
                       <option value="Bank Transfer">Bank Transfer</option>
                       <option value="Mobile Money">Mobile Money</option>
                     </select>
                   </div>
-
+                  
                   <div className="form-group">
                     <label>Delivery Type *</label>
                     <select name="deliveryType" required>
-                      <option value="">Delivery Type *</option>
+                      <option value="">Select Delivery Type</option>
                       <option value="Delivery">Delivery</option>
                       <option value="Pickup">Pickup</option>
                     </select>
                   </div>
-
+                  
                   <div className="form-group">
                     <label>Delivery Address *</label>
-                    <input name="deliveryAddress" placeholder="Delivery Address *" required />
+                    <input name="deliveryAddress" placeholder="Enter delivery address" required />
                   </div>
-
+                  
                   <div className="form-group">
                     <label>Scheduled Date *</label>
                     <input name="scheduledDate" type="date" required />
                   </div>
-
+                  
                   <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                     <label>Order Notes</label>
-                    <textarea name="notes" placeholder="Order Notes" rows="3"></textarea>
+                    <textarea name="notes" placeholder="Enter any special notes..." rows="3"></textarea>
                   </div>
-
+                  
                   <div style={{ gridColumn: '1 / -1', textAlign: 'center' }}>
-                    <button 
-                      type="submit" 
-                      disabled={addingOrder || clients.length === 0 || products.length === 0} 
-                      className="btn"
-                    >
-                      {addingOrder ? 'Creating...' : (clients.length === 0 || products.length === 0 ? '⚠️ Add Clients & Products First' : '📋 Create Order')}
+                    <button type="submit" disabled={addingOrder} className="btn">
+                      {addingOrder ? 'Creating Order...' : 'Create Order'}
                     </button>
                   </div>
                 </form>
@@ -450,46 +548,29 @@ export default function App() {
 
           {/* Orders List */}
           <div className="list">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h2>Orders ({orders.length})</h2>
-              <button 
-                onClick={() => setShowOrderForm(true)}
-                className="btn"
-              >
-                ➕ Add Order
-              </button>
-            </div>
             {orders.length === 0 ? (
-              <p style={{ textAlign: 'center', padding: '20px' }}>No orders yet. Create your first order!</p>
+              <p style={{ textAlign: 'center', padding: '40px' }}>{t.noOrders}</p>
             ) : (
-              orders.map(order => (
+              orders.map((order) => (
                 <div key={order._id} className="list-item">
                   <div>
-                    <h4>{order.orderNumber}</h4>
-                    <p>🏪 {order.client?.name} • 👤 {order.salesAgent?.name}</p>
+                    <h4>Order #{order.orderNumber || order._id?.slice(-8)}</h4>
+                    <p>Client: {order.client?.name || 'N/A'}</p>
+                    <p>{order.items?.length || 0} items</p>
+                    <p>{new Date(order.createdAt || Date.now()).toLocaleDateString()}</p>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <span style={{ 
-                      color: order.status === 'Delivered' ? '#10b981' : order.status === 'Cancelled' ? '#ef4444' : '#f59e0b', 
-                      fontWeight: 'bold', fontSize: '1.1em' 
+                    <h4 style={{ color: 'var(--accent-gold)' }}>
+                      {order.pricing?.total?.toLocaleString() || 0} {t.currency}
+                    </h4>
+                    <p>{order.payment?.method || 'N/A'}</p>
+                    <p>{order.delivery?.type || 'N/A'}</p>
+                    <span style={{
+                      color: order.status === 'Delivered' ? 'var(--success)' : 
+                             order.status === 'Cancelled' ? 'var(--danger)' : 'var(--warning)',
+                      fontWeight: 'bold'
                     }}>
-                      {order.status}
-                    </span>
-                    <p>{new Date(order.createdAt).toLocaleDateString()}</p>
-                  </div>
-                  <div style={{ gridColumn: '1 / -1' }}>
-                    {order.items?.map((item, index) => (
-                      <div key={index} style={{ fontSize: '0.9em', color: '#64748b' }}>
-                        • {item.product?.name} x {item.quantity} = {item.totalPrice?.toLocaleString()} DZD
-                      </div>
-                    ))}
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid #e5e7eb' }}>
-                    <span style={{ fontWeight: 'bold', color: '#1e293b' }}>
-                      Total: {order.pricing?.total?.toLocaleString()} DZD
-                    </span>
-                    <span style={{ fontSize: '0.9em', color: '#64748b' }}>
-                      💳 {order.payment?.method} • {order.payment?.status}
+                      {order.status || 'Pending'}
                     </span>
                   </div>
                 </div>
