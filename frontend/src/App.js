@@ -302,40 +302,32 @@ export default function App() {
       )}
 
       {/* ORDERS */}
-      {activeTab === "orders" && (
-        <div>
-          {/* CREATE ORDER BUTTON - ALWAYS VISIBLE */}
-          <div style={{ 
-            textAlign: 'center', 
-            marginBottom: '30px',
-            padding: '20px',
-            background: '#f0f9ff',
-            border: '2px solid #2563eb',
-            borderRadius: '12px'
-          }}>
-            <h3 style={{ color: '#1e40af', margin: '0 0 15px 0' }}>Create Your First Order</h3>
-            <button 
-              onClick={() => setShowOrderForm(true)}
-              style={{
-                padding: '20px 40px',
-                background: '#2563eb',
-                color: 'white',
-                border: '3px solid #1d4ed8',
-                borderRadius: '12px',
-                fontSize: '20px',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                boxShadow: '0 4px 15px rgba(37, 99, 235, 0.5)',
-                transition: 'all 0.3s',
-                textTransform: 'uppercase'
-              }}
-            >
-              📋 CREATE NEW ORDER
-            </button>
-            <p style={{ color: '#64748b', margin: '10px 0 0 0', fontSize: '14px' }}>
-              Click the button above to add a new order
-            </p>
-          </div>
+     {activeTab === 'orders' && (
+  <div>
+    <div style={{
+      background: '#dbeafe',
+      padding: '30px',
+      border: '3px solid #2563eb',
+      borderRadius: '12px',
+      textAlign: 'center',
+      marginBottom: '20px'
+    }}>
+      <h2 style={{ color: '#1e40af' }}>Create Order</h2>
+
+      <button style={{
+        padding: '20px 40px',
+        fontSize: '20px',
+        background: '#2563eb',
+        color: 'white',
+        border: 'none',
+        borderRadius: '10px',
+        cursor: 'pointer'
+      }}>
+        📋 CREATE NEW ORDER
+      </button>
+    </div>
+  </div>
+)}
 
           {/* Create Order Form - Always Visible When Button Clicked */}
           {showOrderForm && (
