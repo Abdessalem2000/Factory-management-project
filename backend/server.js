@@ -50,27 +50,74 @@ app.get('/api/health', (req, res) => {
 
 // Test route
 app.get('/api/test', (req, res) => {
+  const connectionState = mongoose.connection.readyState;
+  const stateMap = {
+    0: 'Disconnected',
+    1: 'Connected',
+    2: 'Connecting',
+    3: 'Disconnecting'
+  };
+  
   res.json({ 
     success: true,
     message: 'API working',
-    mongodb: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected',
+    mongodb: {
+      status: stateMap[connectionState] || 'Unknown',
+      readyState: connectionState,
+      database: mongoose.connection.name || 'Not connected',
+      host: mongoose.connection.host || 'Unknown',
+      port: mongoose.connection.port || 'Unknown'
+    },
     timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development'
+    environment: process.env.NODE_ENV || 'development',
+    server: 'Factory Management Backend v1.0.0'
   });
 });
 
-// MongoDB Connection with enhanced logging
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => {
-    console.log('✅ MongoDB Connected Successfully');
-    console.log(`🗄️  Database: ${mongoose.connection.name}`);
-    console.log(`🌐 Connection State: ${mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected'}`);
-  })
-  .catch(err => {
-    console.error('❌ MongoDB Connection Error:', err.message);
-    console.log('💡 Please check your MONGODB_URI in .env file');
-    console.log('📧 Current URI:', process.env.MONGODB_URI ? 'Set' : 'Not set');
-  });
+// MongoDB Connection with retry logic and enhanced logging
+const connectDB = async () => {
+  const maxRetries = 5;
+  const retryDelay = 5000; // 5 seconds
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`🔄 MongoDB Connection Attempt ${attempt}/${maxRetries}...`);
+      console.log(`📡 Connecting to: ${process.env.MONGODB_URI ? process.env.MONGODB_URI.replace(/\/\/.*@/, '//***:***@') : 'Not configured'}`);
+      
+      await mongoose.connect(process.env.MONGODB_URI, {
+        serverSelectionTimeoutMS: 10000, // 10 seconds timeout
+        socketTimeoutMS: 45000, // 45 seconds socket timeout
+        bufferCommands: false // Disable mongoose buffering
+      });
+      
+      console.log('✅ MongoDB Connected Successfully');
+      console.log(`🗄️  Database: ${mongoose.connection.name || 'factory-management'}`);
+      console.log(`🌐 Connection State: ${mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected'}`);
+      console.log(`🔗 Host: ${mongoose.connection.host || 'Unknown'}`);
+      console.log(`📍 Port: ${mongoose.connection.port || 'Unknown'}`);
+      
+      return; // Success, exit the retry loop
+      
+    } catch (err) {
+      console.error(`❌ MongoDB Connection Attempt ${attempt} Failed:`, err.message);
+      
+      if (attempt === maxRetries) {
+        console.log('� All MongoDB connection attempts failed');
+        console.log('🔄 Continuing with mock data mode...');
+        console.log('💡 To fix MongoDB connection:');
+        console.log('   1. Check your internet connection');
+        console.log('   2. Verify MONGODB_URI in .env file');
+        console.log('   3. Ensure MongoDB Atlas allows your IP address');
+        console.log('   4. Check if database credentials are correct');
+        console.log('📧 Current URI format:', process.env.MONGODB_URI ? 'Valid format' : 'Missing or invalid');
+        return; // Continue with mock data
+      }
+      
+      console.log(`⏳ Retrying in ${retryDelay / 1000} seconds...`);
+      await new Promise(resolve => setTimeout(resolve, retryDelay));
+    }
+  }
+};
 
 // MongoDB connection events
 mongoose.connection.on('connected', () => {
@@ -78,11 +125,15 @@ mongoose.connection.on('connected', () => {
 });
 
 mongoose.connection.on('error', (err) => {
-  console.error('🔥 MongoDB connection error:', err);
+  console.error('🔥 MongoDB connection error:', err.message);
 });
 
 mongoose.connection.on('disconnected', () => {
   console.log('⚠️ MongoDB disconnected');
+});
+
+mongoose.connection.on('reconnected', () => {
+  console.log('🔄 MongoDB reconnected');
 });
 
 // Graceful shutdown
@@ -96,6 +147,9 @@ process.on('SIGINT', async () => {
     process.exit(1);
   }
 });
+
+// Initialize database connection
+connectDB();
 
 // Worker Schema
 const Worker = mongoose.model('Worker', new mongoose.Schema({
