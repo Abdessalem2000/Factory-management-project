@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import './App.css';
 
-const API_BASE = process.env.REACT_APP_API_URL || "https://factory-management-project.onrender.com/api";
+const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
 
 /* Algerian Market Translations */
 const tData = {
