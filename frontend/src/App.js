@@ -1,6 +1,9 @@
 /* Algerian FMCG Distribution ERP - Magical Interface */
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { AuthProvider, useAuth } from "./AuthContext";
+import Login from "./Login";
+import Register from "./Register";
 import './App.css';
 
 const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
@@ -57,8 +60,9 @@ const tData = {
   }
 };
 
-/* Main Application Component */
-export default function App() {
+/* Authenticated Application Component */
+function AuthenticatedApp() {
+  const { user, logout } = useAuth();
   const [lang, setLang] = useState("en");
   const t = tData[lang];
   
@@ -455,9 +459,31 @@ export default function App() {
       {/* Magical Header */}
       <div className="header">
         <h2>{t.title}</h2>
-        <div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+          <div style={{ textAlign: 'right', fontSize: '14px' }}>
+            <div style={{ fontWeight: 'bold', color: 'var(--primary-dark)' }}>
+              {user.firstName} {user.lastName}
+            </div>
+            <div style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>
+              {user.role} • {user.department}
+            </div>
+          </div>
           <button onClick={() => setLang("en")}>English</button>
           <button onClick={() => setLang("fr")}>Français</button>
+          <button 
+            onClick={logout}
+            style={{ 
+              background: 'var(--danger)', 
+              color: 'white', 
+              border: 'none', 
+              padding: '8px 16px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '14px'
+            }}
+          >
+            Logout
+          </button>
         </div>
       </div>
       
@@ -816,43 +842,43 @@ export default function App() {
               <h2 style={{ textAlign: 'center', marginBottom: '30px', color: 'var(--primary-dark)' }}>
                 📦 Add New Product
               </h2>
-              <form onSubmit={addProduct} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
-                <div className="form-group">
-                  <label>{t.productName} *</label>
-                  <input name="name" placeholder="Enter product name" required />
-                </div>
-                <div className="form-group">
-                  <label>SKU *</label>
-                  <input name="sku" placeholder="Enter SKU" required />
-                </div>
-                <div className="form-group">
-                  <label>Barcode</label>
-                  <input name="barcode" placeholder="Enter barcode" />
-                </div>
-                <div className="form-group">
-                  <label>Category</label>
-                  <select name="category">
-                    <option value="">Select Category</option>
-                    <option value="Beverages">Beverages</option>
-                    <option value="Food">Food</option>
-                    <option value="Snacks">Snacks</option>
-                    <option value="Household">Household</option>
-                    <option value="Other">Other</option>
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label>Brand</label>
-                  <input name="brand" placeholder="Enter brand name" />
-                </div>
-                <div className="form-group">
-                  <label>Supplier</label>
-                  <input name="supplier" placeholder="Enter supplier" />
-                </div>
-                <div className="form-group">
-                  <label>Description</label>
-                  <textarea name="description" placeholder="Enter product description" rows="3"></textarea>
-                </div>
-              </div>
+              <div>
+                <form onSubmit={addProduct}>
+                  <div className="form-group">
+                    <label>{t.productName} *</label>
+                    <input name="name" placeholder="Enter product name" required />
+                  </div>
+                  <div className="form-group">
+                    <label>SKU *</label>
+                    <input name="sku" placeholder="Enter SKU" required />
+                  </div>
+                  <div className="form-group">
+                    <label>Barcode</label>
+                    <input name="barcode" placeholder="Enter barcode" />
+                  </div>
+                  <div className="form-group">
+                    <label>Category</label>
+                    <select name="category">
+                      <option value="">Select Category</option>
+                      <option value="Beverages">Beverages</option>
+                      <option value="Food">Food</option>
+                      <option value="Snacks">Snacks</option>
+                      <option value="Household">Household</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label>Brand</label>
+                    <input name="brand" placeholder="Enter brand name" />
+                  </div>
+                  <div className="form-group">
+                    <label>Supplier</label>
+                    <input name="supplier" placeholder="Enter supplier" />
+                  </div>
+                  <div className="form-group">
+                    <label>Description</label>
+                    <textarea name="description" placeholder="Enter product description" rows="3"></textarea>
+                  </div>
 
               {/* Pricing Section */}
               <div style={{ background: 'rgba(0,102,51,0.05)', padding: '20px', borderRadius: '10px', margin: '20px 0' }}>
@@ -954,7 +980,109 @@ export default function App() {
                   {loadingAction ? '⏳ Adding Product...' : '✅ Add Product'}
                 </button>
               </div>
+
+              {/* Pricing Section */}
+              <div style={{ background: 'rgba(0,102,51,0.05)', padding: '20px', borderRadius: '10px', margin: '20px 0' }}>
+                <h4 style={{ margin: '0 0 15px 0', color: 'var(--primary-dark)' }}>💰 Pricing</h4>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+                  <div className="form-group">
+                    <label>Retail Price ({t.currency}) *</label>
+                    <input name="retailPrice" type="number" step="0.01" placeholder="0.00" required />
+                  </div>
+                  <div className="form-group">
+                    <label>Wholesale Price ({t.currency}) *</label>
+                    <input name="wholesalePrice" type="number" step="0.01" placeholder="0.00" required />
+                  </div>
+                  <div className="form-group">
+                    <label>Cost ({t.currency}) *</label>
+                    <input name="cost" type="number" step="0.01" placeholder="0.00" required />
+                  </div>
+                  <div className="form-group">
+                    <label>Currency</label>
+                    <select name="currency">
+                      <option value="DZD">DZD - Algerian Dinar</option>
+                      <option value="EUR">EUR - Euro</option>
+                      <option value="USD">USD - US Dollar</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Stock Section */}
+              <div style={{ background: 'rgba(0,102,51,0.05)', padding: '20px', borderRadius: '10px', margin: '20px 0' }}>
+                <h4 style={{ margin: '0 0 15px 0', color: 'var(--primary-dark)' }}>📦 Inventory Management</h4>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+                  <div className="form-group">
+                    <label>{t.quantity} *</label>
+                    <input name="quantity" type="number" placeholder="0" required />
+                  </div>
+                  <div className="form-group">
+                    <label>Minimum Stock *</label>
+                    <input name="minStock" type="number" placeholder="0" required />
+                  </div>
+                  <div className="form-group">
+                    <label>Maximum Stock</label>
+                    <input name="maxStock" type="number" placeholder="1000" />
+                  </div>
+                  <div className="form-group">
+                    <label>Reorder Point</label>
+                    <input name="reorderPoint" type="number" placeholder="0" />
+                  </div>
+                  <div className="form-group">
+                    <label>Storage Location</label>
+                    <input name="location" placeholder="Warehouse A, Shelf 1" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Dimensions Section */}
+              <div style={{ background: 'rgba(0,102,51,0.05)', padding: '20px', borderRadius: '10px', margin: '20px 0' }}>
+                <h4 style={{ margin: '0 0 15px 0', color: 'var(--primary-dark)' }}>📏 Product Dimensions</h4>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+                  <div className="form-group">
+                    <label>Weight (kg)</label>
+                    <input name="weight" type="number" step="0.1" placeholder="0.0" />
+                  </div>
+                  <div className="form-group">
+                    <label>Length (cm)</label>
+                    <input name="length" type="number" step="0.1" placeholder="0.0" />
+                  </div>
+                  <div className="form-group">
+                    <label>Width (cm)</label>
+                    <input name="width" type="number" step="0.1" placeholder="0.0" />
+                  </div>
+                  <div className="form-group">
+                    <label>Height (cm)</label>
+                    <input name="height" type="number" step="0.1" placeholder="0.0" />
+                  </div>
+                  <div className="form-group">
+                    <label>Unit</label>
+                    <select name="unit">
+                      <option value="kg">Kilograms</option>
+                      <option value="g">Grams</option>
+                      <option value="cm">Centimeters</option>
+                      <option value="m">Meters</option>
+                      <option value="l">Liters</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ gridColumn: '1 / -1', textAlign: 'center' }}>
+                <button type="submit" disabled={loadingAction} className="btn" style={{ 
+                  background: 'var(--gradient-success)', 
+                  border: 'none', 
+                  color: 'white', 
+                  padding: '15px 40px', 
+                  fontSize: '18px', 
+                  borderRadius: '8px',
+                  fontWeight: 'bold' 
+                }}>
+                  {loadingAction ? '⏳ Adding Product...' : '✅ Add Product'}
+                </button>
+              </div>
             </form>
+              </div>
             </div>
           )}
 
@@ -1197,7 +1325,7 @@ export default function App() {
               <h2 style={{ textAlign: 'center', marginBottom: '30px', color: 'var(--primary-dark)' }}>
                 👤 Add New Client
               </h2>
-              <form onSubmit={addClient} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
+              <form onSubmit={addClient}>
                 <div className="form-group">
                   <label>Client Name *</label>
                   <input name="name" placeholder="Enter client name" required />
@@ -1489,7 +1617,7 @@ export default function App() {
                   <p>Please add clients and products first before creating orders!</p>
                 </div>
               ) : (
-                <form onSubmit={addOrder} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px' }}>
+                <form onSubmit={addOrder}>
                   <div className="form-group">
                     <label>Client *</label>
                     <select name="clientId" required>
@@ -2021,5 +2149,37 @@ export default function App() {
         </div>
       )}
     </div>
+  );
+}
+
+/* Main Application Component */
+function AppContent() {
+  const [currentView, setCurrentView] = useState('login');
+  const { isAuthenticated, login } = useAuth();
+
+  const handleLogin = (userData, token) => {
+    login(userData, token);
+  };
+
+  const handleRegister = () => {
+    setCurrentView('login');
+  };
+
+  if (!isAuthenticated()) {
+    if (currentView === 'register') {
+      return <Register onRegister={handleRegister} />;
+    }
+    return <Login onLogin={handleLogin} />;
+  }
+
+  return <AuthenticatedApp />;
+}
+
+/* Wrap with AuthProvider */
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }

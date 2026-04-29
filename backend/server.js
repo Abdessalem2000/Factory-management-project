@@ -4,6 +4,8 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 require('dotenv').config();
 
 const app = express();
@@ -72,6 +74,316 @@ app.get('/api/test', (req, res) => {
     environment: process.env.NODE_ENV || 'development',
     server: 'Factory Management Backend v1.0.0'
   });
+});
+
+// JWT Middleware
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ success: false, error: 'Access token required' });
+  }
+
+  jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key', (err, user) => {
+    if (err) {
+      return res.status(403).json({ success: false, error: 'Invalid or expired token' });
+    }
+    req.user = user;
+    next();
+  });
+};
+
+// Authentication endpoints
+app.post('/api/auth/register', async (req, res) => {
+  try {
+    const { firstName, lastName, email, password, phone, role, department } = req.body;
+
+    // If MongoDB is not connected, use mock registration
+    if (mongoose.connection.readyState !== 1) {
+      // Mock user data for testing
+      const mockUser = {
+        _id: 'user_' + Date.now(),
+        firstName,
+        lastName,
+        email,
+        phone,
+        role: role || 'Sales Agent',
+        department: department || 'Sales',
+        permissions: {
+          dashboard: true,
+          orders: true,
+          products: role === 'Admin' || role === 'Manager',
+          clients: true,
+          workers: role === 'Admin',
+          reports: role === 'Admin' || role === 'Manager'
+        },
+        isActive: true,
+        createdAt: new Date(),
+        lastLogin: new Date()
+      };
+
+      // Generate JWT token
+      const token = jwt.sign(
+        { 
+          userId: mockUser._id, 
+          email: mockUser.email, 
+          role: mockUser.role,
+          permissions: mockUser.permissions 
+        },
+        process.env.JWT_SECRET || 'your-secret-key',
+        { expiresIn: '24h' }
+      );
+
+      console.log(`Mock user registered: ${mockUser.email} (mock mode)`);
+
+      return res.status(201).json({
+        success: true,
+        message: 'User registered successfully (mock mode)',
+        token,
+        user: {
+          id: mockUser._id,
+          firstName: mockUser.firstName,
+          lastName: mockUser.lastName,
+          email: mockUser.email,
+          role: mockUser.role,
+          department: mockUser.department,
+          permissions: mockUser.permissions,
+          isActive: mockUser.isActive
+        }
+      });
+    }
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ success: false, error: 'User already exists with this email' });
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 12);
+
+    // Create user
+    const user = new User({
+      firstName,
+      lastName,
+      email,
+      password: hashedPassword,
+      phone,
+      role: role || 'Sales Agent',
+      department: department || 'Sales'
+    });
+
+    await user.save();
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { 
+        userId: user._id, 
+        email: user.email, 
+        role: user.role,
+        permissions: user.permissions 
+      },
+      process.env.JWT_SECRET || 'your-secret-key',
+      { expiresIn: '24h' }
+    );
+
+    // Update last login
+    user.lastLogin = new Date();
+    await user.save();
+
+    res.status(201).json({
+      success: true,
+      message: 'User registered successfully',
+      token,
+      user: {
+        id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        role: user.role,
+        department: user.department,
+        permissions: user.permissions,
+        isActive: user.isActive
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // If MongoDB is not connected, use mock login
+    if (mongoose.connection.readyState !== 1) {
+      // Mock user validation
+      if (password.length < 6) {
+        return res.status(401).json({ success: false, error: 'Invalid email or password' });
+      }
+
+      // Mock user data
+      const mockUser = {
+        _id: 'user_' + Date.now(),
+        firstName: 'Ahmed',
+        lastName: 'Benali',
+        email,
+        role: 'Admin',
+        department: 'Management',
+        permissions: {
+          dashboard: true,
+          orders: true,
+          products: true,
+          clients: true,
+          workers: true,
+          reports: true
+        },
+        isActive: true,
+        lastLogin: new Date()
+      };
+
+      // Generate JWT token
+      const token = jwt.sign(
+        { 
+          userId: mockUser._id, 
+          email: mockUser.email, 
+          role: mockUser.role,
+          permissions: mockUser.permissions 
+        },
+        process.env.JWT_SECRET || 'your-secret-key',
+        { expiresIn: '24h' }
+      );
+
+      console.log(`Mock user logged in: ${mockUser.email} (mock mode)`);
+
+      return res.json({
+        success: true,
+        message: 'Login successful (mock mode)',
+        token,
+        user: {
+          id: mockUser._id,
+          firstName: mockUser.firstName,
+          lastName: mockUser.lastName,
+          email: mockUser.email,
+          role: mockUser.role,
+          department: mockUser.department,
+          permissions: mockUser.permissions,
+          isActive: mockUser.isActive,
+          lastLogin: mockUser.lastLogin
+        }
+      });
+    }
+
+    // Find user
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(401).json({ success: false, error: 'Invalid email or password' });
+    }
+
+    // Check if user is active
+    if (!user.isActive) {
+      return res.status(401).json({ success: false, error: 'Account is deactivated' });
+    }
+
+    // Verify password
+    const isValidPassword = await bcrypt.compare(password, user.password);
+    if (!isValidPassword) {
+      return res.status(401).json({ success: false, error: 'Invalid email or password' });
+    }
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { 
+        userId: user._id, 
+        email: user.email, 
+        role: user.role,
+        permissions: user.permissions 
+      },
+      process.env.JWT_SECRET || 'your-secret-key',
+      { expiresIn: '24h' }
+    );
+
+    // Update last login
+    user.lastLogin = new Date();
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Login successful',
+      token,
+      user: {
+        id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        role: user.role,
+        department: user.department,
+        permissions: user.permissions,
+        isActive: user.isActive,
+        lastLogin: user.lastLogin
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.get('/api/auth/me', authenticateToken, async (req, res) => {
+  try {
+    // If MongoDB is not connected, use mock user data
+    if (mongoose.connection.readyState !== 1) {
+      const mockUser = {
+        id: req.user.userId,
+        firstName: 'Ahmed',
+        lastName: 'Benali',
+        email: req.user.email,
+        phone: '213555123456',
+        role: req.user.role || 'Admin',
+        department: req.user.department || 'Management',
+        permissions: req.user.permissions || {
+          dashboard: true,
+          orders: true,
+          products: true,
+          clients: true,
+          workers: true,
+          reports: true
+        },
+        isActive: true,
+        lastLogin: new Date(),
+        createdAt: new Date()
+      };
+
+      return res.json({
+        success: true,
+        user: mockUser
+      });
+    }
+
+    const user = await User.findById(req.user.userId).select('-password');
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+
+    res.json({
+      success: true,
+      user: {
+        id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        phone: user.phone,
+        role: user.role,
+        department: user.department,
+        permissions: user.permissions,
+        isActive: user.isActive,
+        lastLogin: user.lastLogin,
+        createdAt: user.createdAt
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
 });
 
 // DNS Resolution Check
@@ -227,7 +539,7 @@ const Expense = mongoose.model('Expense', new mongoose.Schema({
 // API Routes
 
 // Workers
-app.get('/api/workers', async (req, res) => {
+app.get('/api/workers', authenticateToken, async (req, res) => {
   try {
     // If MongoDB is not connected, return mock data
     if (mongoose.connection.readyState !== 1) {
@@ -286,7 +598,7 @@ app.delete('/api/workers/:id', async (req, res) => {
 });
 
 // Income
-app.get('/api/income', async (req, res) => {
+app.get('/api/income', authenticateToken, async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
     let query = {};
@@ -315,7 +627,7 @@ app.post('/api/income', async (req, res) => {
 });
 
 // Expenses
-app.get('/api/expenses', async (req, res) => {
+app.get('/api/expenses', authenticateToken, async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
     let query = {};
@@ -342,6 +654,27 @@ app.post('/api/expenses', async (req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 });
+
+// User Schema
+const User = mongoose.model('User', new mongoose.Schema({
+  firstName: { type: String, required: true },
+  lastName: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  phone: String,
+  role: { type: String, enum: ['Admin', 'Manager', 'Sales Agent', 'Warehouse Staff'], default: 'Sales Agent' },
+  department: { type: String, enum: ['Management', 'Sales', 'Warehouse', 'Finance', 'IT'], default: 'Sales' },
+  isActive: { type: Boolean, default: true },
+  lastLogin: Date,
+  permissions: {
+    dashboard: { type: Boolean, default: true },
+    orders: { type: Boolean, default: true },
+    products: { type: Boolean, default: false },
+    clients: { type: Boolean, default: true },
+    workers: { type: Boolean, default: false },
+    reports: { type: Boolean, default: false }
+  }
+}, { timestamps: true }));
 
 // Client Schema
 const Client = mongoose.model('Client', new mongoose.Schema({
@@ -447,7 +780,7 @@ const Order = mongoose.model('Order', new mongoose.Schema({
 }, { timestamps: true }));
 
 // Clients endpoints
-app.get('/api/clients', async (req, res) => {
+app.get('/api/clients', authenticateToken, async (req, res) => {
   try {
     // If MongoDB is not connected, return enhanced mock data
     if (mongoose.connection.readyState !== 1) {
@@ -522,7 +855,7 @@ app.get('/api/clients', async (req, res) => {
   }
 });
 
-app.post('/api/clients', async (req, res) => {
+app.post('/api/clients', authenticateToken, async (req, res) => {
   try {
     const clientData = req.body;
     
@@ -634,7 +967,7 @@ app.put('/api/clients/:id/stats', async (req, res) => {
 });
 
 // Products endpoints
-app.get('/api/products', async (req, res) => {
+app.get('/api/products', authenticateToken, async (req, res) => {
   try {
     // If MongoDB is not connected, return enhanced mock data
     if (mongoose.connection.readyState !== 1) {
@@ -715,7 +1048,7 @@ app.get('/api/products', async (req, res) => {
   }
 });
 
-app.post('/api/products', async (req, res) => {
+app.post('/api/products', authenticateToken, async (req, res) => {
   try {
     const productData = req.body;
     
@@ -814,7 +1147,7 @@ app.get('/api/products/low-stock', async (req, res) => {
 });
 
 // Orders endpoints
-app.get('/api/orders', async (req, res) => {
+app.get('/api/orders', authenticateToken, async (req, res) => {
   try {
     // If MongoDB is not connected, return mock data
     if (mongoose.connection.readyState !== 1) {
@@ -982,7 +1315,7 @@ app.get('/api/orders', async (req, res) => {
   }
 });
 
-app.post('/api/orders', async (req, res) => {
+app.post('/api/orders', authenticateToken, async (req, res) => {
   try {
     const orderData = req.body;
     
@@ -1287,7 +1620,7 @@ app.put('/api/orders/:id/status', async (req, res) => {
 });
 
 // Analytics endpoints
-app.get('/api/analytics/dashboard', async (req, res) => {
+app.get('/api/analytics/dashboard', authenticateToken, async (req, res) => {
   try {
     // Always use mock data with real-time calculations for now (MongoDB connection issues)
     // if (mongoose.connection.readyState !== 1) {
