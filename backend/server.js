@@ -74,20 +74,59 @@ app.get('/api/test', (req, res) => {
   });
 });
 
+// DNS Resolution Check
+const checkDNS = async (hostname) => {
+  const dns = require('dns').promises;
+  try {
+    console.log(`🔍 Checking DNS resolution for: ${hostname}`);
+    const addresses = await dns.resolve4(hostname);
+    console.log(`✅ DNS resolved: ${addresses.join(', ')}`);
+    return true;
+  } catch (err) {
+    console.error(`❌ DNS resolution failed: ${err.message}`);
+    console.log('💡 This is likely the main connection issue');
+    return false;
+  }
+};
+
 // MongoDB Connection with retry logic and enhanced logging
 const connectDB = async () => {
-  const maxRetries = 5;
+  const maxRetries = 3;
   const retryDelay = 5000; // 5 seconds
+  
+  // Extract hostname from URI
+  const uri = process.env.MONGODB_URI;
+  const hostname = uri ? uri.match(/@([^\/]+)/)?.[1]?.split('?')[0] : null;
+  
+  if (!hostname) {
+    console.error('❌ Invalid MongoDB URI format');
+    return;
+  }
+  
+  // Check DNS first
+  const dnsOK = await checkDNS(hostname);
+  if (!dnsOK) {
+    console.log('🔄 Skipping MongoDB connection due to DNS issues');
+    console.log('💡 Try these solutions:');
+    console.log('   1. Check internet connection');
+    console.log('   2. Try using mobile hotspot');
+    console.log('   3. Use VPN to different region');
+    console.log('   4. Contact your ISP about DNS issues');
+    return;
+  }
   
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       console.log(`🔄 MongoDB Connection Attempt ${attempt}/${maxRetries}...`);
-      console.log(`📡 Connecting to: ${process.env.MONGODB_URI ? process.env.MONGODB_URI.replace(/\/\/.*@/, '//***:***@') : 'Not configured'}`);
+      console.log(`📡 Connecting to: ${uri ? uri.replace(/\/\/.*@/, '//***:***@') : 'Not configured'}`);
       
-      await mongoose.connect(process.env.MONGODB_URI, {
-        serverSelectionTimeoutMS: 10000, // 10 seconds timeout
+      await mongoose.connect(uri, {
+        serverSelectionTimeoutMS: 15000, // 15 seconds timeout
         socketTimeoutMS: 45000, // 45 seconds socket timeout
-        bufferCommands: false // Disable mongoose buffering
+        bufferCommands: false, // Disable mongoose buffering
+        maxPoolSize: 10, // Connection pool size
+        minPoolSize: 5, // Minimum connections
+        maxIdleTimeMS: 30000 // Close idle connections after 30s
       });
       
       console.log('✅ MongoDB Connected Successfully');
@@ -102,14 +141,16 @@ const connectDB = async () => {
       console.error(`❌ MongoDB Connection Attempt ${attempt} Failed:`, err.message);
       
       if (attempt === maxRetries) {
-        console.log('� All MongoDB connection attempts failed');
+        console.log('💥 All MongoDB connection attempts failed');
         console.log('🔄 Continuing with mock data mode...');
         console.log('💡 To fix MongoDB connection:');
         console.log('   1. Check your internet connection');
         console.log('   2. Verify MONGODB_URI in .env file');
         console.log('   3. Ensure MongoDB Atlas allows your IP address');
         console.log('   4. Check if database credentials are correct');
-        console.log('📧 Current URI format:', process.env.MONGODB_URI ? 'Valid format' : 'Missing or invalid');
+        console.log('   5. Try alternative connection string');
+        console.log('   6. Contact MongoDB Atlas support');
+        console.log('📧 Current URI format:', uri ? 'Valid format' : 'Missing or invalid');
         return; // Continue with mock data
       }
       
@@ -335,27 +376,37 @@ const Order = mongoose.model('Order', new mongoose.Schema({
   salesAgent: { type: mongoose.Schema.Types.ObjectId, ref: 'Worker' },
   items: [{
     product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
-    quantity: { type: Number, required: true },
-    unitPrice: { type: Number, required: true },
+    quantity: { type: Number, required: true, min: 1 },
+    unitPrice: { type: Number, required: true, min: 0 },
+    discount: { type: Number, default: 0, min: 0, max: 100 },
     totalPrice: { type: Number, required: true }
   }],
   pricing: {
-    subtotal: Number,
-    tax: Number,
+    subtotal: { type: Number, required: true },
+    discount: { type: Number, default: 0 },
+    tax: { type: Number, required: true },
     total: { type: Number, required: true }
   },
   payment: {
     method: { type: String, enum: ['Cash', 'Credit', 'Bank Transfer', 'Mobile Money'], required: true },
-    status: { type: String, enum: ['Pending', 'Paid', 'Failed'], default: 'Pending' }
+    status: { type: String, enum: ['Pending', 'Paid', 'Failed', 'Refunded'], default: 'Pending' },
+    paidAt: Date
   },
   delivery: {
     type: { type: String, enum: ['Delivery', 'Pickup'], required: true },
-    address: String,
-    scheduledDate: Date,
-    status: { type: String, enum: ['Pending', 'In Transit', 'Delivered', 'Cancelled'], default: 'Pending' }
+    address: { type: String, required: true },
+    scheduledDate: { type: Date, required: true },
+    status: { type: String, enum: ['Pending', 'In Transit', 'Delivered', 'Cancelled'], default: 'Pending' },
+    deliveredAt: Date
   },
-  status: { type: String, enum: ['Pending', 'Confirmed', 'Processing', 'Completed', 'Cancelled'], default: 'Pending' },
-  notes: String
+  status: { 
+    type: String, 
+    enum: ['Pending', 'Confirmed', 'Processing', 'Shipped', 'Delivered', 'Cancelled'], 
+    default: 'Pending' 
+  },
+  notes: String,
+  priority: { type: String, enum: ['Low', 'Normal', 'High', 'Urgent'], default: 'Normal' },
+  trackingNumber: String
 }, { timestamps: true }));
 
 // Clients endpoints
@@ -421,24 +472,152 @@ app.get('/api/orders', async (req, res) => {
         { 
           _id: '1', 
           orderNumber: 'ORD-000001',
-          client: { name: 'Ahmed Benali', phone: '213555123456', email: 'ahmed@example.com' },
-          items: [{ product: { name: 'Coca-Cola 330ml', sku: 'CC-330' }, quantity: 10, unitPrice: 100, totalPrice: 1000 }],
-          pricing: { total: 1190 },
-          payment: { method: 'Cash', status: 'Paid' },
-          delivery: { type: 'Delivery', status: 'Delivered' },
-          status: 'Completed',
-          createdAt: new Date('2026-04-20')
+          client: { 
+            _id: '1',
+            name: 'Ahmed Benali', 
+            phone: '213555123456', 
+            email: 'ahmed@example.com',
+            address: '123 Rue Didouche Mourad',
+            city: 'Alger',
+            province: 'Alger'
+          },
+          salesAgent: { _id: '1', firstName: 'Mohamed', lastName: 'Ali' },
+          items: [{ 
+            product: { 
+              _id: '1',
+              name: 'Coca-Cola 330ml', 
+              sku: 'CC-330',
+              price: { retail: 120, wholesale: 100, cost: 80 }
+            }, 
+            quantity: 10, 
+            unitPrice: 100, 
+            discount: 5,
+            totalPrice: 950 
+          }],
+          pricing: { 
+            subtotal: 1000,
+            discount: 50,
+            tax: 180.5,
+            total: 1130.5 
+          },
+          payment: { 
+            method: 'Cash', 
+            status: 'Paid',
+            paidAt: new Date('2026-04-20T14:30:00Z')
+          },
+          delivery: { 
+            type: 'Delivery', 
+            address: '123 Rue Didouche Mourad, Alger',
+            scheduledDate: new Date('2026-04-20T10:00:00Z'),
+            status: 'Delivered',
+            deliveredAt: new Date('2026-04-20T16:30:00Z')
+          },
+          status: 'Delivered',
+          priority: 'Normal',
+          trackingNumber: 'DZ-ALG-123456',
+          notes: 'Customer requested delivery before 5 PM',
+          createdAt: new Date('2026-04-20T09:15:00Z'),
+          updatedAt: new Date('2026-04-20T16:30:00Z')
         },
         { 
           _id: '2', 
           orderNumber: 'ORD-000002',
-          client: { name: 'Fatima Zahra', phone: '213555789012', email: 'fatima@example.com' },
-          items: [{ product: { name: 'Fanta Orange 330ml', sku: 'FO-330' }, quantity: 5, unitPrice: 90, totalPrice: 450 }],
-          pricing: { total: 535.5 },
-          payment: { method: 'Credit', status: 'Pending' },
-          delivery: { type: 'Pickup', status: 'Pending' },
+          client: { 
+            _id: '2',
+            name: 'Fatima Zahra', 
+            phone: '213555789012', 
+            email: 'fatima@example.com',
+            address: '456 Avenue des Frères d\'Ache',
+            city: 'Oran',
+            province: 'Oran'
+          },
+          salesAgent: { _id: '2', firstName: 'Sami', lastName: 'Brahim' },
+          items: [{ 
+            product: { 
+              _id: '2',
+              name: 'Fanta Orange 330ml', 
+              sku: 'FO-330',
+              price: { retail: 110, wholesale: 90, cost: 70 }
+            }, 
+            quantity: 5, 
+            unitPrice: 90, 
+            discount: 0,
+            totalPrice: 450 
+          }],
+          pricing: { 
+            subtotal: 450,
+            discount: 0,
+            tax: 85.5,
+            total: 535.5 
+          },
+          payment: { 
+            method: 'Credit', 
+            status: 'Pending',
+            paidAt: null
+          },
+          delivery: { 
+            type: 'Pickup', 
+            address: '456 Avenue des Frères d\'Ache, Oran',
+            scheduledDate: new Date('2026-04-25T14:00:00Z'),
+            status: 'Pending',
+            deliveredAt: null
+          },
           status: 'Pending',
-          createdAt: new Date('2026-04-25')
+          priority: 'High',
+          trackingNumber: null,
+          notes: 'Urgent customer request',
+          createdAt: new Date('2026-04-25T11:30:00Z'),
+          updatedAt: new Date('2026-04-25T11:30:00Z')
+        },
+        { 
+          _id: '3', 
+          orderNumber: 'ORD-000003',
+          client: { 
+            _id: '3',
+            name: 'Karim Boudiaf', 
+            phone: '213555345678', 
+            email: 'karim@example.com',
+            address: '789 Boulevard des Martyrs',
+            city: 'Constantine',
+            province: 'Constantine'
+          },
+          salesAgent: { _id: '1', firstName: 'Mohamed', lastName: 'Ali' },
+          items: [{ 
+            product: { 
+              _id: '1',
+              name: 'Coca-Cola 330ml', 
+              sku: 'CC-330',
+              price: { retail: 120, wholesale: 100, cost: 80 }
+            }, 
+            quantity: 15, 
+            unitPrice: 95, 
+            discount: 10,
+            totalPrice: 1282.5 
+          }],
+          pricing: { 
+            subtotal: 1425,
+            discount: 142.5,
+            tax: 243.68,
+            total: 1526.18 
+          },
+          payment: { 
+            method: 'Bank Transfer', 
+            status: 'Paid',
+            paidAt: new Date('2026-04-18T12:00:00Z')
+          },
+          delivery: { 
+            type: 'Delivery', 
+            address: '789 Boulevard des Martyrs, Constantine',
+            scheduledDate: new Date('2026-04-19T10:00:00Z'),
+            status: 'Cancelled',
+            deliveredAt: null
+          },
+          status: 'Cancelled',
+          priority: 'Urgent',
+          trackingNumber: 'DZ-ALG-789012',
+          notes: 'Customer cancelled due to change of plans',
+          createdAt: new Date('2026-04-18T08:45:00Z'),
+          updatedAt: new Date('2026-04-19T15:20:00Z')
         }
       ]);
     }
@@ -457,29 +636,83 @@ app.post('/api/orders', async (req, res) => {
   try {
     const orderData = req.body;
     
+    // Auto-calculate item totals with discount
+    orderData.items = orderData.items.map(item => ({
+      ...item,
+      totalPrice: (item.quantity * item.unitPrice) * (1 - (item.discount || 0) / 100)
+    }));
+    
     // Generate order number
     const orderCount = await Order.countDocuments();
     orderData.orderNumber = `ORD-${String(orderCount + 1).padStart(6, '0')}`;
     
-    // Calculate pricing
+    // Auto-calculate pricing
     const subtotal = orderData.items.reduce((sum, item) => sum + item.totalPrice, 0);
-    const tax = subtotal * 0.19; // 19% tax for Algeria
+    const discountAmount = orderData.items.reduce((sum, item) => sum + (item.quantity * item.unitPrice * (item.discount || 0) / 100), 0);
+    const discountedSubtotal = subtotal - discountAmount;
+    const tax = discountedSubtotal * 0.19; // 19% tax for Algeria
+    const total = discountedSubtotal + tax;
+    
     orderData.pricing = {
       subtotal,
+      discount: discountAmount,
       tax,
-      total: subtotal + tax
+      total
     };
+    
+    // Auto-set dates based on status
+    if (orderData.status === 'Delivered') {
+      orderData.delivery.deliveredAt = new Date();
+      orderData.payment.paidAt = new Date();
+      orderData.payment.status = 'Paid';
+      orderData.delivery.status = 'Delivered';
+    }
     
     const order = new Order(orderData);
     await order.save();
     
     // Return populated order
     const populatedOrder = await Order.findById(order._id)
-      .populate('client', 'name phone email')
+      .populate('client', 'name phone email address city province')
       .populate('salesAgent', 'firstName lastName')
-      .populate('items.product', 'name sku');
+      .populate('items.product', 'name sku price');
     
     res.status(201).json(populatedOrder);
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Update order status
+app.put('/api/orders/:id/status', async (req, res) => {
+  try {
+    const { status } = req.body;
+    const updateData = { status };
+    
+    // Auto-update related fields based on status
+    if (status === 'Delivered') {
+      updateData['delivery.deliveredAt'] = new Date();
+      updateData['delivery.status'] = 'Delivered';
+      updateData['payment.paidAt'] = new Date();
+      updateData['payment.status'] = 'Paid';
+    } else if (status === 'Cancelled') {
+      updateData['delivery.status'] = 'Cancelled';
+      updateData['payment.status'] = 'Refunded';
+    }
+    
+    const order = await Order.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      { new: true, runValidators: true }
+    ).populate('client', 'name phone email')
+     .populate('salesAgent', 'firstName lastName')
+     .populate('items.product', 'name sku');
+    
+    if (!order) {
+      return res.status(404).json({ success: false, error: 'Order not found' });
+    }
+    
+    res.json({ success: true, data: order });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }

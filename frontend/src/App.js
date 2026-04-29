@@ -642,26 +642,263 @@ export default function App() {
               <p style={{ textAlign: 'center', padding: '40px' }}>{t.noOrders}</p>
             ) : (
               orders.map((order) => (
-                <div key={order._id} className="list-item">
-                  <div>
-                    <h4>Order #{order.orderNumber || order._id?.slice(-8)}</h4>
-                    <p>Client: {order.client?.name || 'N/A'}</p>
-                    <p>{order.items?.length || 0} items</p>
-                    <p>{new Date(order.createdAt || Date.now()).toLocaleDateString()}</p>
+                <div key={order._id} className="list-item" style={{ 
+                  background: 'linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(240,248,255,0.95) 100%)',
+                  border: '1px solid rgba(0,102,51,0.1)',
+                  borderRadius: '15px',
+                  padding: '20px',
+                  marginBottom: '20px',
+                  boxShadow: '0 8px 25px rgba(0,102,51,0.15)',
+                  transition: 'all 0.3s ease',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}>
+                  {/* Status Badge */}
+                  <div style={{
+                    position: 'absolute',
+                    top: '15px',
+                    right: '15px',
+                    padding: '6px 12px',
+                    borderRadius: '20px',
+                    fontSize: '12px',
+                    fontWeight: 'bold',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                    background: order.status === 'Delivered' ? 'var(--success)' : 
+                               order.status === 'Cancelled' ? 'var(--danger)' : 
+                               order.status === 'Shipped' ? 'var(--info)' : 'var(--warning)',
+                    color: 'white',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
+                  }}>
+                    {order.status || 'Pending'}
                   </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <h4 style={{ color: 'var(--accent-gold)' }}>
-                      {order.pricing?.total?.toLocaleString() || 0} {t.currency}
-                    </h4>
-                    <p>{order.payment?.method || 'N/A'}</p>
-                    <p>{order.delivery?.type || 'N/A'}</p>
-                    <span style={{
-                      color: order.status === 'Delivered' ? 'var(--success)' : 
-                             order.status === 'Cancelled' ? 'var(--danger)' : 'var(--warning)',
-                      fontWeight: 'bold'
+
+                  {/* Priority Badge */}
+                  {order.priority && order.priority !== 'Normal' && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '15px',
+                      left: '15px',
+                      padding: '4px 8px',
+                      borderRadius: '12px',
+                      fontSize: '10px',
+                      fontWeight: 'bold',
+                      background: order.priority === 'Urgent' ? 'var(--danger)' : 'var(--warning)',
+                      color: 'white'
                     }}>
-                      {order.status || 'Pending'}
-                    </span>
+                      {order.priority}
+                    </div>
+                  )}
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', alignItems: 'start' }}>
+                    {/* Left Column - Order Info */}
+                    <div>
+                      <h3 style={{ 
+                        margin: '0 0 10px 0', 
+                        color: 'var(--primary-dark)',
+                        fontSize: '18px',
+                        fontWeight: '700'
+                      }}>
+                        📋 #{order.orderNumber || order._id?.slice(-8)}
+                      </h3>
+                      
+                      <div style={{ marginBottom: '15px' }}>
+                        <p style={{ 
+                          margin: '0 0 5px 0', 
+                          fontSize: '14px',
+                          color: 'var(--text-secondary)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px'
+                        }}>
+                          👤 <strong>{order.client?.name || 'N/A'}</strong>
+                        </p>
+                        <p style={{ 
+                          margin: '0 0 5px 0', 
+                          fontSize: '13px',
+                          color: 'var(--text-secondary)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px'
+                        }}>
+                          📞 {order.client?.phone || 'N/A'}
+                        </p>
+                        <p style={{ 
+                          margin: '0 0 5px 0', 
+                          fontSize: '13px',
+                          color: 'var(--text-secondary)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px'
+                        }}>
+                          📍 {order.client?.city || 'N/A'}, {order.client?.province || 'N/A'}
+                        </p>
+                        <p style={{ 
+                          margin: '0 0 5px 0', 
+                          fontSize: '13px',
+                          color: 'var(--text-secondary)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px'
+                        }}>
+                          📦 {order.items?.length || 0} items • {order.salesAgent ? `👔 ${order.salesAgent.firstName} ${order.salesAgent.lastName}` : 'No agent'}
+                        </p>
+                        <p style={{ 
+                          margin: '0', 
+                          fontSize: '13px',
+                          color: 'var(--text-secondary)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px'
+                        }}>
+                          📅 {new Date(order.createdAt || Date.now()).toLocaleDateString('en-DZ', { 
+                            year: 'numeric', 
+                            month: 'short', 
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </p>
+                      </div>
+
+                      {/* Items Summary */}
+                      <div style={{ 
+                        background: 'rgba(0,102,51,0.05)', 
+                        padding: '12px', 
+                        borderRadius: '10px',
+                        marginBottom: '15px'
+                      }}>
+                        <h4 style={{ margin: '0 0 8px 0', fontSize: '14px', color: 'var(--primary-dark)' }}>
+                          🛍️ Order Items
+                        </h4>
+                        {order.items?.slice(0, 2).map((item, index) => (
+                          <div key={index} style={{ 
+                            display: 'flex', 
+                            justifyContent: 'space-between', 
+                            alignItems: 'center',
+                            padding: '4px 0',
+                            fontSize: '12px',
+                            borderBottom: index < order.items.length - 1 ? '1px solid rgba(0,102,51,0.1)' : 'none'
+                          }}>
+                            <span>{item.product?.name || 'Product'}</span>
+                            <span style={{ fontWeight: 'bold' }}>
+                              {item.quantity} × {item.unitPrice} DZD
+                              {item.discount > 0 && (
+                                <span style={{ color: 'var(--danger)', fontSize: '11px' }}>
+                                  {' '}(-{item.discount}%)
+                                </span>
+                              )}
+                            </span>
+                          </div>
+                        ))}
+                        {order.items?.length > 2 && (
+                          <p style={{ 
+                            margin: '4px 0 0 0', 
+                            fontSize: '11px', 
+                            color: 'var(--text-secondary)',
+                            fontStyle: 'italic'
+                          }}>
+                            +{order.items.length - 2} more items...
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Right Column - Pricing & Status */}
+                    <div style={{ textAlign: 'right' }}>
+                      {/* Pricing Card */}
+                      <div style={{ 
+                        background: 'linear-gradient(135deg, var(--accent-gold) 0%, var(--warning) 100%)',
+                        padding: '15px',
+                        borderRadius: '12px',
+                        marginBottom: '15px',
+                        color: 'white',
+                        boxShadow: '0 4px 15px rgba(245,158,11,0.3)'
+                      }}>
+                        <h4 style={{ margin: '0 0 10px 0', fontSize: '16px' }}>
+                          💰 {order.pricing?.total?.toLocaleString() || 0} {t.currency}
+                        </h4>
+                        <div style={{ fontSize: '12px', opacity: 0.9 }}>
+                          {order.pricing?.discount > 0 && (
+                            <p style={{ margin: '0 0 2px 0' }}>
+                              Discount: -{order.pricing.discount.toLocaleString()} DZD
+                            </p>
+                          )}
+                          <p style={{ margin: '0 0 2px 0' }}>
+                            Subtotal: {order.pricing?.subtotal?.toLocaleString() || 0} DZD
+                          </p>
+                          <p style={{ margin: '0 0 2px 0' }}>
+                            Tax (19%): {order.pricing?.tax?.toLocaleString() || 0} DZD
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Payment & Delivery Info */}
+                      <div style={{ 
+                        background: 'rgba(0,102,51,0.05)', 
+                        padding: '12px', 
+                        borderRadius: '10px',
+                        marginBottom: '15px'
+                      }}>
+                        <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                          <p style={{ margin: '0 0 5px 0', display: 'flex', justifyContent: 'space-between' }}>
+                            <span>💳 Payment:</span>
+                            <strong>{order.payment?.method || 'N/A'}</strong>
+                          </p>
+                          <p style={{ margin: '0 0 5px 0', display: 'flex', justifyContent: 'space-between' }}>
+                            <span>💵 Status:</span>
+                            <strong style={{ 
+                              color: order.payment?.status === 'Paid' ? 'var(--success)' : 'var(--warning)'
+                            }}>
+                              {order.payment?.status || 'Pending'}
+                            </strong>
+                          </p>
+                          <p style={{ margin: '0 0 5px 0', display: 'flex', justifyContent: 'space-between' }}>
+                            <span>🚚 Delivery:</span>
+                            <strong>{order.delivery?.type || 'N/A'}</strong>
+                          </p>
+                          <p style={{ margin: '0', display: 'flex', justifyContent: 'space-between' }}>
+                            <span>📦 Status:</span>
+                            <strong style={{ 
+                              color: order.delivery?.status === 'Delivered' ? 'var(--success)' : 
+                                     order.delivery?.status === 'Cancelled' ? 'var(--danger)' : 'var(--warning)'
+                            }}>
+                              {order.delivery?.status || 'Pending'}
+                            </strong>
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Tracking Info */}
+                      {order.trackingNumber && (
+                        <div style={{ 
+                          background: 'rgba(0,102,51,0.05)', 
+                          padding: '8px', 
+                          borderRadius: '8px',
+                          marginBottom: '10px',
+                          fontSize: '11px'
+                        }}>
+                          <p style={{ margin: '0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            📍 <strong>Tracking:</strong> {order.trackingNumber}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Notes */}
+                      {order.notes && (
+                        <div style={{ 
+                          background: 'rgba(0,102,51,0.05)', 
+                          padding: '8px', 
+                          borderRadius: '8px',
+                          fontSize: '11px',
+                          fontStyle: 'italic'
+                        }}>
+                          <p style={{ margin: '0', color: 'var(--text-secondary)' }}>
+                            📝 {order.notes}
+                          </p>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))
