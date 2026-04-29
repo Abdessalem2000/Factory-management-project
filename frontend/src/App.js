@@ -63,12 +63,11 @@ const tData = {
 
 /* Authenticated Application Component */
 function AuthenticatedApp() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [lang, setLang] = useState("en");
   const t = tData[lang];
   
-  const [activeTab, setActiveTab] = useState("dashboard");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   
   const [clients, setClients] = useState([]);
   const [products, setProducts] = useState([]);
@@ -962,92 +961,6 @@ function AuthenticatedApp() {
                   {loadingAction ? '⏳ Adding Product...' : '✅ Add Product'}
                 </button>
               </div>
-
-              {/* Pricing Section */}
-              <div style={{ background: 'rgba(0,102,51,0.05)', padding: '20px', borderRadius: '10px', margin: '20px 0' }}>
-                <h4 style={{ margin: '0 0 15px 0', color: 'var(--primary-dark)' }}>💰 Pricing</h4>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
-                  <div className="form-group">
-                    <label>Retail Price ({t.currency}) *</label>
-                    <input name="retailPrice" type="number" step="0.01" placeholder="0.00" required />
-                  </div>
-                  <div className="form-group">
-                    <label>Wholesale Price ({t.currency}) *</label>
-                    <input name="wholesalePrice" type="number" step="0.01" placeholder="0.00" required />
-                  </div>
-                  <div className="form-group">
-                    <label>Cost ({t.currency}) *</label>
-                    <input name="cost" type="number" step="0.01" placeholder="0.00" required />
-                  </div>
-                  <div className="form-group">
-                    <label>Currency</label>
-                    <select name="currency">
-                      <option value="DZD">DZD - Algerian Dinar</option>
-                      <option value="EUR">EUR - Euro</option>
-                      <option value="USD">USD - US Dollar</option>
-                    </select>
-                  </div>
-                  <div className="form-group">
-                    <label>Country</label>
-                    <input name="country" placeholder="Algeria" value="Algeria" readOnly />
-                  </div>
-                </div>
-              </div>
-
-              {/* Notes Section */}
-              <div style={{ background: 'rgba(0,102,51,0.05)', padding: '20px', borderRadius: '10px', margin: '20px 0' }}>
-                <h4 style={{ margin: '0 0 15px 0', color: 'var(--primary-dark)' }}>� Additional Information</h4>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '15px' }}>
-                  <div className="form-group">
-                    <label>Company</label>
-                    <input name="company" placeholder="Company name" />
-                  </div>
-                  <div className="form-group">
-                    <label>Tax ID</label>
-                    <input name="taxId" placeholder="Tax identification number" />
-                  </div>
-                  <div className="form-group">
-                    <label>Credit Limit</label>
-                    <input name="creditLimit" type="number" placeholder="0.00" />
-                  </div>
-                  <div className="form-group">
-                    <label>Payment Terms</label>
-                    <select name="paymentTerms">
-                      <option value="COD">Cash on Delivery</option>
-                      <option value="7 Days">7 Days</option>
-                      <option value="14 Days">14 Days</option>
-                      <option value="30 Days">30 Days</option>
-                      <option value="60 Days">60 Days</option>
-                    </select>
-                  </div>
-                  <div className="form-group">
-                    <label>Account Status</label>
-                    <select name="status">
-                      <option value="Active">Active</option>
-                      <option value="Inactive">Inactive</option>
-                      <option value="Suspended">Suspended</option>
-                    </select>
-                  </div>
-                  <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                    <label>Notes</label>
-                    <textarea name="notes" placeholder="Additional notes about this client" rows="3"></textarea>
-                  </div>
-                </div>
-              </div>
-
-              <div style={{ gridColumn: '1 / -1', textAlign: 'center' }}>
-                <button type="submit" disabled={loadingAction} className="btn" style={{ 
-                  background: 'var(--gradient-success)', 
-                  border: 'none', 
-                  color: 'white', 
-                  padding: '15px 40px', 
-                  fontSize: '18px', 
-                  borderRadius: '8px',
-                  fontWeight: 'bold' 
-                }}>
-                  {loadingAction ? '⏳ Adding Product...' : '✅ Add Product'}
-                </button>
-              </div>
             </form>
               </div>
             </div>
@@ -1293,6 +1206,7 @@ function AuthenticatedApp() {
                 👤 Add New Client
               </h2>
               <form onSubmit={addClient}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
                 <div className="form-group">
                   <label>Client Name *</label>
                   <input name="name" placeholder="Enter client name" required />
@@ -1335,56 +1249,6 @@ function AuthenticatedApp() {
                     <option value="Suspended">Suspended</option>
                   </select>
                 </div>
-              </div>
-
-              {/* Address Section */}
-              <div style={{ background: 'rgba(0,102,51,0.05)', padding: '20px', borderRadius: '10px', margin: '20px 0' }}>
-                <h4 style={{ margin: '0 0 15px 0', color: 'var(--primary-dark)' }}>📍 Address Information</h4>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '15px' }}>
-                  <div className="form-group">
-                    <label>Address *</label>
-                    <input name="address" placeholder="Street address" required />
-                  </div>
-                  <div className="form-group">
-                    <label>City *</label>
-                    <input name="city" placeholder="City" required />
-                  </div>
-                  <div className="form-group">
-                    <label>Province *</label>
-                    <input name="province" placeholder="Province" required />
-                  </div>
-                  <div className="form-group">
-                    <label>Postal Code</label>
-                    <input name="postalCode" placeholder="XXXXX" />
-                  </div>
-                  <div className="form-group">
-                    <label>Country</label>
-                    <input name="country" placeholder="Algeria" value="Algeria" readOnly />
-                  </div>
-                </div>
-              </div>
-
-              {/* Notes Section */}
-              <div style={{ background: 'rgba(0,102,51,0.05)', padding: '20px', borderRadius: '10px', margin: '20px 0' }}>
-                <h4 style={{ margin: '0 0 15px 0', color: 'var(--primary-dark)' }}>📝 Additional Information</h4>
-                <div className="form-group">
-                  <label>Notes</label>
-                  <textarea name="notes" placeholder="Enter client notes, preferences, special requirements..." rows="3"></textarea>
-                </div>
-              </div>
-
-              <div style={{ gridColumn: '1 / -1', textAlign: 'center' }}>
-                <button type="submit" disabled={loadingAction} className="btn" style={{ 
-                  background: 'var(--gradient-success)', 
-                  border: 'none', 
-                  color: 'white', 
-                  padding: '15px 40px', 
-                  fontSize: '18px', 
-                  borderRadius: '8px',
-                  fontWeight: 'bold' 
-                }}>
-                  {loadingAction ? '⏳ Adding Client...' : '✅ Add Client'}
-                </button>
               </div>
             </form>
             </div>
