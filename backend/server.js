@@ -678,6 +678,7 @@ const User = mongoose.model('User', new mongoose.Schema({
 
 // Client Schema
 const Client = mongoose.model('Client', new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   name: { type: String, required: true },
   phone: { type: String, required: true },
   email: { type: String, required: true },
@@ -699,6 +700,7 @@ const Client = mongoose.model('Client', new mongoose.Schema({
 
 // Product Schema
 const Product = mongoose.model('Product', new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   name: { type: String, required: true },
   sku: { type: String, required: true, unique: true },
   barcode: String,
@@ -719,7 +721,7 @@ const Product = mongoose.model('Product', new mongoose.Schema({
     reorderPoint: { type: Number, default: 0 },
     location: String,
     lastRestocked: Date,
-    stockStatus: { 
+    stockStatus: {
       type: String, 
       enum: ['In Stock', 'Low Stock', 'Out of Stock', 'Discontinued'], 
       default: 'In Stock' 
@@ -741,6 +743,7 @@ const Product = mongoose.model('Product', new mongoose.Schema({
 
 // Order Schema
 const Order = mongoose.model('Order', new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   orderNumber: { type: String, unique: true },
   client: { type: mongoose.Schema.Types.ObjectId, ref: 'Client', required: true },
   salesAgent: { type: mongoose.Schema.Types.ObjectId, ref: 'Worker' },
@@ -748,7 +751,7 @@ const Order = mongoose.model('Order', new mongoose.Schema({
     product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
     quantity: { type: Number, required: true, min: 1 },
     unitPrice: { type: Number, required: true, min: 0 },
-    discount: { type: Number, default: 0, min: 0, max: 100 },
+    discount: { type: Number, default: 0 },
     totalPrice: { type: Number, required: true }
   }],
   pricing: {
@@ -758,15 +761,15 @@ const Order = mongoose.model('Order', new mongoose.Schema({
     total: { type: Number, required: true }
   },
   payment: {
-    method: { type: String, enum: ['Cash', 'Credit', 'Bank Transfer', 'Mobile Money'], required: true },
-    status: { type: String, enum: ['Pending', 'Paid', 'Failed', 'Refunded'], default: 'Pending' },
+    method: { type: String, enum: ['Cash', 'Card', 'Bank Transfer', 'Check'], default: 'Cash' },
+    status: { type: String, enum: ['Pending', 'Paid', 'Refunded'], default: 'Pending' },
     paidAt: Date
   },
   delivery: {
-    type: { type: String, enum: ['Delivery', 'Pickup'], required: true },
-    address: { type: String, required: true },
-    scheduledDate: { type: Date, required: true },
-    status: { type: String, enum: ['Pending', 'In Transit', 'Delivered', 'Cancelled'], default: 'Pending' },
+    type: { type: String, enum: ['Pickup', 'Standard', 'Express'], default: 'Standard' },
+    address: String,
+    scheduledDate: Date,
+    status: { type: String, enum: ['Pending', 'Processing', 'Shipped', 'Delivered'], default: 'Pending' },
     deliveredAt: Date
   },
   status: { 
@@ -848,7 +851,7 @@ app.get('/api/clients', authenticateToken, async (req, res) => {
       ]);
     }
     
-    const clients = await Client.find().sort({ createdAt: -1 });
+    const clients = await Client.find({ userId: req.user.userId }).sort({ createdAt: -1 });
     res.json(clients);
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -863,6 +866,7 @@ app.post('/api/clients', authenticateToken, async (req, res) => {
     clientData.totalOrders = 0;
     clientData.totalSpent = 0;
     clientData.status = 'Active';
+    clientData.userId = req.user.userId;
     
     const client = new Client(clientData);
     await client.save();
@@ -1041,7 +1045,7 @@ app.get('/api/products', authenticateToken, async (req, res) => {
       ]);
     }
     
-    const products = await Product.find().sort({ createdAt: -1 });
+    const products = await Product.find({ userId: req.user.userId }).sort({ createdAt: -1 });
     res.json(products);
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -1067,6 +1071,9 @@ app.post('/api/products', authenticateToken, async (req, res) => {
     if (productData.inventory && productData.inventory.quantity > 0) {
       productData.inventory.lastRestocked = new Date();
     }
+    
+    // Set userId for the product
+    productData.userId = req.user.userId;
     
     const product = new Product(productData);
     await product.save();
@@ -1304,7 +1311,7 @@ app.get('/api/orders', authenticateToken, async (req, res) => {
         }
       ]);
     }
-    const orders = await Order.find()
+    const orders = await Order.find({ userId: req.user.userId })
       .populate('client', 'name phone email')
       .populate('salesAgent', 'firstName lastName')
       .populate('items.product', 'name sku')
@@ -1476,6 +1483,9 @@ app.post('/api/orders', authenticateToken, async (req, res) => {
       orderData.payment.status = 'Paid';
       orderData.delivery.status = 'Delivered';
     }
+    
+    // Set userId for the order
+    orderData.userId = req.user.userId;
     
     // Create the order
     const order = new Order(orderData);

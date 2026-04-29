@@ -4,6 +4,7 @@ import axios from "axios";
 import { AuthProvider, useAuth } from "./AuthContext";
 import Login from "./Login";
 import Register from "./Register";
+import SidebarLayout from "./SidebarLayout";
 import './App.css';
 
 const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
@@ -455,51 +456,32 @@ function AuthenticatedApp() {
   }
 
   return (
-    <div className="container">
-      {/* Magical Header */}
-      <div className="header">
-        <h2>{t.title}</h2>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-          <div style={{ textAlign: 'right', fontSize: '14px' }}>
-            <div style={{ fontWeight: 'bold', color: 'var(--primary-dark)' }}>
-              {user.firstName} {user.lastName}
-            </div>
-            <div style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>
-              {user.role} • {user.department}
-            </div>
-          </div>
-          <button onClick={() => setLang("en")}>English</button>
-          <button onClick={() => setLang("fr")}>Français</button>
-          <button 
-            onClick={logout}
-            style={{ 
-              background: 'var(--danger)', 
-              color: 'white', 
-              border: 'none', 
-              padding: '8px 16px',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '14px'
-            }}
-          >
-            Logout
-          </button>
-        </div>
-      </div>
-      
-      <p>{t.subtitle}</p>
-
-      {/* Professional Navigation */}
-      <div className="nav">
-        {["dashboard", "clients", "orders", "products"].map((tab) => (
-          <button 
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={activeTab === tab ? "active" : ""}
-          >
-            {t[tab]}
-          </button>
-        ))}
+    <SidebarLayout activeTab={activeTab} setActiveTab={setActiveTab}>
+      {/* Language Selector */}
+      <div style={{ marginBottom: '20px', textAlign: 'right' }}>
+        <button onClick={() => setLang("en")} style={{ 
+          background: 'var(--primary-green)', 
+          color: 'white', 
+          border: 'none', 
+          padding: '8px 16px',
+          borderRadius: '6px',
+          cursor: 'pointer',
+          fontSize: '14px',
+          marginRight: '10px'
+        }}>
+          English
+        </button>
+        <button onClick={() => setLang("fr")} style={{ 
+          background: 'var(--primary-green)', 
+          color: 'white', 
+          border: 'none', 
+          padding: '8px 16px',
+          borderRadius: '6px',
+          cursor: 'pointer',
+          fontSize: '14px'
+        }}>
+          Français
+        </button>
       </div>
 
       {/* Dashboard */}
@@ -1005,65 +987,50 @@ function AuthenticatedApp() {
                       <option value="USD">USD - US Dollar</option>
                     </select>
                   </div>
-                </div>
-              </div>
-
-              {/* Stock Section */}
-              <div style={{ background: 'rgba(0,102,51,0.05)', padding: '20px', borderRadius: '10px', margin: '20px 0' }}>
-                <h4 style={{ margin: '0 0 15px 0', color: 'var(--primary-dark)' }}>📦 Inventory Management</h4>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
                   <div className="form-group">
-                    <label>{t.quantity} *</label>
-                    <input name="quantity" type="number" placeholder="0" required />
-                  </div>
-                  <div className="form-group">
-                    <label>Minimum Stock *</label>
-                    <input name="minStock" type="number" placeholder="0" required />
-                  </div>
-                  <div className="form-group">
-                    <label>Maximum Stock</label>
-                    <input name="maxStock" type="number" placeholder="1000" />
-                  </div>
-                  <div className="form-group">
-                    <label>Reorder Point</label>
-                    <input name="reorderPoint" type="number" placeholder="0" />
-                  </div>
-                  <div className="form-group">
-                    <label>Storage Location</label>
-                    <input name="location" placeholder="Warehouse A, Shelf 1" />
+                    <label>Country</label>
+                    <input name="country" placeholder="Algeria" value="Algeria" readOnly />
                   </div>
                 </div>
               </div>
 
-              {/* Dimensions Section */}
+              {/* Notes Section */}
               <div style={{ background: 'rgba(0,102,51,0.05)', padding: '20px', borderRadius: '10px', margin: '20px 0' }}>
-                <h4 style={{ margin: '0 0 15px 0', color: 'var(--primary-dark)' }}>📏 Product Dimensions</h4>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+                <h4 style={{ margin: '0 0 15px 0', color: 'var(--primary-dark)' }}>� Additional Information</h4>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '15px' }}>
                   <div className="form-group">
-                    <label>Weight (kg)</label>
-                    <input name="weight" type="number" step="0.1" placeholder="0.0" />
+                    <label>Company</label>
+                    <input name="company" placeholder="Company name" />
                   </div>
                   <div className="form-group">
-                    <label>Length (cm)</label>
-                    <input name="length" type="number" step="0.1" placeholder="0.0" />
+                    <label>Tax ID</label>
+                    <input name="taxId" placeholder="Tax identification number" />
                   </div>
                   <div className="form-group">
-                    <label>Width (cm)</label>
-                    <input name="width" type="number" step="0.1" placeholder="0.0" />
+                    <label>Credit Limit</label>
+                    <input name="creditLimit" type="number" placeholder="0.00" />
                   </div>
                   <div className="form-group">
-                    <label>Height (cm)</label>
-                    <input name="height" type="number" step="0.1" placeholder="0.0" />
-                  </div>
-                  <div className="form-group">
-                    <label>Unit</label>
-                    <select name="unit">
-                      <option value="kg">Kilograms</option>
-                      <option value="g">Grams</option>
-                      <option value="cm">Centimeters</option>
-                      <option value="m">Meters</option>
-                      <option value="l">Liters</option>
+                    <label>Payment Terms</label>
+                    <select name="paymentTerms">
+                      <option value="COD">Cash on Delivery</option>
+                      <option value="7 Days">7 Days</option>
+                      <option value="14 Days">14 Days</option>
+                      <option value="30 Days">30 Days</option>
+                      <option value="60 Days">60 Days</option>
                     </select>
+                  </div>
+                  <div className="form-group">
+                    <label>Account Status</label>
+                    <select name="status">
+                      <option value="Active">Active</option>
+                      <option value="Inactive">Inactive</option>
+                      <option value="Suspended">Suspended</option>
+                    </select>
+                  </div>
+                  <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                    <label>Notes</label>
+                    <textarea name="notes" placeholder="Additional notes about this client" rows="3"></textarea>
                   </div>
                 </div>
               </div>
@@ -2148,7 +2115,7 @@ function AuthenticatedApp() {
           </div>
         </div>
       )}
-    </div>
+    </SidebarLayout>
   );
 }
 
