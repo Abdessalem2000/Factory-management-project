@@ -173,15 +173,31 @@ export default function App() {
         name: formData.get('name'),
         sku: formData.get('sku'),
         barcode: formData.get('barcode'),
+        description: formData.get('description'),
+        category: formData.get('category'),
+        brand: formData.get('brand'),
+        supplier: formData.get('supplier'),
         price: {
-          retail: parseFloat(formData.get('retailPrice')) || 0,
-          wholesale: parseFloat(formData.get('wholesalePrice')) || 0,
-          cost: parseFloat(formData.get('cost')) || 0
+          retail: parseFloat(formData.get('retailPrice')),
+          wholesale: parseFloat(formData.get('wholesalePrice')),
+          cost: parseFloat(formData.get('cost')),
+          currency: formData.get('currency')
         },
         inventory: {
-          quantity: parseInt(formData.get('quantity')) || 0,
-          minStock: parseInt(formData.get('minStock')) || 0
-        }
+          quantity: parseInt(formData.get('quantity')),
+          minStock: parseInt(formData.get('minStock')),
+          maxStock: parseInt(formData.get('maxStock')),
+          reorderPoint: parseInt(formData.get('reorderPoint')),
+          location: formData.get('location')
+        },
+        dimensions: {
+          weight: parseFloat(formData.get('weight')),
+          length: parseFloat(formData.get('length')),
+          width: parseFloat(formData.get('width')),
+          height: parseFloat(formData.get('height')),
+          unit: formData.get('unit')
+        },
+        status: 'Active'
       };
       
       await axios.post(`${API_BASE}/products`, productData);
@@ -194,6 +210,51 @@ export default function App() {
     }
     
     setLoadingAction(false);
+  };
+
+  /* Update Stock */
+  const updateStock = async (productId, quantity, operation) => {
+    try {
+      const response = await axios.put(`${API_BASE}/products/${productId}/stock`, {
+        quantity,
+        operation
+      });
+      
+      if (response.data.success) {
+        refresh("products", setProducts);
+        const message = operation === 'add' 
+          ? `Successfully added ${quantity} units to inventory!`
+          : `Successfully removed ${quantity} units from inventory!`;
+        alert(message);
+      }
+    } catch (err) {
+      alert("Error updating stock");
+    }
+  };
+
+  /* Fetch Low Stock Products */
+  const fetchLowStockProducts = async () => {
+    try {
+      const response = await axios.get(`${API_BASE}/products/low-stock`);
+      const lowStockProducts = response.data;
+      
+      if (lowStockProducts.length > 0) {
+        const stockList = lowStockProducts.map(p => 
+          `${p.name} (${p.inventory?.quantity} units - ${p.inventory?.stockStatus})`
+        ).join('\n');
+        
+        alert(`⚠️ Low Stock Alert!\n\n${stockList}\n\nPlease consider reordering these products.`);
+      } else {
+        alert("✅ All products are in stock!");
+      }
+    } catch (err) {
+      alert("Error fetching low stock products");
+    }
+  };
+
+  /* Edit Product */
+  const editProduct = (productId) => {
+    alert(`Edit product functionality for ID: ${productId}\n\nThis feature would open an edit form with current product data.`);
   };
 
   /* Add Order */
@@ -561,22 +622,60 @@ export default function App() {
 
       {/* Products Section */}
       {activeTab === "products" && (
-        <div className="card">
-          <h3>{t.products}</h3>
-          
-          {/* Add Product Button */}
-          <button 
-            onClick={() => setShowProductForm(!showProductForm)}
-            className="btn btn-success"
-            style={{ marginBottom: '20px' }}
-          >
-            {showProductForm ? 'Cancel' : '➕ ' + t.addProduct}
-          </button>
+        <div>
+          {/* Enhanced Products Header */}
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center', 
+            marginBottom: '25px',
+            padding: '0 20px',
+            borderBottom: '2px solid rgba(0,102,51,0.1)',
+            paddingBottom: '15px'
+          }}>
+            <h3 style={{ fontSize: '24px', color: 'var(--primary-dark)', margin: '0' }}>
+              🛍️ {t.products}
+            </h3>
+            <div style={{ display: 'flex', gap: '15px' }}>
+              <button 
+                onClick={() => setShowProductForm(!showProductForm)}
+                className="btn"
+                style={{
+                  background: 'var(--gradient-primary)',
+                  border: 'none',
+                  color: 'white',
+                  padding: '12px 24px',
+                  fontSize: '16px',
+                  borderRadius: '8px',
+                  fontWeight: 'bold'
+                }}
+              >
+                {showProductForm ? '✖ Cancel' : '➕ Add Product'}
+              </button>
+              <button 
+                onClick={() => fetchLowStockProducts()}
+                className="btn"
+                style={{
+                  background: 'var(--gradient-secondary)',
+                  border: 'none',
+                  color: 'white',
+                  padding: '12px 20px',
+                  fontSize: '14px',
+                  borderRadius: '8px'
+                }}
+              >
+                ⚠️ Low Stock Alert
+              </button>
+            </div>
+          </div>
 
           {/* Add Product Form */}
           {showProductForm && (
-            <div className="form">
-              <form onSubmit={addProduct}>
+            <div className="card" style={{ marginBottom: '30px' }}>
+              <h2 style={{ textAlign: 'center', marginBottom: '30px', color: 'var(--primary-dark)' }}>
+                📦 Add New Product
+              </h2>
+              <form onSubmit={addProduct} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
                 <div className="form-group">
                   <label>{t.productName} *</label>
                   <input name="name" placeholder="Enter product name" required />
@@ -590,44 +689,326 @@ export default function App() {
                   <input name="barcode" placeholder="Enter barcode" />
                 </div>
                 <div className="form-group">
-                  <label>Retail Price ({t.currency})</label>
-                  <input name="retailPrice" type="number" step="0.01" placeholder="0.00" />
+                  <label>Category</label>
+                  <select name="category">
+                    <option value="">Select Category</option>
+                    <option value="Beverages">Beverages</option>
+                    <option value="Food">Food</option>
+                    <option value="Snacks">Snacks</option>
+                    <option value="Household">Household</option>
+                    <option value="Other">Other</option>
+                  </select>
                 </div>
                 <div className="form-group">
-                  <label>Wholesale Price ({t.currency})</label>
-                  <input name="wholesalePrice" type="number" step="0.01" placeholder="0.00" />
+                  <label>Brand</label>
+                  <input name="brand" placeholder="Enter brand name" />
                 </div>
                 <div className="form-group">
-                  <label>Cost ({t.currency})</label>
-                  <input name="cost" type="number" step="0.01" placeholder="0.00" />
+                  <label>Supplier</label>
+                  <input name="supplier" placeholder="Enter supplier" />
                 </div>
                 <div className="form-group">
-                  <label>{t.quantity} *</label>
-                  <input name="quantity" type="number" placeholder="0" required />
+                  <label>Description</label>
+                  <textarea name="description" placeholder="Enter product description" rows="3"></textarea>
                 </div>
-                <div className="form-group">
-                  <label>Minimum Stock</label>
-                  <input name="minStock" type="number" placeholder="0" />
+              </div>
+
+              {/* Pricing Section */}
+              <div style={{ background: 'rgba(0,102,51,0.05)', padding: '20px', borderRadius: '10px', margin: '20px 0' }}>
+                <h4 style={{ margin: '0 0 15px 0', color: 'var(--primary-dark)' }}>💰 Pricing</h4>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+                  <div className="form-group">
+                    <label>Retail Price ({t.currency}) *</label>
+                    <input name="retailPrice" type="number" step="0.01" placeholder="0.00" required />
+                  </div>
+                  <div className="form-group">
+                    <label>Wholesale Price ({t.currency}) *</label>
+                    <input name="wholesalePrice" type="number" step="0.01" placeholder="0.00" required />
+                  </div>
+                  <div className="form-group">
+                    <label>Cost ({t.currency}) *</label>
+                    <input name="cost" type="number" step="0.01" placeholder="0.00" required />
+                  </div>
+                  <div className="form-group">
+                    <label>Currency</label>
+                    <select name="currency">
+                      <option value="DZD">DZD - Algerian Dinar</option>
+                      <option value="EUR">EUR - Euro</option>
+                      <option value="USD">USD - US Dollar</option>
+                    </select>
+                  </div>
                 </div>
-                <button type="submit" disabled={loadingAction} className="btn">
-                  {loadingAction ? 'Adding...' : '✅ ' + t.addProduct}
+              </div>
+
+              {/* Stock Section */}
+              <div style={{ background: 'rgba(0,102,51,0.05)', padding: '20px', borderRadius: '10px', margin: '20px 0' }}>
+                <h4 style={{ margin: '0 0 15px 0', color: 'var(--primary-dark)' }}>📦 Inventory Management</h4>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+                  <div className="form-group">
+                    <label>{t.quantity} *</label>
+                    <input name="quantity" type="number" placeholder="0" required />
+                  </div>
+                  <div className="form-group">
+                    <label>Minimum Stock *</label>
+                    <input name="minStock" type="number" placeholder="0" required />
+                  </div>
+                  <div className="form-group">
+                    <label>Maximum Stock</label>
+                    <input name="maxStock" type="number" placeholder="1000" />
+                  </div>
+                  <div className="form-group">
+                    <label>Reorder Point</label>
+                    <input name="reorderPoint" type="number" placeholder="0" />
+                  </div>
+                  <div className="form-group">
+                    <label>Storage Location</label>
+                    <input name="location" placeholder="Warehouse A" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Dimensions Section */}
+              <div style={{ background: 'rgba(0,102,51,0.05)', padding: '20px', borderRadius: '10px', margin: '20px 0' }}>
+                <h4 style={{ margin: '0 0 15px 0', color: 'var(--primary-dark)' }}>📏 Product Dimensions</h4>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+                  <div className="form-group">
+                    <label>Weight (kg)</label>
+                    <input name="weight" type="number" step="0.01" placeholder="0.00" />
+                  </div>
+                  <div className="form-group">
+                    <label>Length (cm)</label>
+                    <input name="length" type="number" step="0.1" placeholder="0.0" />
+                  </div>
+                  <div className="form-group">
+                    <label>Width (cm)</label>
+                    <input name="width" type="number" step="0.1" placeholder="0.0" />
+                  </div>
+                  <div className="form-group">
+                    <label>Height (cm)</label>
+                    <input name="height" type="number" step="0.1" placeholder="0.0" />
+                  </div>
+                  <div className="form-group">
+                    <label>Unit</label>
+                    <select name="unit">
+                      <option value="kg">Kilograms</option>
+                      <option value="g">Grams</option>
+                      <option value="cm">Centimeters</option>
+                      <option value="m">Meters</option>
+                      <option value="l">Liters</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ gridColumn: '1 / -1', textAlign: 'center' }}>
+                <button type="submit" disabled={loadingAction} className="btn" style={{ 
+                  background: 'var(--gradient-success)', 
+                  border: 'none', 
+                  color: 'white', 
+                  padding: '15px 40px', 
+                  fontSize: '18px', 
+                  borderRadius: '8px',
+                  fontWeight: 'bold' 
+                }}>
+                  {loadingAction ? '⏳ Adding Product...' : '✅ Add Product'}
                 </button>
-              </form>
+              </div>
+            </form>
             </div>
           )}
 
           {/* Products List */}
           <div className="list">
             {products.length === 0 ? (
-              <p style={{ textAlign: 'center', padding: '40px' }}>{t.noProducts}</p>
+              <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-secondary)' }}>
+                <div style={{ fontSize: '48px', marginBottom: '20px' }}>📦</div>
+                <p style={{ fontSize: '18px', marginBottom: '10px' }}>No products yet</p>
+                <p style={{ fontSize: '14px' }}>Add your first product to see it here!</p>
+              </div>
             ) : (
               products.map((product) => (
-                <div key={product._id} className="list-item">
-                  <div>
-                    <h4>{product.name}</h4>
-                    <p>SKU: {product.sku || 'N/A'}</p>
-                    <p>Retail: {product.price?.retail || 0} {t.currency}</p>
-                    <p>Stock: {product.inventory?.quantity || 0}</p>
+                <div key={product._id} className="list-item" style={{
+                  background: 'linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(240,248,255,0.98) 100%)',
+                  border: '1px solid rgba(0,102,51,0.1)',
+                  borderRadius: '12px',
+                  padding: '20px',
+                  marginBottom: '15px',
+                  transition: 'all 0.3s ease',
+                  borderLeft: `4px solid ${
+                    product.inventory?.stockStatus === 'Out of Stock' ? 'var(--danger)' : 
+                    product.inventory?.stockStatus === 'Low Stock' ? 'var(--warning)' : 'var(--success)'
+                  }`
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    {/* Left Column - Product Info */}
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+                        <h3 style={{ 
+                          margin: '0', 
+                          fontSize: '20px', 
+                          fontWeight: '700',
+                          color: 'var(--primary-dark)' 
+                        }}>
+                          {product.name}
+                        </h3>
+                        {product.category && (
+                          <span style={{
+                            background: 'var(--gradient-primary)',
+                            color: 'white',
+                            padding: '3px 8px',
+                            borderRadius: '12px',
+                            fontSize: '10px',
+                            marginLeft: '10px'
+                          }}>
+                            {product.category}
+                          </span>
+                        )}
+                      </div>
+                      <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '10px' }}>
+                        {product.brand && <p><strong>Brand:</strong> {product.brand}</p>}
+                        {product.supplier && <p><strong>Supplier:</strong> {product.supplier}</p>}
+                        {product.sku && <p><strong>SKU:</strong> {product.sku}</p>}
+                        {product.barcode && <p><strong>Barcode:</strong> {product.barcode}</p>}
+                        {product.description && <p><strong>Description:</strong> {product.description}</p>}
+                      </div>
+                      
+                      {/* Pricing Display */}
+                      <div style={{ 
+                        background: 'rgba(0,102,51,0.05)', 
+                        padding: '12px', 
+                        borderRadius: '8px', 
+                        marginBottom: '10px',
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+                        gap: '8px'
+                      }}>
+                        <div style={{ textAlign: 'center' }}>
+                          <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '3px' }}>💰 Retail</div>
+                          <div style={{ fontSize: '16px', fontWeight: 'bold', color: 'var(--accent-gold)' }}>
+                            {product.price?.retail?.toLocaleString() || 0} {product.price?.currency || 'DZD'}
+                          </div>
+                        </div>
+                        <div style={{ textAlign: 'center' }}>
+                          <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '3px' }}>🏪 Wholesale</div>
+                          <div style={{ fontSize: '16px', fontWeight: 'bold', color: 'var(--success)' }}>
+                            {product.price?.wholesale?.toLocaleString() || 0} {product.price?.currency || 'DZD'}
+                          </div>
+                        </div>
+                        <div style={{ textAlign: 'center' }}>
+                          <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '3px' }}>💸 Cost</div>
+                          <div style={{ fontSize: '16px', fontWeight: 'bold', color: 'var(--info)' }}>
+                            {product.price?.cost?.toLocaleString() || 0} {product.price?.currency || 'DZD'}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Stock Status */}
+                      <div style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '15px', 
+                        marginBottom: '10px',
+                        fontSize: '14px'
+                      }}>
+                        <div style={{ textAlign: 'center' }}>
+                          <div style={{ 
+                            fontSize: '24px', 
+                            fontWeight: 'bold',
+                            color: product.inventory?.stockStatus === 'Out of Stock' ? 'var(--danger)' : 
+                                   product.inventory?.stockStatus === 'Low Stock' ? 'var(--warning)' : 'var(--success)'
+                          }}>
+                            {product.inventory?.quantity || 0}
+                          </div>
+                          <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Units</div>
+                        </div>
+                        <div style={{ textAlign: 'center' }}>
+                          <div style={{ 
+                            fontSize: '14px', 
+                            color: 'var(--text-secondary)',
+                            marginBottom: '5px'
+                          }}>
+                            Min: {product.inventory?.minStock || 0}
+                          </div>
+                          <div style={{ 
+                            fontSize: '14px', 
+                            color: 'var(--text-secondary)',
+                            marginBottom: '5px'
+                          }}>
+                            Max: {product.inventory?.maxStock || 1000}
+                          </div>
+                          <div style={{ 
+                            fontSize: '14px', 
+                            color: 'var(--text-secondary)'
+                          }}>
+                            Reorder: {product.inventory?.reorderPoint || 0}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Location and Dimensions */}
+                      <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+                        {product.inventory?.location && <p><strong>📍 Location:</strong> {product.inventory.location}</p>}
+                        {product.inventory?.lastRestocked && (
+                          <p><strong>📅 Last Restocked:</strong> {new Date(product.inventory.lastRestocked).toLocaleDateString()}</p>
+                        )}
+                        {product.dimensions && (
+                          <div style={{ marginTop: '5px' }}>
+                            <strong>📏 Dimensions:</strong> {product.dimensions.weight || 0}{product.dimensions.unit || 'kg'}, {product.dimensions.length || 0}×{product.dimensions.width || 0}×{product.dimensions.height || 0} {product.dimensions.unit || 'cm'}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Right Column - Status & Actions */}
+                    <div style={{ textAlign: 'right', minWidth: '200px' }}>
+                      {/* Stock Status Badge */}
+                      <div style={{
+                        background: product.inventory?.stockStatus === 'Out of Stock' ? 'var(--danger)' : 
+                                   product.inventory?.stockStatus === 'Low Stock' ? 'var(--warning)' : 'var(--success)',
+                        color: 'white',
+                        padding: '8px 16px',
+                        borderRadius: '20px',
+                        fontSize: '12px',
+                        fontWeight: 'bold',
+                        marginBottom: '15px',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px'
+                      }}>
+                        {product.inventory?.stockStatus || 'In Stock'}
+                      </div>
+                      
+                      {/* Status Indicator */}
+                      <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '10px' }}>
+                        {product.inventory?.stockStatus === 'Out of Stock' && '⚠️ Out of Stock - Order Immediately!'}
+                        {product.inventory?.stockStatus === 'Low Stock' && '⚠️ Low Stock - Consider Reordering!'}
+                        {product.inventory?.stockStatus === 'In Stock' && '✅ In Stock'}
+                      </div>
+                      
+                      {/* Action Buttons */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <button 
+                          onClick={() => updateStock(product._id, 10, 'add')}
+                          className="btn"
+                          style={{ fontSize: '12px', padding: '8px 12px' }}
+                        >
+                          📦 Add Stock
+                        </button>
+                        <button 
+                          onClick={() => updateStock(product._id, 1, 'subtract')}
+                          className="btn"
+                          style={{ fontSize: '12px', padding: '8px 12px' }}
+                        >
+                          📤 Remove Stock
+                        </button>
+                        <button 
+                          onClick={() => editProduct(product._id)}
+                          className="btn"
+                          style={{ fontSize: '12px', padding: '8px 12px' }}
+                        >
+                          ✏️ Edit
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               ))

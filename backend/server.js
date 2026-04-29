@@ -358,14 +358,40 @@ const Product = mongoose.model('Product', new mongoose.Schema({
   name: { type: String, required: true },
   sku: { type: String, required: true, unique: true },
   barcode: String,
+  description: String,
+  category: { type: String, enum: ['Beverages', 'Food', 'Snacks', 'Household', 'Other'], default: 'Other' },
+  brand: String,
+  supplier: String,
   price: {
-    retail: { type: Number, default: 0 },
-    wholesale: { type: Number, default: 0 },
-    cost: { type: Number, default: 0 }
+    retail: { type: Number, required: true, min: 0 },
+    wholesale: { type: Number, required: true, min: 0 },
+    cost: { type: Number, required: true, min: 0 },
+    currency: { type: String, default: 'DZD' }
   },
   inventory: {
-    quantity: { type: Number, default: 0 },
-    minStock: { type: Number, default: 0 }
+    quantity: { type: Number, required: true, min: 0 },
+    minStock: { type: Number, required: true, min: 0 },
+    maxStock: { type: Number, default: 1000 },
+    reorderPoint: { type: Number, default: 0 },
+    location: String,
+    lastRestocked: Date,
+    stockStatus: { 
+      type: String, 
+      enum: ['In Stock', 'Low Stock', 'Out of Stock', 'Discontinued'], 
+      default: 'In Stock' 
+    }
+  },
+  dimensions: {
+    weight: Number,
+    length: Number,
+    width: Number,
+    height: Number,
+    unit: { type: String, enum: ['kg', 'g', 'cm', 'm', 'l'], default: 'kg' }
+  },
+  status: { 
+    type: String, 
+    enum: ['Active', 'Inactive', 'Discontinued'], 
+    default: 'Active' 
   }
 }, { timestamps: true }));
 
@@ -439,13 +465,78 @@ app.post('/api/clients', async (req, res) => {
 // Products endpoints
 app.get('/api/products', async (req, res) => {
   try {
-    // If MongoDB is not connected, return mock data
+    // If MongoDB is not connected, return enhanced mock data
     if (mongoose.connection.readyState !== 1) {
       return res.json([
-        { _id: '1', name: 'Coca-Cola 330ml', sku: 'CC-330', barcode: '123456789', price: { retail: 120, wholesale: 100, cost: 80 }, inventory: { quantity: 500, minStock: 50 } },
-        { _id: '2', name: 'Fanta Orange 330ml', sku: 'FO-330', barcode: '987654321', price: { retail: 110, wholesale: 90, cost: 70 }, inventory: { quantity: 300, minStock: 30 } }
+        { 
+          _id: '1', 
+          name: 'Coca-Cola 330ml', 
+          sku: 'CC-330', 
+          barcode: '123456789',
+          description: 'Refreshing Coca-Cola soft drink',
+          category: 'Beverages',
+          brand: 'Coca-Cola',
+          supplier: 'Coca-Cola Algeria',
+          price: { retail: 120, wholesale: 100, cost: 80, currency: 'DZD' },
+          inventory: { 
+            quantity: 500, 
+            minStock: 50, 
+            maxStock: 2000,
+            reorderPoint: 100,
+            location: 'Warehouse A',
+            lastRestocked: new Date('2026-04-01'),
+            stockStatus: 'In Stock'
+          },
+          dimensions: { weight: 0.33, length: 6, width: 6, height: 20, unit: 'cm' },
+          status: 'Active'
+        },
+        { 
+          _id: '2', 
+          name: 'Fanta Orange 330ml', 
+          sku: 'FO-330', 
+          barcode: '987654321',
+          description: 'Refreshing orange flavored soft drink',
+          category: 'Beverages',
+          brand: 'Fanta',
+          supplier: 'Coca-Cola Algeria',
+          price: { retail: 110, wholesale: 90, cost: 70, currency: 'DZD' },
+          inventory: { 
+            quantity: 45, 
+            minStock: 50, 
+            maxStock: 1000,
+            reorderPoint: 75,
+            location: 'Warehouse B',
+            lastRestocked: new Date('2026-04-15'),
+            stockStatus: 'Low Stock'
+          },
+          dimensions: { weight: 0.33, length: 6, width: 6, height: 20, unit: 'cm' },
+          status: 'Active'
+        },
+        { 
+          _id: '3', 
+          name: 'Reggaoui Chips 25g', 
+          sku: 'RG-025', 
+          barcode: '456789012',
+          description: 'Popular Algerian potato chips',
+          category: 'Snacks',
+          brand: 'Reggaoui',
+          supplier: 'Reggaoui Algeria',
+          price: { retail: 85, wholesale: 70, cost: 55, currency: 'DZD' },
+          inventory: { 
+            quantity: 5, 
+            minStock: 20, 
+            maxStock: 500,
+            reorderPoint: 50,
+            location: 'Warehouse A',
+            lastRestocked: new Date('2026-04-10'),
+            stockStatus: 'Out of Stock'
+          },
+          dimensions: { weight: 0.025, length: 15, width: 10, height: 2, unit: 'cm' },
+          status: 'Active'
+        }
       ]);
     }
+    
     const products = await Product.find().sort({ createdAt: -1 });
     res.json(products);
   } catch (err) {
@@ -455,9 +546,97 @@ app.get('/api/products', async (req, res) => {
 
 app.post('/api/products', async (req, res) => {
   try {
-    const product = new Product(req.body);
+    const productData = req.body;
+    
+    // Auto-calculate stock status based on quantity and minStock
+    if (productData.inventory && productData.inventory.minStock) {
+      if (productData.inventory.quantity <= 0) {
+        productData.inventory.stockStatus = 'Out of Stock';
+      } else if (productData.inventory.quantity <= productData.inventory.minStock) {
+        productData.inventory.stockStatus = 'Low Stock';
+      } else {
+        productData.inventory.stockStatus = 'In Stock';
+      }
+    }
+    
+    // Set last restocked date if creating new stock
+    if (productData.inventory && productData.inventory.quantity > 0) {
+      productData.inventory.lastRestocked = new Date();
+    }
+    
+    const product = new Product(productData);
     await product.save();
     res.status(201).json(product);
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Update product stock
+app.put('/api/products/:id/stock', async (req, res) => {
+  try {
+    const { quantity, operation } = req.body;
+    const product = await Product.findById(req.params.id);
+    
+    if (!product) {
+      return res.status(404).json({ success: false, error: 'Product not found' });
+    }
+    
+    // Update stock based on operation
+    if (operation === 'add') {
+      product.inventory.quantity += quantity;
+      product.inventory.lastRestocked = new Date();
+    } else if (operation === 'subtract') {
+      product.inventory.quantity = Math.max(0, product.inventory.quantity - quantity);
+    }
+    
+    // Auto-update stock status
+    if (product.inventory.quantity <= 0) {
+      product.inventory.stockStatus = 'Out of Stock';
+    } else if (product.inventory.quantity <= product.inventory.minStock) {
+      product.inventory.stockStatus = 'Low Stock';
+    } else {
+      product.inventory.stockStatus = 'In Stock';
+    }
+    
+    await product.save();
+    res.json({ success: true, data: product });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Get low stock products
+app.get('/api/products/low-stock', async (req, res) => {
+  try {
+    // If MongoDB is not connected, return mock low stock data
+    if (mongoose.connection.readyState !== 1) {
+      return res.json([
+        {
+          _id: '2',
+          name: 'Fanta Orange 330ml',
+          sku: 'FO-330',
+          inventory: { quantity: 45, minStock: 50, stockStatus: 'Low Stock' },
+          price: { retail: 110, wholesale: 90 }
+        },
+        {
+          _id: '3',
+          name: 'Reggaoui Chips 25g',
+          sku: 'RG-025',
+          inventory: { quantity: 5, minStock: 20, stockStatus: 'Out of Stock' },
+          price: { retail: 85, wholesale: 70 }
+        }
+      ]);
+    }
+    
+    const lowStockProducts = await Product.find({
+      $or: [
+        { 'inventory.stockStatus': 'Low Stock' },
+        { 'inventory.stockStatus': 'Out of Stock' }
+      ]
+    }).sort({ 'inventory.quantity': 1 });
+    
+    res.json(lowStockProducts);
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
