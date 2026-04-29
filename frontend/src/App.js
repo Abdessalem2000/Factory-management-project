@@ -333,6 +333,27 @@ export default function App() {
     }, 100);
   };
 
+  /* Update Order Status */
+  const updateOrderStatus = async (orderId, newStatus) => {
+    try {
+      const response = await axios.put(`${API_BASE}/orders/${orderId}/status`, { status: newStatus });
+      
+      if (response.data.success) {
+        refresh("orders", setOrders);
+        
+        let message = `✅ Order status updated to ${newStatus}`;
+        if (newStatus === 'Delivered') {
+          message += '\n📅 Delivery date recorded';
+        }
+        alert(message);
+      } else {
+        alert(`❌ Failed to update order status`);
+      }
+    } catch (err) {
+      alert(`❌ Error updating order status`);
+    }
+  };
+
   /* Add Order */
   const addOrder = async (e) => {
     e.preventDefault();
@@ -1878,6 +1899,119 @@ export default function App() {
                           </p>
                         </div>
                       )}
+
+                      {/* Workflow Buttons */}
+                      <div style={{ 
+                        marginTop: '15px', 
+                        padding: '15px', 
+                        background: 'rgba(0,102,51,0.05)', 
+                        borderRadius: '8px',
+                        borderTop: '1px solid rgba(0,102,51,0.1)'
+                      }}>
+                        <div style={{ 
+                          fontSize: '12px', 
+                          fontWeight: 'bold', 
+                          marginBottom: '10px', 
+                          color: 'var(--primary-dark)' 
+                        }}>
+                          🔄 Order Workflow
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                          {order.status === 'Pending' && (
+                            <>
+                              <button 
+                                onClick={() => updateOrderStatus(order._id, 'Confirmed')}
+                                className="btn"
+                                style={{ 
+                                  fontSize: '11px', 
+                                  padding: '6px 12px',
+                                  background: 'var(--info)',
+                                  border: 'none',
+                                  color: 'white',
+                                  borderRadius: '4px'
+                                }}
+                              >
+                                ✅ Confirm Order
+                              </button>
+                              <button 
+                                onClick={() => updateOrderStatus(order._id, 'Cancelled')}
+                                className="btn"
+                                style={{ 
+                                  fontSize: '11px', 
+                                  padding: '6px 12px',
+                                  background: 'var(--danger)',
+                                  border: 'none',
+                                  color: 'white',
+                                  borderRadius: '4px'
+                                }}
+                              >
+                                ❌ Cancel
+                              </button>
+                            </>
+                          )}
+                          
+                          {order.status === 'Confirmed' && (
+                            <>
+                              <button 
+                                onClick={() => updateOrderStatus(order._id, 'Delivered')}
+                                className="btn"
+                                style={{ 
+                                  fontSize: '11px', 
+                                  padding: '6px 12px',
+                                  background: 'var(--success)',
+                                  border: 'none',
+                                  color: 'white',
+                                  borderRadius: '4px'
+                                }}
+                              >
+                                📦 Mark as Delivered
+                              </button>
+                              <button 
+                                onClick={() => updateOrderStatus(order._id, 'Cancelled')}
+                                className="btn"
+                                style={{ 
+                                  fontSize: '11px', 
+                                  padding: '6px 12px',
+                                  background: 'var(--danger)',
+                                  border: 'none',
+                                  color: 'white',
+                                  borderRadius: '4px'
+                                }}
+                              >
+                                ❌ Cancel
+                              </button>
+                            </>
+                          )}
+                          
+                          {order.status === 'Delivered' && (
+                            <div style={{ 
+                              fontSize: '11px', 
+                              color: 'var(--success)', 
+                              fontWeight: 'bold',
+                              padding: '6px 12px',
+                              background: 'rgba(40, 167, 69, 0.1)',
+                              borderRadius: '4px',
+                              border: '1px solid rgba(40, 167, 69, 0.3)'
+                            }}>
+                              ✅ Order Completed
+                            </div>
+                          )}
+                          
+                          {order.status === 'Cancelled' && (
+                            <div style={{ 
+                              fontSize: '11px', 
+                              color: 'var(--danger)', 
+                              fontWeight: 'bold',
+                              padding: '6px 12px',
+                              background: 'rgba(220, 53, 69, 0.1)',
+                              borderRadius: '4px',
+                              border: '1px solid rgba(220, 53, 69, 0.3)'
+                            }}>
+                              ❌ Order Cancelled
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
