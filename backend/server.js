@@ -986,6 +986,121 @@ app.post('/api/orders', async (req, res) => {
   try {
     const orderData = req.body;
     
+    // If MongoDB is not connected, use mock stock validation
+    if (mongoose.connection.readyState !== 1) {
+      // Mock product stock data for validation
+      const mockProducts = {
+        '1': { name: 'Coca-Cola 330ml', inventory: { quantity: 500 } },
+        '2': { name: 'Fanta Orange 330ml', inventory: { quantity: 45 } },
+        '3': { name: 'Reggaoui Chips 25g', inventory: { quantity: 5 } }
+      };
+      
+      // Validate stock for each item
+      for (const item of orderData.items) {
+        const product = mockProducts[item.product];
+        if (!product) {
+          return res.status(400).json({ 
+            success: false, 
+            error: `Product not found: ${item.product}` 
+          });
+        }
+        
+        if (product.inventory.quantity < item.quantity) {
+          return res.status(400).json({ 
+            success: false, 
+            error: `Not enough stock for ${product.name}. Available: ${product.inventory.quantity}, Requested: ${item.quantity}` 
+          });
+        }
+      }
+      
+      // Simulate stock reduction
+      for (const item of orderData.items) {
+        const product = mockProducts[item.product];
+        product.inventory.quantity -= item.quantity;
+      }
+      
+      // Continue with order creation (mock logic)
+      const orderCount = 15; // Mock order count
+      orderData.orderNumber = `ORD-${String(orderCount + 1).padStart(6, '0')}`;
+      
+      // Auto-calculate item totals with discount
+      orderData.items = orderData.items.map(item => ({
+        ...item,
+        totalPrice: (item.quantity * item.unitPrice) * (1 - (item.discount || 0) / 100)
+      }));
+      
+      // Auto-calculate pricing
+      const subtotal = orderData.items.reduce((sum, item) => sum + item.totalPrice, 0);
+      const discountAmount = orderData.items.reduce((sum, item) => sum + (item.quantity * item.unitPrice * (item.discount || 0) / 100), 0);
+      const discountedSubtotal = subtotal - discountAmount;
+      const tax = discountedSubtotal * 0.19; // 19% tax for Algeria
+      const total = discountedSubtotal + tax;
+      
+      orderData.pricing = {
+        subtotal,
+        discount: discountAmount,
+        tax,
+        total
+      };
+      
+      // Auto-set dates based on status
+      if (orderData.status === 'Delivered') {
+        orderData.delivery.deliveredAt = new Date();
+        orderData.payment.paidAt = new Date();
+        orderData.payment.status = 'Paid';
+        orderData.delivery.status = 'Delivered';
+      }
+      
+      // Mock order creation
+      const mockOrder = {
+        _id: String(orderCount + 1),
+        ...orderData,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      
+      return res.status(201).json(mockOrder);
+    }
+    
+    // Validate stock for each item
+    const stockValidationErrors = [];
+    const productUpdates = [];
+    
+    for (const item of orderData.items) {
+      const product = await Product.findById(item.product);
+      
+      if (!product) {
+        return res.status(400).json({ 
+          success: false, 
+          error: `Product not found: ${item.product}` 
+        });
+      }
+      
+      if (product.inventory.quantity < item.quantity) {
+        stockValidationErrors.push(
+          `Not enough stock for ${product.name}. Available: ${product.inventory.quantity}, Requested: ${item.quantity}`
+        );
+      } else {
+        // Prepare stock reduction for this product
+        productUpdates.push({
+          productId: product._id,
+          currentQuantity: product.inventory.quantity,
+          newQuantity: product.inventory.quantity - item.quantity,
+          itemName: product.name,
+          itemQuantity: item.quantity
+        });
+      }
+    }
+    
+    // If there are stock validation errors, return them
+    if (stockValidationErrors.length > 0) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Stock validation failed',
+        details: stockValidationErrors 
+      });
+    }
+    
     // Auto-calculate item totals with discount
     orderData.items = orderData.items.map(item => ({
       ...item,
@@ -1018,16 +1133,51 @@ app.post('/api/orders', async (req, res) => {
       orderData.delivery.status = 'Delivered';
     }
     
+    // Create the order
     const order = new Order(orderData);
     await order.save();
+    
+    // Update product stock for all items
+    for (const update of productUpdates) {
+      await Product.findByIdAndUpdate(
+        update.productId,
+        { 
+          $inc: { 'inventory.quantity': -update.itemQuantity },
+          $set: { 
+            'inventory.lastRestocked': new Date() // Update timestamp
+          }
+        }
+      );
+      
+      // Re-check and update stock status
+      const updatedProduct = await Product.findById(update.productId);
+      if (updatedProduct.inventory.quantity <= 0) {
+        updatedProduct.inventory.stockStatus = 'Out of Stock';
+      } else if (updatedProduct.inventory.quantity <= updatedProduct.inventory.minStock) {
+        updatedProduct.inventory.stockStatus = 'Low Stock';
+      } else {
+        updatedProduct.inventory.stockStatus = 'In Stock';
+      }
+      await updatedProduct.save();
+    }
     
     // Return populated order
     const populatedOrder = await Order.findById(order._id)
       .populate('client', 'name phone email address city province')
       .populate('salesAgent', 'firstName lastName')
-      .populate('items.product', 'name sku price');
+      .populate('items.product', 'name sku price.inventory.quantity');
     
-    res.status(201).json(populatedOrder);
+    res.status(201).json({
+      success: true,
+      data: populatedOrder,
+      message: 'Order created successfully and stock updated',
+      stockUpdates: productUpdates.map(update => ({
+        product: update.itemName,
+        quantityReduced: update.itemQuantity,
+        previousStock: update.currentQuantity,
+        newStock: update.newQuantity
+      }))
+    });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }

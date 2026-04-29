@@ -361,13 +361,46 @@ export default function App() {
         notes: formData.get('notes')
       };
       
-      await axios.post(`${API_BASE}/orders`, orderData);
-      e.target.reset();
-      refresh("orders", setOrders);
-      setShowOrderForm(false);
-      alert("Order created successfully!");
+      const response = await axios.post(`${API_BASE}/orders`, orderData);
+      
+      // Handle successful order creation with stock updates
+      if (response.data.success) {
+        e.target.reset();
+        refresh("orders", setOrders);
+        refresh("products", setProducts); // Refresh products to show updated stock
+        setShowOrderForm(false);
+        
+        // Show success message with stock update information
+        let message = "✅ Order created successfully!";
+        if (response.data.stockUpdates && response.data.stockUpdates.length > 0) {
+          const stockInfo = response.data.stockUpdates.map(update => 
+            `${update.product}: -${update.quantityReduced} (Stock: ${update.previousStock} → ${update.newStock})`
+          ).join('\n');
+          message += `\n\n📦 Stock Updated:\n${stockInfo}`;
+        }
+        alert(message);
+      } else {
+        // Handle stock validation errors
+        if (response.data.details && Array.isArray(response.data.details)) {
+          const errorList = response.data.details.join('\n');
+          alert(`❌ Stock Validation Failed:\n\n${errorList}`);
+        } else {
+          alert(`❌ Error: ${response.data.error || 'Failed to create order'}`);
+        }
+      }
     } catch (err) {
-      alert("Error creating order");
+      // Handle API errors
+      if (err.response && err.response.data) {
+        const errorData = err.response.data;
+        if (errorData.details && Array.isArray(errorData.details)) {
+          const errorList = errorData.details.join('\n');
+          alert(`❌ Stock Validation Failed:\n\n${errorList}`);
+        } else {
+          alert(`❌ Error: ${errorData.error || 'Failed to create order'}`);
+        }
+      } else {
+        alert("❌ Error creating order. Please try again.");
+      }
     }
     
     setAddingOrder(false);
@@ -1447,19 +1480,79 @@ export default function App() {
                   
                   <div className="form-group">
                     <label>Product *</label>
-                    <select name="productId" required>
+                    <select name="productId" required onChange={(e) => {
+                      const selectedProduct = products.find(p => p._id === e.target.value);
+                      if (selectedProduct) {
+                        // Set unit price to wholesale price
+                        const unitPriceInput = document.querySelector('input[name="unitPrice"]');
+                        if (unitPriceInput) {
+                          unitPriceInput.value = selectedProduct.price?.wholesale || 0;
+                        }
+                        
+                        // Show stock info
+                        const stockInfo = document.getElementById('stock-info');
+                        if (stockInfo) {
+                          const stockStatus = selectedProduct.inventory?.stockStatus || 'In Stock';
+                          const stockColor = stockStatus === 'Out of Stock' ? '#dc3545' : 
+                                          stockStatus === 'Low Stock' ? '#ffc107' : '#28a745';
+                          stockInfo.innerHTML = `
+                            <div style="padding: 8px; border-radius: 6px; background: ${stockColor}20; border: 1px solid ${stockColor}40; margin-top: 8px;">
+                              <strong>📦 Stock Information:</strong><br/>
+                              Available: <strong>${selectedProduct.inventory?.quantity || 0}</strong> units<br/>
+                              Status: <strong style="color: ${stockColor}">${stockStatus}</strong><br/>
+                              Min Stock: ${selectedProduct.inventory?.minStock || 0} units
+                            </div>
+                          `;
+                        }
+                      }
+                    }}>
                       <option value="">Select Product</option>
                       {products.map(product => (
                         <option key={product._id} value={product._id}>
-                          {product.name} - {product.price?.wholesale || 0} {t.currency}
+                          {product.name} - {product.price?.wholesale || 0} {t.currency} 
+                          (Stock: {product.inventory?.quantity || 0})
                         </option>
                       ))}
                     </select>
+                    <div id="stock-info"></div>
                   </div>
                   
                   <div className="form-group">
                     <label>{t.quantity} *</label>
-                    <input name="quantity" type="number" min="1" placeholder="1" required />
+                    <input 
+                      name="quantity" 
+                      type="number" 
+                      min="1" 
+                      placeholder="1" 
+                      required
+                      onChange={(e) => {
+                        const productId = document.querySelector('select[name="productId"]').value;
+                        const selectedProduct = products.find(p => p._id === productId);
+                        const quantity = parseInt(e.target.value);
+                        
+                        if (selectedProduct && quantity > 0) {
+                          const availableStock = selectedProduct.inventory?.quantity || 0;
+                          const validationMsg = document.getElementById('quantity-validation');
+                          
+                          if (quantity > availableStock) {
+                            validationMsg.innerHTML = `
+                              <div style="color: #dc3545; font-size: 12px; margin-top: 4px;">
+                                ⚠️ Not enough stock! Available: ${availableStock} units
+                              </div>
+                            `;
+                            e.target.setCustomValidity(`Not enough stock. Available: ${availableStock} units`);
+                          } else {
+                            validationMsg.innerHTML = `
+                              <div style="color: #28a745; font-size: 12px; margin-top: 4px;">
+                                ✅ Stock available: ${availableStock - quantity} units will remain
+                              </div>
+                            `;
+                            e.target.setCustomValidity('');
+                          }
+                        }
+                      }}
+                    />
+                    <div id="quantity-validation"></div>
                   </div>
                   
                   <div className="form-group">
