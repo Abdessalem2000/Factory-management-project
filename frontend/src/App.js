@@ -368,6 +368,7 @@ export default function App() {
         e.target.reset();
         refresh("orders", setOrders);
         refresh("products", setProducts); // Refresh products to show updated stock
+        refresh("clients", setClients); // Refresh clients to show updated statistics
         setShowOrderForm(false);
         
         // Show success message with stock update information
@@ -378,6 +379,16 @@ export default function App() {
           ).join('\n');
           message += `\n\n📦 Stock Updated:\n${stockInfo}`;
         }
+        
+        // Show client statistics update information
+        if (response.data.clientStatsUpdated) {
+          const stats = response.data.clientStatsUpdated;
+          message += `\n\n👥 Client Stats Updated:\n`;
+          message += `• Total Orders: +${stats.totalOrdersIncrement}\n`;
+          message += `• Total Spent: +${stats.totalSpentIncrement.toLocaleString()} DZD\n`;
+          message += `• Last Order Date: ${new Date(stats.lastOrderDate).toLocaleDateString()}`;
+        }
+        
         alert(message);
       } else {
         // Handle stock validation errors

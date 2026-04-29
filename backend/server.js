@@ -1059,7 +1059,13 @@ app.post('/api/orders', async (req, res) => {
         updatedAt: new Date()
       };
       
-      return res.status(201).json(mockOrder);
+      // Mock client statistics update (in real implementation, this would update the database)
+      console.log(`Client stats updated for client ${orderData.client}: +1 order, +${total} DZD spent`);
+      
+      return res.status(201).json({
+        ...mockOrder,
+        message: 'Order created successfully (mock mode - client stats would be updated)'
+      });
     }
     
     // Validate stock for each item
@@ -1161,6 +1167,22 @@ app.post('/api/orders', async (req, res) => {
       await updatedProduct.save();
     }
     
+    // Update client statistics
+    if (orderData.client) {
+      await Client.findByIdAndUpdate(
+        orderData.client,
+        {
+          $inc: { 
+            totalOrders: 1,
+            totalSpent: total
+          },
+          $set: { 
+            lastOrderDate: new Date()
+          }
+        }
+      );
+    }
+    
     // Return populated order
     const populatedOrder = await Order.findById(order._id)
       .populate('client', 'name phone email address city province')
@@ -1175,8 +1197,14 @@ app.post('/api/orders', async (req, res) => {
         product: update.itemName,
         quantityReduced: update.itemQuantity,
         previousStock: update.currentQuantity,
-        newStock: update.newQuantity
-      }))
+        newStock: update.newStock
+      })),
+      clientStatsUpdated: {
+        clientId: orderData.client,
+        totalOrdersIncrement: 1,
+        totalSpentIncrement: total,
+        lastOrderDate: new Date()
+      }
     });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
