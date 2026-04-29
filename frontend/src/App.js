@@ -74,31 +74,78 @@ export default function App() {
   const [showProductForm, setShowProductForm] = useState(false);
   const [loadingAction, setLoadingAction] = useState(false);
   const [addingOrder, setAddingOrder] = useState(false);
+  const [dashboardData, setDashboardData] = useState({
+    overview: {
+      totalRevenue: 0,
+      totalOrders: 0,
+      totalClients: 0,
+      totalProducts: 0,
+      avgOrderValue: 0,
+      pendingOrders: 0,
+      completedOrders: 0,
+      cancelledOrders: 0,
+      revenueGrowth: 0
+    },
+    topProducts: [],
+    recentOrders: [],
+    monthlyRevenue: []
+  });
 
   /* Fetch Data from API */
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [w, c, p, o] = await Promise.all([
+        const [w, c, p, o, analytics] = await Promise.all([
           axios.get(`${API_BASE}/workers`),
           axios.get(`${API_BASE}/clients`),
           axios.get(`${API_BASE}/products`),
-          axios.get(`${API_BASE}/orders`)
+          axios.get(`${API_BASE}/orders`),
+          axios.get(`${API_BASE}/analytics/dashboard`)
         ]);
         
         setWorkers(w.data || []);
         setClients(c.data || []);
         setProducts(p.data || []);
         setOrders(o.data || []);
+        setDashboardData(analytics.data?.data || {
+          overview: {
+            totalRevenue: 0,
+            totalOrders: 0,
+            totalClients: 0,
+            totalProducts: 0,
+            avgOrderValue: 0,
+            pendingOrders: 0,
+            completedOrders: 0,
+            cancelledOrders: 0,
+            revenueGrowth: 0
+          },
+          topProducts: [],
+          recentOrders: [],
+          monthlyRevenue: []
+        });
       } catch (err) {
-        console.log("API Error:", err);
+        console.log("Fetch error:", err);
         // Set empty data if API fails
         setWorkers([]);
         setClients([]);
         setProducts([]);
         setOrders([]);
-      } finally {
-        setLoading(false);
+        setDashboardData({
+          overview: {
+            totalRevenue: 0,
+            totalOrders: 0,
+            totalClients: 0,
+            totalProducts: 0,
+            avgOrderValue: 0,
+            pendingOrders: 0,
+            completedOrders: 0,
+            cancelledOrders: 0,
+            revenueGrowth: 0
+          },
+          topProducts: [],
+          recentOrders: [],
+          monthlyRevenue: []
+        });
       }
     };
     
@@ -230,219 +277,284 @@ export default function App() {
       {/* Dashboard */}
       {activeTab === "dashboard" && (
         <div>
-          {/* Stats Cards */}
-          <div className="dashboard">
-            <div className="dashboard-card">
-              <h3>👥 {t.clients}</h3>
-              <p>{clients.length}</p>
-            </div>
-            <div className="dashboard-card">
-              <h3>📦 {t.orders}</h3>
-              <p>{orders.length}</p>
-            </div>
-            <div className="dashboard-card">
-              <h3>🛍️ {t.products}</h3>
-              <p>{products.length}</p>
-            </div>
-            <div className="dashboard-card">
-              <h3>💰 Revenue</h3>
-              <p>
-                {orders.reduce((total, order) => total + (order.pricing?.total || 0), 0).toLocaleString()} {t.currency}
+          {/* Enhanced Stats Cards */}
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', 
+            gap: '20px', 
+            marginBottom: '30px' 
+          }}>
+            {/* Total Revenue Card */}
+            <div className="dashboard-card" style={{
+              background: 'linear-gradient(135deg, var(--accent-gold) 0%, var(--warning) 100%)',
+              color: 'white',
+              position: 'relative',
+              overflow: 'hidden'
+            }}>
+              <div style={{ position: 'absolute', top: '-50%', right: '-50%', width: '200%', height: '200%', background: 'rgba(255,255,255,0.1)', transform: 'rotate(45deg)' }}></div>
+              <h3 style={{ margin: '0 0 10px 0', fontSize: '14px', opacity: 0.9 }}>💰 Total Revenue</h3>
+              <p style={{ fontSize: '28px', fontWeight: 'bold', margin: '0' }}>
+                {dashboardData.overview.totalRevenue.toLocaleString()} {t.currency}
               </p>
+              <div style={{ 
+                fontSize: '12px', 
+                opacity: 0.8, 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '5px',
+                marginTop: '5px'
+              }}>
+                <span style={{ color: dashboardData.overview.revenueGrowth > 0 ? '#4ade80' : '#ff6b6b' }}>
+                  {dashboardData.overview.revenueGrowth > 0 ? '↑' : '↓'}
+                </span>
+                <span>{Math.abs(dashboardData.overview.revenueGrowth).toFixed(1)}% from last month</span>
+              </div>
+            </div>
+
+            {/* Total Orders Card */}
+            <div className="dashboard-card" style={{
+              background: 'linear-gradient(135deg, var(--primary-green) 0%, var(--success) 100%)',
+              color: 'white',
+              position: 'relative',
+              overflow: 'hidden'
+            }}>
+              <div style={{ position: 'absolute', top: '-50%', right: '-50%', width: '200%', height: '200%', background: 'rgba(255,255,255,0.1)', transform: 'rotate(45deg)' }}></div>
+              <h3 style={{ margin: '0 0 10px 0', fontSize: '14px', opacity: 0.9 }}>📦 Total Orders</h3>
+              <p style={{ fontSize: '28px', fontWeight: 'bold', margin: '0' }}>
+                {dashboardData.overview.totalOrders.toLocaleString()}
+              </p>
+              <div style={{ 
+                fontSize: '12px', 
+                opacity: 0.8, 
+                marginTop: '5px'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                  <span>✅ Completed: {dashboardData.overview.completedOrders}</span>
+                  <span>⏳ Pending: {dashboardData.overview.pendingOrders}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>❌ Cancelled: {dashboardData.overview.cancelledOrders}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Average Order Value Card */}
+            <div className="dashboard-card" style={{
+              background: 'linear-gradient(135deg, var(--info) 0%, var(--primary-blue) 100%)',
+              color: 'white',
+              position: 'relative',
+              overflow: 'hidden'
+            }}>
+              <div style={{ position: 'absolute', top: '-50%', right: '-50%', width: '200%', height: '200%', background: 'rgba(255,255,255,0.1)', transform: 'rotate(45deg)' }}></div>
+              <h3 style={{ margin: '0 0 10px 0', fontSize: '14px', opacity: 0.9 }}>📊 Avg Order Value</h3>
+              <p style={{ fontSize: '28px', fontWeight: 'bold', margin: '0' }}>
+                {Math.round(dashboardData.overview.avgOrderValue).toLocaleString()} {t.currency}
+              </p>
+              <div style={{ 
+                fontSize: '12px', 
+                opacity: 0.8, 
+                marginTop: '5px'
+              }}>
+                Per order across all time
+              </div>
+            </div>
+
+            {/* Total Clients Card */}
+            <div className="dashboard-card" style={{
+              background: 'linear-gradient(135deg, var(--primary-red) 0%, var(--danger) 100%)',
+              color: 'white',
+              position: 'relative',
+              overflow: 'hidden'
+            }}>
+              <div style={{ position: 'absolute', top: '-50%', right: '-50%', width: '200%', height: '200%', background: 'rgba(255,255,255,0.1)', transform: 'rotate(45deg)' }}></div>
+              <h3 style={{ margin: '0 0 10px 0', fontSize: '14px', opacity: 0.9 }}>👥 Total Clients</h3>
+              <p style={{ fontSize: '28px', fontWeight: 'bold', margin: '0' }}>
+                {dashboardData.overview.totalClients.toLocaleString()}
+              </p>
+              <div style={{ 
+                fontSize: '12px', 
+                opacity: 0.8, 
+                marginTop: '5px'
+              }}>
+                Active Algerian businesses
+              </div>
             </div>
           </div>
 
-          {/* Charts and Recent Orders */}
+          {/* Top Products and Recent Orders */}
           <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '25px', marginBottom: '30px' }}>
-            {/* Simple Chart */}
+            {/* Top Products */}
             <div className="card">
-              <h3>📊 Orders & Revenue Overview</h3>
-              <div style={{ height: '300px', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-around', padding: '20px' }}>
-                {/* Simple Bar Chart */}
-                {(() => {
-                  const last7Days = Array.from({length: 7}, (_, i) => {
-                    const date = new Date();
-                    date.setDate(date.getDate() - (6 - i));
-                    return date;
-                  });
-                  
-                  const ordersByDay = last7Days.map(date => {
-                    const dayOrders = orders.filter(order => {
-                      const orderDate = new Date(order.createdAt || Date.now());
-                      return orderDate.toDateString() === date.toDateString();
-                    });
-                    return {
-                      date: date.toLocaleDateString('en', { weekday: 'short' }),
-                      count: dayOrders.length,
-                      revenue: dayOrders.reduce((sum, order) => sum + (order.pricing?.total || 0), 0)
-                    };
-                  });
-
-                  const maxValue = Math.max(...ordersByDay.map(d => Math.max(d.count, d.revenue / 1000)), 1);
-
-                  return (
-                    <div style={{ width: '100%', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-around', height: '250px' }}>
-                      {ordersByDay.map((day, index) => (
-                        <div key={index} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1 }}>
-                          <div style={{ 
-                            display: 'flex', 
-                            flexDirection: 'column', 
-                            alignItems: 'center', 
-                            gap: '5px',
-                            height: '200px',
-                            justifyContent: 'flex-end'
-                          }}>
-                            <div style={{
-                              width: '30px',
-                              background: 'var(--gradient-primary)',
-                              height: `${(day.revenue / 1000 / maxValue) * 150}px`,
-                              borderRadius: '4px 4px 0 0',
-                              position: 'relative'
-                            }}>
-                              <span style={{ 
-                                position: 'absolute', 
-                                top: '-20px', 
-                                left: '50%', 
-                                transform: 'translateX(-50%)',
-                                fontSize: '10px',
-                                color: 'var(--text-secondary)',
-                                fontWeight: 'bold'
-                              }}>
-                                {(day.revenue / 1000).toFixed(1)}k
-                              </span>
-                            </div>
-                            <div style={{
-                              width: '30px',
-                              background: 'var(--gradient-secondary)',
-                              height: `${(day.count / maxValue) * 50}px`,
-                              borderRadius: '4px 4px 0 0',
-                              position: 'relative'
-                            }}>
-                              <span style={{ 
-                                position: 'absolute', 
-                                top: '-20px', 
-                                left: '50%', 
-                                transform: 'translateX(-50%)',
-                                fontSize: '10px',
-                                color: 'var(--text-secondary)',
-                                fontWeight: 'bold'
-                              }}>
-                                {day.count}
-                              </span>
-                            </div>
-                          </div>
-                          <span style={{ 
-                            fontSize: '11px', 
-                            color: 'var(--text-secondary)',
-                            marginTop: '10px'
-                          }}>
-                            {day.date}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  );
-                })()}
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'center', gap: '30px', marginTop: '20px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <div style={{ width: '20px', height: '12px', background: 'var(--gradient-primary)', borderRadius: '2px' }}></div>
-                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Revenue (k DZD)</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <div style={{ width: '20px', height: '12px', background: 'var(--gradient-secondary)', borderRadius: '2px' }}></div>
-                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Orders</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Quick Stats */}
-            <div className="card">
-              <h3>📈 Quick Stats</h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px', background: 'rgba(0, 102, 51, 0.1)', borderRadius: '10px' }}>
-                  <span style={{ color: 'var(--text-secondary)' }}>Avg Order Value</span>
-                  <span style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--accent-gold)' }}>
-                    {orders.length > 0 ? Math.round(orders.reduce((sum, order) => sum + (order.pricing?.total || 0), 0) / orders.length).toLocaleString() : 0} {t.currency}
-                  </span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px', background: 'rgba(200, 16, 46, 0.1)', borderRadius: '10px' }}>
-                  <span style={{ color: 'var(--text-secondary)' }}>Pending Orders</span>
-                  <span style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--primary-red)' }}>
-                    {orders.filter(order => order.status === 'Pending').length}
-                  </span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '10px' }}>
-                  <span style={{ color: 'var(--text-secondary)' }}>Delivered Orders</span>
-                  <span style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--success)' }}>
-                    {orders.filter(order => order.status === 'Delivered').length}
-                  </span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px', background: 'rgba(245, 158, 11, 0.1)', borderRadius: '10px' }}>
-                  <span style={{ color: 'var(--text-secondary)' }}>Total Products</span>
-                  <span style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--warning)' }}>
-                    {products.reduce((sum, product) => sum + (product.inventory?.quantity || 0), 0)}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Recent Orders */}
-          <div className="card">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px' }}>
-              <h3>📋 Recent Orders</h3>
-              <button 
-                onClick={() => setActiveTab('orders')}
-                className="btn"
-                style={{ padding: '8px 16px', fontSize: '14px' }}
-              >
-                View All
-              </button>
-            </div>
-            {orders.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-secondary)' }}>
-                <p style={{ fontSize: '16px' }}>No orders yet</p>
-                <p style={{ fontSize: '14px', marginTop: '10px' }}>Create your first order to see it here!</p>
-              </div>
-            ) : (
-              <div style={{ display: 'grid', gap: '15px' }}>
-                {orders.slice(0, 5).map((order) => (
-                  <div key={order._id} className="list-item" style={{ padding: '15px', marginBottom: '0' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ 
+                margin: '0 0 20px 0', 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '10px' 
+              }}>
+                🏆 Top 3 Products
+                </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                {dashboardData.topProducts.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-secondary)' }}>
+                    <p>No products data available</p>
+                  </div>
+                ) : (
+                  dashboardData.topProducts.map((product, index) => (
+                    <div key={product._id || index} style={{
+                      background: 'linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(240,248,255,0.95) 100%)',
+                      border: '1px solid rgba(0,102,51,0.1)',
+                      borderRadius: '12px',
+                      padding: '15px',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      transition: 'all 0.3s ease'
+                    }}>
                       <div>
-                        <h4 style={{ fontSize: '16px', marginBottom: '5px' }}>
-                          📋 #{order.orderNumber || order._id?.slice(-8)}
+                        <h4 style={{ 
+                          margin: '0 0 5px 0', 
+                          fontSize: '16px', 
+                          fontWeight: '600',
+                          color: 'var(--primary-dark)' 
+                        }}>
+                          {product.name}
                         </h4>
-                        <p style={{ margin: '0', color: 'var(--text-secondary)', fontSize: '14px' }}>
-                          👤 {order.client?.name || 'Unknown Client'}
+                        <p style={{ 
+                          margin: '0 0 3px 0', 
+                          fontSize: '12px', 
+                          color: 'var(--text-secondary)' 
+                        }}>
+                          SKU: {product.sku}
                         </p>
-                        <p style={{ margin: '5px 0 0 0', color: 'var(--text-secondary)', fontSize: '12px' }}>
-                          📅 {new Date(order.createdAt || Date.now()).toLocaleDateString()}
-                        </p>
+                        <div style={{ display: 'flex', gap: '15px', fontSize: '12px' }}>
+                          <span>📦 Sold: {product.totalSold}</span>
+                          <span>💰 Revenue: {product.revenue.toLocaleString()} {t.currency}</span>
+                        </div>
                       </div>
                       <div style={{ textAlign: 'right' }}>
-                        <h4 style={{ fontSize: '16px', color: 'var(--accent-gold)', marginBottom: '5px' }}>
-                          {order.pricing?.total?.toLocaleString() || 0} {t.currency}
-                        </h4>
-                        <span style={{
+                        <div style={{
+                          background: product.growth > 0 ? 'var(--success)' : 'var(--danger)',
+                          color: 'white',
                           padding: '4px 8px',
-                          borderRadius: '6px',
+                          borderRadius: '20px',
                           fontSize: '12px',
                           fontWeight: 'bold',
-                          background: order.status === 'Delivered' ? 'rgba(16, 185, 129, 0.2)' : 
-                                       order.status === 'Cancelled' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(245, 158, 11, 0.2)',
-                          color: order.status === 'Delivered' ? 'var(--success)' : 
-                                 order.status === 'Cancelled' ? 'var(--danger)' : 'var(--warning)'
+                          marginBottom: '10px'
                         }}>
-                          {order.status || 'Pending'}
-                        </span>
+                          {product.growth > 0 ? '↑' : '↓'} {Math.abs(product.growth).toFixed(1)}%
+                        </div>
+                        <div style={{
+                          background: 'var(--gradient-primary)',
+                          color: 'white',
+                          padding: '6px 12px',
+                          borderRadius: '8px',
+                          fontSize: '14px',
+                          fontWeight: 'bold'
+                        }}>
+                          {Math.round(product.avgPrice).toLocaleString()} {t.currency}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
-            )}
+            </div>
+
+            {/* Recent Orders */}
+            <div className="card">
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center', 
+                marginBottom: '25px',
+                padding: '0 20px',
+                borderBottom: '1px solid rgba(0,102,51,0.1)',
+                paddingBottom: '15px'
+              }}>
+                <h3 style={{ fontSize: '18px', color: 'var(--primary-dark)' }}>📋 Recent Orders</h3>
+                <button 
+                  onClick={() => setActiveTab('orders')}
+                  className="btn"
+                  style={{ 
+                    padding: '8px 16px', 
+                    fontSize: '14px',
+                    background: 'var(--gradient-primary)',
+                    border: 'none',
+                    color: 'white'
+                  }}
+                >
+                  View All Orders →
+                </button>
+              </div>
+              
+              {dashboardData.recentOrders.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-secondary)' }}>
+                  <div style={{ fontSize: '48px', marginBottom: '20px' }}>📦</div>
+                  <p style={{ fontSize: '18px', marginBottom: '10px' }}>No orders yet</p>
+                  <p style={{ fontSize: '14px' }}>Create your first order to see it here!</p>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                  {dashboardData.recentOrders.map((order, index) => (
+                    <div key={order._id} style={{
+                      background: 'linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(240,248,255,0.98) 100%)',
+                      border: '1px solid rgba(0,102,51,0.1)',
+                      borderRadius: '12px',
+                      padding: '15px',
+                      transition: 'all 0.3s ease',
+                      borderLeft: `4px solid ${
+                        order.status === 'Delivered' ? 'var(--success)' : 
+                        order.status === 'Cancelled' ? 'var(--danger)' : 'var(--warning)'
+                      }`
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                            <h4 style={{ 
+                              margin: '0', 
+                              fontSize: '16px', 
+                              fontWeight: '600',
+                              color: 'var(--primary-dark)' 
+                            }}>
+                              #{order.orderNumber}
+                            </h4>
+                            <span style={{
+                              padding: '3px 8px',
+                              borderRadius: '12px',
+                              fontSize: '11px',
+                              fontWeight: 'bold',
+                              background: order.status === 'Delivered' ? 'var(--success)' : 
+                                           order.status === 'Cancelled' ? 'var(--danger)' : 'var(--warning)',
+                              color: 'white'
+                            }}>
+                              {order.status}
+                            </span>
+                          </div>
+                          <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+                            <p style={{ margin: '0 0 3px 0' }}>👤 {order.client?.name}</p>
+                            <p style={{ margin: '0 0 3px 0' }}>📅 {new Date(order.createdAt).toLocaleDateString()}</p>
+                            <p style={{ margin: '0 0 3px 0' }}>📦 {order.items} items</p>
+                          </div>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <div style={{
+                            background: 'var(--accent-gold)',
+                            color: 'white',
+                            padding: '8px 12px',
+                            borderRadius: '8px',
+                            fontSize: '16px',
+                            fontWeight: 'bold',
+                            marginBottom: '8px'
+                          }}>
+                            💰 {order.total.toLocaleString()} {t.currency}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
