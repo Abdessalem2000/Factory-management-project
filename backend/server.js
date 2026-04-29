@@ -347,10 +347,21 @@ app.post('/api/expenses', async (req, res) => {
 const Client = mongoose.model('Client', new mongoose.Schema({
   name: { type: String, required: true },
   phone: { type: String, required: true },
-  email: String,
-  address: String,
-  city: String,
-  province: String
+  email: { type: String, required: true },
+  address: { type: String, required: true },
+  city: { type: String, required: true },
+  province: { type: String, required: true },
+  postalCode: String,
+  country: { type: String, default: 'Algeria' },
+  company: String,
+  taxId: String,
+  creditLimit: { type: Number, default: 0 },
+  paymentTerms: { type: String, enum: ['COD', '7 Days', '14 Days', '30 Days', '60 Days'], default: 'COD' },
+  status: { type: String, enum: ['Active', 'Inactive', 'Suspended'], default: 'Active' },
+  notes: String,
+  totalOrders: { type: Number, default: 0 },
+  totalSpent: { type: Number, default: 0 },
+  lastOrderDate: Date
 }, { timestamps: true }));
 
 // Product Schema
@@ -438,13 +449,72 @@ const Order = mongoose.model('Order', new mongoose.Schema({
 // Clients endpoints
 app.get('/api/clients', async (req, res) => {
   try {
-    // If MongoDB is not connected, return mock data
+    // If MongoDB is not connected, return enhanced mock data
     if (mongoose.connection.readyState !== 1) {
       return res.json([
-        { _id: '1', name: 'Ahmed Benali', phone: '213555123456', email: 'ahmed@example.com', city: 'Alger', province: 'Alger' },
-        { _id: '2', name: 'Fatima Zahra', phone: '213555789012', email: 'fatima@example.com', city: 'Oran', province: 'Oran' }
+        { 
+          _id: '1', 
+          name: 'Ahmed Benali', 
+          phone: '213555123456', 
+          email: 'ahmed.benali@company.dz', 
+          address: '123 Rue Didouche Mourad', 
+          city: 'Alger', 
+          province: 'Alger',
+          postalCode: '16000',
+          country: 'Algeria',
+          company: 'Benali Trading Co.',
+          taxId: 'DZ123456789',
+          creditLimit: 50000,
+          paymentTerms: '30 Days',
+          status: 'Active',
+          notes: 'Regular customer, prefers Coca-Cola products',
+          totalOrders: 15,
+          totalSpent: 28500,
+          lastOrderDate: new Date('2026-04-20')
+        },
+        { 
+          _id: '2', 
+          name: 'Fatima Zahra', 
+          phone: '213555789012', 
+          email: 'fatima.zahra@supermarket.dz', 
+          address: '456 Avenue des Frères d\'Aït', 
+          city: 'Oran', 
+          province: 'Oran',
+          postalCode: '31000',
+          country: 'Algeria',
+          company: 'Zahra Supermarket',
+          taxId: 'DZ987654321',
+          creditLimit: 75000,
+          paymentTerms: '14 Days',
+          status: 'Active',
+          notes: 'Large volume customer, weekly deliveries',
+          totalOrders: 32,
+          totalSpent: 45600,
+          lastOrderDate: new Date('2026-04-25')
+        },
+        { 
+          _id: '3', 
+          name: 'Karim Boudiaf', 
+          phone: '213555345678', 
+          email: 'karim.boudiaf@retail.dz', 
+          address: '789 Boulevard Mohamed V', 
+          city: 'Constantine', 
+          province: 'Constantine',
+          postalCode: '25000',
+          country: 'Algeria',
+          company: 'Boudiaf Retail',
+          taxId: 'DZ456789123',
+          creditLimit: 30000,
+          paymentTerms: 'COD',
+          status: 'Active',
+          notes: 'New customer, growing business',
+          totalOrders: 8,
+          totalSpent: 12300,
+          lastOrderDate: new Date('2026-04-18')
+        }
       ]);
     }
+    
     const clients = await Client.find().sort({ createdAt: -1 });
     res.json(clients);
   } catch (err) {
@@ -454,9 +524,110 @@ app.get('/api/clients', async (req, res) => {
 
 app.post('/api/clients', async (req, res) => {
   try {
-    const client = new Client(req.body);
+    const clientData = req.body;
+    
+    // Set default values for new clients
+    clientData.totalOrders = 0;
+    clientData.totalSpent = 0;
+    clientData.status = 'Active';
+    
+    const client = new Client(clientData);
     await client.save();
     res.status(201).json(client);
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Get client with order history
+app.get('/api/clients/:id/orders', async (req, res) => {
+  try {
+    // If MongoDB is not connected, return mock order history
+    if (mongoose.connection.readyState !== 1) {
+      const mockOrderHistory = {
+        '1': [
+          {
+            _id: '1',
+            orderNumber: 'ORD-000001',
+            status: 'Delivered',
+            total: 1130.50,
+            createdAt: new Date('2026-04-20T09:15:00Z'),
+            items: [{ product: 'Coca-Cola 330ml', quantity: 10, unitPrice: 113.00 }],
+            payment: { method: 'Bank Transfer', status: 'Paid' }
+          },
+          {
+            _id: '2',
+            orderNumber: 'ORD-000004',
+            status: 'Pending',
+            total: 2250.00,
+            createdAt: new Date('2026-04-15T14:30:00Z'),
+            items: [{ product: 'Fanta Orange 330ml', quantity: 25, unitPrice: 90.00 }],
+            payment: { method: 'Credit', status: 'Pending' }
+          }
+        ],
+        '2': [
+          {
+            _id: '2',
+            orderNumber: 'ORD-000002',
+            status: 'Pending',
+            total: 535.50,
+            createdAt: new Date('2026-04-25T11:30:00Z'),
+            items: [{ product: 'Fanta Orange 330ml', quantity: 5, unitPrice: 107.10 }],
+            payment: { method: 'Cash', status: 'Pending' }
+          }
+        ],
+        '3': [
+          {
+            _id: '3',
+            orderNumber: 'ORD-000003',
+            status: 'Cancelled',
+            total: 1526.18,
+            createdAt: new Date('2026-04-18T08:45:00Z'),
+            items: [{ product: 'Coca-Cola 330ml', quantity: 15, unitPrice: 101.75 }],
+            payment: { method: 'Mobile Money', status: 'Refunded' }
+          }
+        ]
+      };
+      
+      const orders = mockOrderHistory[req.params.id] || [];
+      return res.json(orders);
+    }
+    
+    const orders = await Order.find({ client: req.params.id })
+      .populate('items.product', 'name sku')
+      .sort({ createdAt: -1 });
+    
+    res.json(orders);
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Update client statistics
+app.put('/api/clients/:id/stats', async (req, res) => {
+  try {
+    const { totalOrders, totalSpent, lastOrderDate } = req.body;
+    
+    // If MongoDB is not connected, return success
+    if (mongoose.connection.readyState !== 1) {
+      return res.json({ success: true, message: 'Client stats updated' });
+    }
+    
+    const client = await Client.findByIdAndUpdate(
+      req.params.id,
+      { 
+        totalOrders,
+        totalSpent,
+        lastOrderDate
+      },
+      { new: true }
+    );
+    
+    if (!client) {
+      return res.status(404).json({ success: false, error: 'Client not found' });
+    }
+    
+    res.json({ success: true, data: client });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }

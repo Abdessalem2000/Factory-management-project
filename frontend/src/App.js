@@ -72,6 +72,7 @@ export default function App() {
   
   const [showOrderForm, setShowOrderForm] = useState(false);
   const [showProductForm, setShowProductForm] = useState(false);
+  const [showClientForm, setShowClientForm] = useState(false);
   const [loadingAction, setLoadingAction] = useState(false);
   const [addingOrder, setAddingOrder] = useState(false);
   const [dashboardData, setDashboardData] = useState({
@@ -255,6 +256,81 @@ export default function App() {
   /* Edit Product */
   const editProduct = (productId) => {
     alert(`Edit product functionality for ID: ${productId}\n\nThis feature would open an edit form with current product data.`);
+  };
+
+  /* Add Client */
+  const addClient = async (e) => {
+    e.preventDefault();
+    setLoadingAction(true);
+    
+    try {
+      const formData = new FormData(e.target);
+      const clientData = {
+        name: formData.get('name'),
+        company: formData.get('company'),
+        phone: formData.get('phone'),
+        email: formData.get('email'),
+        taxId: formData.get('taxId'),
+        creditLimit: parseFloat(formData.get('creditLimit')) || 0,
+        paymentTerms: formData.get('paymentTerms'),
+        status: formData.get('status'),
+        address: formData.get('address'),
+        city: formData.get('city'),
+        province: formData.get('province'),
+        postalCode: formData.get('postalCode'),
+        country: formData.get('country'),
+        notes: formData.get('notes')
+      };
+      
+      await axios.post(`${API_BASE}/clients`, clientData);
+      e.target.reset();
+      refresh("clients", setClients);
+      setShowClientForm(false);
+      alert("Client added successfully!");
+    } catch (err) {
+      alert("Error adding client");
+    }
+    
+    setLoadingAction(false);
+  };
+
+  /* View Client Order History */
+  const viewClientOrderHistory = async (clientId) => {
+    try {
+      const response = await axios.get(`${API_BASE}/clients/${clientId}/orders`);
+      const orders = response.data;
+      
+      if (orders.length === 0) {
+        alert("No orders found for this client.");
+        return;
+      }
+      
+      const orderList = orders.map(order => 
+        `#${order.orderNumber} - ${order.status} - ${order.total?.toLocaleString() || 0} DZD (${new Date(order.createdAt).toLocaleDateString()})`
+      ).join('\n');
+      
+      alert(`📋 Order History:\n\n${orderList}`);
+    } catch (err) {
+      alert("Error fetching order history");
+    }
+  };
+
+  /* Edit Client */
+  const editClient = (clientId) => {
+    alert(`Edit client functionality for ID: ${clientId}\n\nThis feature would open an edit form with current client data.`);
+  };
+
+  /* Create Order for Client */
+  const createOrderForClient = (clientId) => {
+    setActiveTab('orders');
+    setShowOrderForm(true);
+    // Pre-select the client in the order form
+    setTimeout(() => {
+      const clientSelect = document.querySelector('select[name="clientId"]');
+      if (clientSelect) {
+        clientSelect.value = clientId;
+      }
+    }, 100);
   };
 
   /* Add Order */
@@ -1006,6 +1082,313 @@ export default function App() {
                           style={{ fontSize: '12px', padding: '8px 12px' }}
                         >
                           ✏️ Edit
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Clients Section */}
+      {activeTab === "clients" && (
+        <div>
+          {/* Enhanced Clients Header */}
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center', 
+            marginBottom: '25px',
+            padding: '0 20px',
+            borderBottom: '2px solid rgba(0,102,51,0.1)',
+            paddingBottom: '15px'
+          }}>
+            <h3 style={{ fontSize: '24px', color: 'var(--primary-dark)', margin: '0' }}>
+              👥 {t.clients}
+            </h3>
+            <button 
+              onClick={() => setShowClientForm(!showClientForm)}
+              className="btn"
+              style={{
+                background: 'var(--gradient-primary)',
+                border: 'none',
+                color: 'white',
+                padding: '12px 24px',
+                fontSize: '16px',
+                borderRadius: '8px',
+                fontWeight: 'bold'
+              }}
+            >
+              {showClientForm ? '✖ Cancel' : '➕ Add Client'}
+            </button>
+          </div>
+
+          {/* Add Client Form */}
+          {showClientForm && (
+            <div className="card" style={{ marginBottom: '30px' }}>
+              <h2 style={{ textAlign: 'center', marginBottom: '30px', color: 'var(--primary-dark)' }}>
+                👤 Add New Client
+              </h2>
+              <form onSubmit={addClient} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
+                <div className="form-group">
+                  <label>Client Name *</label>
+                  <input name="name" placeholder="Enter client name" required />
+                </div>
+                <div className="form-group">
+                  <label>Company</label>
+                  <input name="company" placeholder="Enter company name" />
+                </div>
+                <div className="form-group">
+                  <label>Phone *</label>
+                  <input name="phone" type="tel" placeholder="213XXXXXXXXX" required />
+                </div>
+                <div className="form-group">
+                  <label>Email *</label>
+                  <input name="email" type="email" placeholder="client@example.com" required />
+                </div>
+                <div className="form-group">
+                  <label>Tax ID</label>
+                  <input name="taxId" placeholder="DZXXXXXXXXX" />
+                </div>
+                <div className="form-group">
+                  <label>Credit Limit (DZD)</label>
+                  <input name="creditLimit" type="number" placeholder="0" />
+                </div>
+                <div className="form-group">
+                  <label>Payment Terms</label>
+                  <select name="paymentTerms">
+                    <option value="COD">Cash on Delivery</option>
+                    <option value="7 Days">7 Days</option>
+                    <option value="14 Days">14 Days</option>
+                    <option value="30 Days">30 Days</option>
+                    <option value="60 Days">60 Days</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Status</label>
+                  <select name="status">
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
+                    <option value="Suspended">Suspended</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Address Section */}
+              <div style={{ background: 'rgba(0,102,51,0.05)', padding: '20px', borderRadius: '10px', margin: '20px 0' }}>
+                <h4 style={{ margin: '0 0 15px 0', color: 'var(--primary-dark)' }}>📍 Address Information</h4>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '15px' }}>
+                  <div className="form-group">
+                    <label>Address *</label>
+                    <input name="address" placeholder="Street address" required />
+                  </div>
+                  <div className="form-group">
+                    <label>City *</label>
+                    <input name="city" placeholder="City" required />
+                  </div>
+                  <div className="form-group">
+                    <label>Province *</label>
+                    <input name="province" placeholder="Province" required />
+                  </div>
+                  <div className="form-group">
+                    <label>Postal Code</label>
+                    <input name="postalCode" placeholder="XXXXX" />
+                  </div>
+                  <div className="form-group">
+                    <label>Country</label>
+                    <input name="country" placeholder="Algeria" value="Algeria" readOnly />
+                  </div>
+                </div>
+              </div>
+
+              {/* Notes Section */}
+              <div style={{ background: 'rgba(0,102,51,0.05)', padding: '20px', borderRadius: '10px', margin: '20px 0' }}>
+                <h4 style={{ margin: '0 0 15px 0', color: 'var(--primary-dark)' }}>📝 Additional Information</h4>
+                <div className="form-group">
+                  <label>Notes</label>
+                  <textarea name="notes" placeholder="Enter client notes, preferences, special requirements..." rows="3"></textarea>
+                </div>
+              </div>
+
+              <div style={{ gridColumn: '1 / -1', textAlign: 'center' }}>
+                <button type="submit" disabled={loadingAction} className="btn" style={{ 
+                  background: 'var(--gradient-success)', 
+                  border: 'none', 
+                  color: 'white', 
+                  padding: '15px 40px', 
+                  fontSize: '18px', 
+                  borderRadius: '8px',
+                  fontWeight: 'bold' 
+                }}>
+                  {loadingAction ? '⏳ Adding Client...' : '✅ Add Client'}
+                </button>
+              </div>
+            </form>
+            </div>
+          )}
+
+          {/* Clients List */}
+          <div className="list">
+            {clients.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-secondary)' }}>
+                <div style={{ fontSize: '48px', marginBottom: '20px' }}>👥</div>
+                <p style={{ fontSize: '18px', marginBottom: '10px' }}>No clients yet</p>
+                <p style={{ fontSize: '14px' }}>Add your first client to see it here!</p>
+              </div>
+            ) : (
+              clients.map((client) => (
+                <div key={client._id} className="list-item" style={{
+                  background: 'linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(240,248,255,0.98) 100%)',
+                  border: '1px solid rgba(0,102,51,0.1)',
+                  borderRadius: '12px',
+                  padding: '20px',
+                  marginBottom: '15px',
+                  transition: 'all 0.3s ease',
+                  borderLeft: `4px solid ${
+                    client.status === 'Active' ? 'var(--success)' : 
+                    client.status === 'Inactive' ? 'var(--warning)' : 'var(--danger)'
+                  }`
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    {/* Left Column - Client Info */}
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+                        <h3 style={{ 
+                          margin: '0', 
+                          fontSize: '20px', 
+                          fontWeight: '700',
+                          color: 'var(--primary-dark)' 
+                        }}>
+                          {client.name}
+                        </h3>
+                        {client.company && (
+                          <span style={{
+                            background: 'var(--gradient-secondary)',
+                            color: 'white',
+                            padding: '3px 8px',
+                            borderRadius: '12px',
+                            fontSize: '10px'
+                          }}>
+                            {client.company}
+                          </span>
+                        )}
+                        <span style={{
+                          background: client.status === 'Active' ? 'var(--success)' : 
+                                     client.status === 'Inactive' ? 'var(--warning)' : 'var(--danger)',
+                          color: 'white',
+                          padding: '3px 8px',
+                          borderRadius: '12px',
+                          fontSize: '10px'
+                        }}>
+                          {client.status}
+                        </span>
+                      </div>
+                      
+                      {/* Contact Information */}
+                      <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '10px' }}>
+                        <p><strong>📞 Phone:</strong> {client.phone}</p>
+                        <p><strong>📧 Email:</strong> {client.email}</p>
+                        {client.taxId && <p><strong>🆔 Tax ID:</strong> {client.taxId}</p>}
+                      </div>
+
+                      {/* Address Information */}
+                      <div style={{ 
+                        background: 'rgba(0,102,51,0.05)', 
+                        padding: '12px', 
+                        borderRadius: '8px', 
+                        marginBottom: '10px',
+                        fontSize: '13px'
+                      }}>
+                        <div style={{ fontWeight: 'bold', marginBottom: '5px', color: 'var(--primary-dark)' }}>📍 Address</div>
+                        <div>{client.address}</div>
+                        <div>{client.city}, {client.province} {client.postalCode || ''}</div>
+                        <div>{client.country}</div>
+                      </div>
+
+                      {/* Business Information */}
+                      <div style={{ 
+                        display: 'grid', 
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', 
+                        gap: '10px', 
+                        marginBottom: '10px',
+                        fontSize: '13px'
+                      }}>
+                        <div style={{ textAlign: 'center', background: 'rgba(0,102,51,0.05)', padding: '8px', borderRadius: '6px' }}>
+                          <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '3px' }}>💳 Credit Limit</div>
+                          <div style={{ fontSize: '16px', fontWeight: 'bold', color: 'var(--accent-gold)' }}>
+                            {client.creditLimit?.toLocaleString() || 0} DZD
+                          </div>
+                        </div>
+                        <div style={{ textAlign: 'center', background: 'rgba(0,102,51,0.05)', padding: '8px', borderRadius: '6px' }}>
+                          <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '3px' }}>⏰ Payment Terms</div>
+                          <div style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--info)' }}>
+                            {client.paymentTerms || 'COD'}
+                          </div>
+                        </div>
+                        <div style={{ textAlign: 'center', background: 'rgba(0,102,51,0.05)', padding: '8px', borderRadius: '6px' }}>
+                          <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '3px' }}>📦 Total Orders</div>
+                          <div style={{ fontSize: '16px', fontWeight: 'bold', color: 'var(--success)' }}>
+                            {client.totalOrders || 0}
+                          </div>
+                        </div>
+                        <div style={{ textAlign: 'center', background: 'rgba(0,102,51,0.05)', padding: '8px', borderRadius: '6px' }}>
+                          <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '3px' }}>💰 Total Spent</div>
+                          <div style={{ fontSize: '16px', fontWeight: 'bold', color: 'var(--primary-green)' }}>
+                            {client.totalSpent?.toLocaleString() || 0} DZD
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Notes */}
+                      {client.notes && (
+                        <div style={{ 
+                          background: 'rgba(0,102,51,0.05)', 
+                          padding: '10px', 
+                          borderRadius: '8px', 
+                          fontSize: '12px',
+                          color: 'var(--text-secondary)',
+                          fontStyle: 'italic'
+                        }}>
+                          <strong>📝 Notes:</strong> {client.notes}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Right Column - Actions & Order History */}
+                    <div style={{ textAlign: 'right', minWidth: '200px' }}>
+                      {/* Last Order Date */}
+                      {client.lastOrderDate && (
+                        <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '15px' }}>
+                          <strong>📅 Last Order:</strong><br/>
+                          {new Date(client.lastOrderDate).toLocaleDateString()}
+                        </div>
+                      )}
+                      
+                      {/* Action Buttons */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <button 
+                          onClick={() => viewClientOrderHistory(client._id)}
+                          className="btn"
+                          style={{ fontSize: '12px', padding: '8px 12px' }}
+                        >
+                          📋 Order History
+                        </button>
+                        <button 
+                          onClick={() => editClient(client._id)}
+                          className="btn"
+                          style={{ fontSize: '12px', padding: '8px 12px' }}
+                        >
+                          ✏️ Edit
+                        </button>
+                        <button 
+                          onClick={() => createOrderForClient(client._id)}
+                          className="btn"
+                          style={{ fontSize: '12px', padding: '8px 12px' }}
+                        >
+                          📦 Create Order
                         </button>
                       </div>
                     </div>
